@@ -65,6 +65,7 @@ fun DashboardRoute(
     onNavigateToScan: () -> Unit,
     onNavigateToSearch: (String) -> Unit,
     onNavigateToWatchlist: () -> Unit,
+    onNavigateToComparison: (productId: String, productName: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -75,6 +76,7 @@ fun DashboardRoute(
         onNavigateToScan = onNavigateToScan,
         onNavigateToSearch = onNavigateToSearch,
         onNavigateToWatchlist = onNavigateToWatchlist,
+        onNavigateToComparison = onNavigateToComparison,
         modifier = modifier
     )
 }
@@ -86,6 +88,7 @@ fun DashboardScreen(
     onNavigateToScan: () -> Unit,
     onNavigateToSearch: (String) -> Unit,
     onNavigateToWatchlist: () -> Unit,
+    onNavigateToComparison: (productId: String, productName: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -169,7 +172,10 @@ fun DashboardScreen(
 
                 // Section: Trending Comparisons
                 item {
-                    TrendingSection()
+                    TrendingSection(
+                        trendingProducts = uiState.trendingProducts,
+                        onProductClick = onNavigateToComparison
+                    )
                 }
 
                 item {
@@ -426,6 +432,8 @@ private fun WatchlistSection(
 
 @Composable
 private fun TrendingSection(
+    trendingProducts: List<com.pricelens.domain.model.ProductSummary>,
+    onProductClick: (productId: String, productName: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -442,12 +450,55 @@ private fun TrendingSection(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Strictly truthful state: explains observations are required rather than fabricating mock data
-        EmptyStateCard(
-            icon = Icons.AutoMirrored.Filled.TrendingUp,
-            title = stringResource(R.string.empty_trending_title),
-            subtitle = stringResource(R.string.empty_trending_subtitle)
-        )
+        if (trendingProducts.isEmpty()) {
+            EmptyStateCard(
+                icon = Icons.AutoMirrored.Filled.TrendingUp,
+                title = stringResource(R.string.empty_trending_title),
+                subtitle = stringResource(R.string.empty_trending_subtitle)
+            )
+        } else {
+            val currencyFormatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("en", "IN"))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                trendingProducts.forEach { product ->
+                    GlassCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { onProductClick(product.id, product.name) }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text(
+                                    text = product.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = PriceLensTheme.glassColors.textPrimary,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = "${product.brand.orEmpty()} • ${product.retailerCount} stores compared",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PriceLensTheme.glassColors.textSecondary
+                                )
+                            }
+                            if (product.lowestPrice != null) {
+                                Text(
+                                    text = currencyFormatter.format(product.lowestPrice),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = com.pricelens.core.designsystem.MintSuccess
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

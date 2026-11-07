@@ -1,5 +1,7 @@
 package com.pricelens.data.repository
 
+import com.pricelens.data.remote.datasource.ProductCatalogRemoteDataSource
+import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.ProductSummary
 import com.pricelens.domain.model.RetailerOffer
 import com.pricelens.domain.repository.ProductCatalogRepository
@@ -7,21 +9,23 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ProductCatalogRepositoryImpl @Inject constructor() : ProductCatalogRepository {
+class ProductCatalogRepositoryImpl @Inject constructor(
+    private val remoteDataSource: ProductCatalogRemoteDataSource
+) : ProductCatalogRepository {
 
     override suspend fun searchProducts(query: String): Result<List<ProductSummary>> {
-        // Ready for authorized provider adapter in Stage 2.
-        // Returns empty list when no live provider is connected; strictly never fabricates mock items or prices.
-        return Result.success(emptyList())
+        return remoteDataSource.searchProducts(query)
     }
 
     override suspend fun getProductOffers(productId: String): Result<List<RetailerOffer>> {
-        // Real offers will be populated from authorized partner feeds once connected.
-        return Result.success(emptyList())
+        return remoteDataSource.getProductOffers(productId)
+    }
+
+    override suspend fun getProductComparison(productId: String): Result<ProductComparisonDetails> {
+        return remoteDataSource.getProductComparison(productId)
     }
 
     override suspend fun getTrendingProducts(): Result<List<ProductSummary>> {
-        // Trending comparisons require real historical observation data; returns empty until observations exist.
-        return Result.success(emptyList())
+        return remoteDataSource.getTrendingProducts()
     }
 }

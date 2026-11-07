@@ -27,4 +27,17 @@
     <string name="state_error_retry">Retry</string>
     <string name="camera_permission_required">Camera permission is required to scan products and barcodes.</string>
     <string name="grant_permission">Grant Permission</string>
+
+    <!-- Search & Comparison -->
+    <string name="search_screen_title">Search Results</string>
+    <string name="search_empty_title">No products found</string>
+    <string name="search_empty_subtitle">Try searching with a different product name, brand, or model number.</string>
+    <string name="comparison_title">Price Comparison</string>
+    <string name="lowest_price_badge">Lowest Available</string>
+    <string name="verified_match_badge">Verified Product Match</string>
+    <string name="view_deal_button">View Deal</string>
+    <string name="available_offers_title">Retailer Offers</string>
+    <string name="unavailable_retailers_title">Retailers Without Active Offers</string>
+    <string name="specifications_title">Specifications</string>
+    <string name="timestamp_prefix">Prices verified:</string>
 </resources>

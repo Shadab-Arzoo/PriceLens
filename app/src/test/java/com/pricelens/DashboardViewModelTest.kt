@@ -57,6 +57,8 @@ class DashboardViewModelTest {
     private class TestProductCatalogRepository : ProductCatalogRepository {
         override suspend fun searchProducts(query: String): Result<List<ProductSummary>> = Result.success(emptyList())
         override suspend fun getProductOffers(productId: String): Result<List<RetailerOffer>> = Result.success(emptyList())
+        override suspend fun getProductComparison(productId: String): Result<com.pricelens.domain.model.ProductComparisonDetails> =
+            Result.failure(NotImplementedError())
         override suspend fun getTrendingProducts(): Result<List<ProductSummary>> = Result.success(emptyList())
     }
 

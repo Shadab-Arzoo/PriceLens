@@ -17,9 +17,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.pricelens.core.designsystem.PriceLensTheme
+import com.pricelens.presentation.comparison.ProductComparisonRoute
+import com.pricelens.presentation.comparison.ProductComparisonViewModel
 import com.pricelens.presentation.dashboard.DashboardRoute
 import com.pricelens.presentation.dashboard.DashboardViewModel
 import com.pricelens.presentation.scanner.ScannerScreen
+import com.pricelens.presentation.search.SearchRoute
+import com.pricelens.presentation.search.SearchViewModel
 
 @Composable
 fun PriceLensNavGraph(
@@ -44,6 +48,11 @@ fun PriceLensNavGraph(
                 },
                 onNavigateToWatchlist = {
                     navController.navigate(PriceLensDestination.Watchlist.route)
+                },
+                onNavigateToComparison = { productId, productName ->
+                    navController.navigate(
+                        PriceLensDestination.ProductComparison.createRoute(productId, productName)
+                    )
                 }
             )
         }
@@ -62,21 +71,36 @@ fun PriceLensNavGraph(
                     defaultValue = ""
                 }
             )
-        ) { backStackEntry ->
-            val query = backStackEntry.arguments?.getString("q").orEmpty()
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(PriceLensTheme.glassColors.backgroundBrush)
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = if (query.isNotBlank()) "Search results for: \"$query\"" else "Product Search",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = PriceLensTheme.glassColors.textPrimary
-                )
-            }
+        ) {
+            val viewModel: SearchViewModel = hiltViewModel()
+            SearchRoute(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onProductClick = { productId, productName ->
+                    navController.navigate(
+                        PriceLensDestination.ProductComparison.createRoute(productId, productName)
+                    )
+                }
+            )
+        }
+
+        composable(
+            route = PriceLensDestination.ProductComparison.route,
+            arguments = listOf(
+                navArgument("productId") {
+                    type = NavType.StringType
+                },
+                navArgument("productName") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) {
+            val viewModel: ProductComparisonViewModel = hiltViewModel()
+            ProductComparisonRoute(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(PriceLensDestination.Watchlist.route) {
