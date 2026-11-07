@@ -58,8 +58,18 @@ fun PriceLensNavGraph(
         }
 
         composable(PriceLensDestination.Scanner.route) {
-            ScannerScreen(
-                onNavigateBack = { navController.popBackStack() }
+            val viewModel: com.pricelens.presentation.scanner.ScannerViewModel = hiltViewModel()
+            com.pricelens.presentation.scanner.ScannerRoute(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToComparison = { productId, productName ->
+                    navController.navigate(
+                        PriceLensDestination.ProductComparison.createRoute(productId, productName)
+                    )
+                },
+                onNavigateToSearch = { query ->
+                    navController.navigate(PriceLensDestination.Search.createRoute(query))
+                }
             )
         }
 

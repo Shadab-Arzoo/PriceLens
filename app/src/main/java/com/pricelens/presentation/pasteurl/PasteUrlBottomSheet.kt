@@ -40,6 +40,7 @@ import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
+import com.pricelens.domain.model.ConfirmedProductIdentity
 import com.pricelens.domain.usecase.UrlValidationResult
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,7 +48,10 @@ import com.pricelens.domain.usecase.UrlValidationResult
 fun PasteUrlBottomSheet(
     urlInput: String,
     validationResult: UrlValidationResult?,
+    confirmedIdentity: ConfirmedProductIdentity? = null,
     onUrlChange: (String) -> Unit,
+    onIdentityChange: (name: String, brand: String?, model: String?) -> Unit = { _, _, _ -> },
+    onSubmitConfirmedUrl: (ConfirmedProductIdentity) -> Unit = {},
     onSubmitUrl: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -125,28 +129,87 @@ fun PasteUrlBottomSheet(
             // Validation Status Feedback
             when (validationResult) {
                 is UrlValidationResult.Supported -> {
-                    GlassCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        backgroundColor = MintSuccess.copy(alpha = 0.12f),
-                        borderColor = MintSuccess.copy(alpha = 0.4f)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        GlassCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            backgroundColor = MintSuccess.copy(alpha = 0.12f),
+                            borderColor = MintSuccess.copy(alpha = 0.4f)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = MintSuccess,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = "Supported retailer: ${validationResult.retailerName}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = PriceLensTheme.glassColors.textPrimary
-                            )
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MintSuccess,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = "Supported retailer: ${validationResult.retailerName}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = PriceLensTheme.glassColors.textPrimary
+                                )
+                            }
+                        }
+
+                        val identity = confirmedIdentity ?: validationResult.suggestedIdentity
+                        if (identity != null) {
+                            GlassCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                borderColor = ElectricBlue.copy(alpha = 0.5f)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(
+                                        text = "Confirm Product Identity",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.textPrimary
+                                    )
+                                    Text(
+                                        text = "Verify or edit the identified product before comparing offers:",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = PriceLensTheme.glassColors.textSecondary
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    OutlinedTextField(
+                                        value = identity.editedName,
+                                        onValueChange = { newName ->
+                                            onIdentityChange(newName, identity.editedBrand, identity.editedModel)
+                                        },
+                                        label = { Text("Product Name (Editable)") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedTextColor = PriceLensTheme.glassColors.textPrimary,
+                                            unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
+                                        ),
+                                        singleLine = false,
+                                        maxLines = 3
+                                    )
+
+                                    if (!identity.suggestedBrand.isNullOrBlank() || identity.editedBrand != null) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        OutlinedTextField(
+                                            value = identity.editedBrand.orEmpty(),
+                                            onValueChange = { newBrand ->
+                                                onIdentityChange(identity.editedName, newBrand, identity.editedModel)
+                                            },
+                                            label = { Text("Brand") },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            shape = RoundedCornerShape(12.dp),
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedTextColor = PriceLensTheme.glassColors.textPrimary,
+                                                unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
+                                            ),
+                                            singleLine = true
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -234,7 +297,14 @@ fun PasteUrlBottomSheet(
             Spacer(modifier = Modifier.height(20.dp))
 
             Button(
-                onClick = onSubmitUrl,
+                onClick = {
+                    val identity = confirmedIdentity ?: (validationResult as? UrlValidationResult.Supported)?.suggestedIdentity
+                    if (identity != null) {
+                        onSubmitConfirmedUrl(identity.confirm())
+                    } else {
+                        onSubmitUrl()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
@@ -246,7 +316,7 @@ fun PasteUrlBottomSheet(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
-                    text = "Compare Price",
+                    text = "Confirm & Compare",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )

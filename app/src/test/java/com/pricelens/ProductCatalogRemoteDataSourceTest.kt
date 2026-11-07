@@ -19,7 +19,7 @@ class ProductCatalogRemoteDataSourceTest {
     @Before
     fun setUp() {
         sandboxAdapter = SandboxRetailerAdapter()
-        remoteDataSource = ProductCatalogRemoteDataSourceImpl(sandboxAdapter)
+        remoteDataSource = ProductCatalogRemoteDataSourceImpl(sandboxAdapter, com.pricelens.domain.service.AlternativesService())
     }
 
     @Test

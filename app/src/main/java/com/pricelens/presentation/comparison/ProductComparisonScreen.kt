@@ -152,7 +152,10 @@ fun ProductComparisonScreen(
                     uiState.comparisonDetails != null -> {
                         ComparisonDetailsContent(
                             details = uiState.comparisonDetails,
-                            onOpenOfferUrl = onOpenOfferUrl
+                            onOpenOfferUrl = onOpenOfferUrl,
+                            onSelectAlternative = { id, name ->
+                                onEvent(ProductComparisonUiEvent.SelectAlternative(id, name))
+                            }
                         )
                     }
                 }
@@ -165,6 +168,7 @@ fun ProductComparisonScreen(
 private fun ComparisonDetailsContent(
     details: ProductComparisonDetails,
     onOpenOfferUrl: (String) -> Unit,
+    onSelectAlternative: (productId: String, productName: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
@@ -265,6 +269,36 @@ private fun ComparisonDetailsContent(
             }
         }
 
+        // 8. Similar & Cheaper Alternatives Section
+        if (details.alternatives.isNotEmpty()) {
+            item {
+                Column(modifier = Modifier.padding(top = 16.dp)) {
+                    Text(
+                        text = "Similar & Cheaper Alternatives (${details.alternatives.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textPrimary
+                    )
+                    Text(
+                        text = "Based on normalized catalog specifications and lower available prices",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                }
+            }
+
+            items(
+                items = details.alternatives,
+                key = { it.productId }
+            ) { alternative ->
+                AlternativeProductCard(
+                    alternative = alternative,
+                    currencyFormatter = currencyFormatter,
+                    onSelectAlternative = onSelectAlternative
+                )
+            }
+        }
+
         // Bottom Spacer
         item {
             Spacer(modifier = Modifier.height(32.dp))
@@ -316,6 +350,160 @@ private fun HistoryStat(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = PriceLensTheme.glassColors.textSecondary)
         Text(value, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = PriceLensTheme.glassColors.textPrimary)
+    }
+}
+
+@Composable
+private fun AlternativeProductCard(
+    alternative: com.pricelens.domain.model.ProductAlternative,
+    currencyFormatter: NumberFormat,
+    onSelectAlternative: (productId: String, productName: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    GlassCard(
+        modifier = modifier.fillMaxWidth(),
+        borderColor = if (alternative.isCheaper) MintSuccess.copy(alpha = 0.5f) else PriceLensTheme.glassColors.specularBorder
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Header: Brand & Model
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (!alternative.brand.isNullOrBlank()) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = ElectricBlue.copy(alpha = 0.12f)
+                    ) {
+                        Text(
+                            text = alternative.brand.uppercase(),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = ElectricBlue,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+
+                if (alternative.isCheaper && alternative.priceDifference != null) {
+                    val savings = kotlin.math.abs(alternative.priceDifference)
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MintSuccess.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = "Save ${currencyFormatter.format(savings)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MintSuccess,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Title
+            Text(
+                text = alternative.title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = PriceLensTheme.glassColors.textPrimary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            if (!alternative.modelNumber.isNullOrBlank()) {
+                Text(
+                    text = "Model: ${alternative.modelNumber}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = PriceLensTheme.glassColors.textTertiary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Price Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Lowest available price",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                    Text(
+                        text = alternative.lowestPrice?.let { currencyFormatter.format(it) } ?: "Price Unavailable",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (alternative.isCheaper) MintSuccess else PriceLensTheme.glassColors.textPrimary
+                    )
+                }
+
+                Button(
+                    onClick = { onSelectAlternative(alternative.productId, alternative.title) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ElectricBlue,
+                        contentColor = androidx.compose.ui.graphics.Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Compare",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            // Meaningful Differences Section
+            if (alternative.meaningfulDifferences.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.3f))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = "Meaningful Differences:",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PriceLensTheme.glassColors.textSecondary
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    alternative.meaningfulDifferences.take(4).forEach { diff ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = if (diff.isAdvantage) "✓" else "•",
+                                color = if (diff.isAdvantage) MintSuccess else PriceLensTheme.glassColors.textTertiary,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(end = 6.dp)
+                            )
+                            Text(
+                                text = "${diff.category}: ${diff.explanation}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (diff.isAdvantage) PriceLensTheme.glassColors.textPrimary else PriceLensTheme.glassColors.textSecondary,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

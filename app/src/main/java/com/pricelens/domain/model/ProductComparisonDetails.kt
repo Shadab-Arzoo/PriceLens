@@ -15,6 +15,7 @@ data class ProductComparisonDetails(
     val unavailableRetailers: List<UnavailableRetailer> = emptyList(),
     val priceHistory: List<PriceHistoryPoint> = emptyList(),
     val lowestPriceOffer: RetailerOffer? = null,
+    val alternatives: List<ProductAlternative> = emptyList(),
     val confidenceScore: Double = 1.0,
     val lastRefreshedTimestamp: Long = 0L
 )

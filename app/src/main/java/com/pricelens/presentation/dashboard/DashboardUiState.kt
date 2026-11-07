@@ -1,5 +1,6 @@
 package com.pricelens.presentation.dashboard
 
+import com.pricelens.domain.model.ConfirmedProductIdentity
 import com.pricelens.domain.model.ProductSummary
 import com.pricelens.domain.model.RecentSearch
 import com.pricelens.domain.model.WatchlistItem
@@ -14,5 +15,6 @@ data class DashboardUiState(
     val errorMessage: String? = null,
     val isPasteUrlSheetOpen: Boolean = false,
     val pasteUrlInput: String = "",
-    val urlValidation: UrlValidationResult? = null
+    val urlValidation: UrlValidationResult? = null,
+    val confirmedIdentity: ConfirmedProductIdentity? = null
 )

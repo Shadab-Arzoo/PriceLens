@@ -67,6 +67,9 @@ class SearchViewModelTest {
             Result.failure(NotImplementedError())
 
         override suspend fun getTrendingProducts(): Result<List<ProductSummary>> = Result.success(emptyList())
+
+        override suspend fun getProductAlternatives(productId: String): Result<List<com.pricelens.domain.model.ProductAlternative>> =
+            Result.success(emptyList())
     }
 
     private lateinit var dashboardRepo: FakeDashboardRepository

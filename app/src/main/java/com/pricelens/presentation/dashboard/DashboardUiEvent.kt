@@ -10,6 +10,8 @@ sealed interface DashboardUiEvent {
     data object ClosePasteUrlSheet : DashboardUiEvent
     data class PasteUrlInputChanged(val url: String) : DashboardUiEvent
     data object SubmitPastedUrl : DashboardUiEvent
+    data class ConfirmedIdentityChanged(val name: String, val brand: String?, val model: String?) : DashboardUiEvent
+    data class ConfirmProductAndNavigate(val identity: com.pricelens.domain.model.ConfirmedProductIdentity) : DashboardUiEvent
 
     data object RetryLoad : DashboardUiEvent
 }

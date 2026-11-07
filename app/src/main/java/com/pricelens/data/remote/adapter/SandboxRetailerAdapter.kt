@@ -27,6 +27,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
             productTitle = "Sony WH-1000XM5 Wireless Noise Cancelling Headphones",
             brand = "Sony",
             modelNumber = "WH-1000XM5/B",
+            category = "Headphones",
             imageUrl = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
             description = "Industry-leading noise cancellation with two processors and 8 microphones. Up to 30-hour battery life with quick charging.",
             specifications = mapOf(
@@ -95,6 +96,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
             productTitle = "Apple iPhone 15 (128 GB) - Black",
             brand = "Apple",
             modelNumber = "A3090 / MTP03HN/A",
+            category = "Smartphone",
             imageUrl = "https://images.unsplash.com/photo-1592750475338-74b7b21085ab",
             description = "Dynamic Island, 48MP Main camera, and USB-C in a durable color-infused glass and aluminum design.",
             specifications = mapOf(
@@ -170,6 +172,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
             productTitle = "Samsung Galaxy S24 5G (Onyx Black, 128 GB)",
             brand = "Samsung",
             modelNumber = "SM-S921BZKDINS",
+            category = "Smartphone",
             imageUrl = "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf",
             description = "Galaxy AI is here. Circle to Search, Live Translate, Note Assist, and upgraded 50MP camera with ProVisual Engine.",
             specifications = mapOf(
@@ -238,6 +241,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
             productTitle = "Apple MacBook Air M2 (13.6-inch, 8GB Unified Memory, 256GB SSD) - Midnight",
             brand = "Apple",
             modelNumber = "MLY33HN/A",
+            category = "Laptop",
             imageUrl = "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
             description = "Incredibly thin and fast. Supercharged by the next-generation M2 chip, with up to 18 hours of battery life.",
             specifications = mapOf(
@@ -301,6 +305,257 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
             lastRefreshedTimestamp = System.currentTimeMillis() - 1200000L
         ),
 
+        "prod_bose_qc45" to ProductOffersDto(
+            productId = "prod_bose_qc45",
+            productTitle = "Bose QuietComfort 45 Wireless Noise Cancelling Headphones - Triple Black",
+            brand = "Bose",
+            modelNumber = "866724-0100",
+            category = "Headphones",
+            imageUrl = "https://images.unsplash.com/photo-1546435770-a3e426bf472b",
+            description = "Iconic quiet, comfort, and sound. World-class noise cancelling technology with TriPort acoustic architecture.",
+            specifications = mapOf(
+                "Driver Unit" to "35 mm TriPort acoustic",
+                "Battery Life" to "Up to 24 hours",
+                "Weight" to "240g",
+                "Bluetooth" to "v5.1 with multipoint",
+                "Controls" to "Physical buttons on earcups"
+            ),
+            offers = listOf(
+                RetailerOfferDto(
+                    retailerId = "amazon_in",
+                    retailerName = "Amazon India",
+                    price = 24990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.amazon.in/dp/B0B171Q435",
+                    observedAtTimestamp = System.currentTimeMillis() - 2400000L,
+                    condition = "NEW",
+                    sellerRating = 4.6,
+                    deliveryInfo = "Prime Next Day"
+                ),
+                RetailerOfferDto(
+                    retailerId = "croma",
+                    retailerName = "Croma",
+                    price = 25490.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.croma.com/p/262840",
+                    observedAtTimestamp = System.currentTimeMillis() - 4000000L,
+                    condition = "NEW",
+                    sellerRating = 4.4,
+                    deliveryInfo = "Standard delivery in 2 days"
+                ),
+                RetailerOfferDto(
+                    retailerId = "flipkart",
+                    retailerName = "Flipkart",
+                    price = 26990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.flipkart.com/p/itm876543",
+                    observedAtTimestamp = System.currentTimeMillis() - 5000000L,
+                    condition = "NEW",
+                    sellerRating = 4.3,
+                    deliveryInfo = "Free Delivery"
+                )
+            ),
+            unavailableRetailers = listOf(
+                UnavailableRetailerDto(
+                    retailerId = "reliance_digital",
+                    retailerName = "Reliance Digital",
+                    reason = "Out of stock online"
+                )
+            ),
+            confidenceScore = 0.97,
+            lastRefreshedTimestamp = System.currentTimeMillis() - 2400000L
+        ),
+
+        "prod_sennheiser_m4" to ProductOffersDto(
+            productId = "prod_sennheiser_m4",
+            productTitle = "Sennheiser Momentum 4 Wireless ANC Headphones - Black",
+            brand = "Sennheiser",
+            modelNumber = "509180",
+            category = "Headphones",
+            imageUrl = "https://images.unsplash.com/photo-1583394838336-acd977736f90",
+            description = "Maximum audio resolution with Sennheiser Signature Sound and an exceptional 60-hour battery life.",
+            specifications = mapOf(
+                "Driver Unit" to "42 mm audiophile-inspired",
+                "Battery Life" to "Up to 60 hours",
+                "Weight" to "293g",
+                "Bluetooth" to "v5.2 (aptX Adaptive, AAC, SBC)",
+                "Microphones" to "4 digital beamforming mics"
+            ),
+            offers = listOf(
+                RetailerOfferDto(
+                    retailerId = "amazon_in",
+                    retailerName = "Amazon India",
+                    price = 24990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.amazon.in/dp/B0B6488349",
+                    observedAtTimestamp = System.currentTimeMillis() - 3000000L,
+                    condition = "NEW",
+                    sellerRating = 4.5,
+                    deliveryInfo = "Prime Next Day"
+                ),
+                RetailerOfferDto(
+                    retailerId = "vijay_sales",
+                    retailerName = "Vijay Sales",
+                    price = 25990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.vijaysales.com/p/24180",
+                    observedAtTimestamp = System.currentTimeMillis() - 6000000L,
+                    condition = "NEW",
+                    sellerRating = 4.2,
+                    deliveryInfo = "Delivery in 3 days"
+                )
+            ),
+            unavailableRetailers = listOf(
+                UnavailableRetailerDto(
+                    retailerId = "croma",
+                    retailerName = "Croma",
+                    reason = "Listing currently inactive"
+                )
+            ),
+            confidenceScore = 0.96,
+            lastRefreshedTimestamp = System.currentTimeMillis() - 3000000L
+        ),
+
+        "prod_oneplus_12" to ProductOffersDto(
+            productId = "prod_oneplus_12",
+            productTitle = "OnePlus 12 5G (Silky Black, 256 GB)",
+            brand = "OnePlus",
+            modelNumber = "CPH2581",
+            category = "Smartphone",
+            imageUrl = "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9",
+            description = "Elite, Long-Lasting Power. 4th Gen Hasselblad Camera for Mobile, 2K 120Hz ProXDR Display, and 100W SUPERVOOC charging.",
+            specifications = mapOf(
+                "Display" to "6.82-inch 2K ProXDR AMOLED 120Hz LTPO",
+                "Processor" to "Snapdragon 8 Gen 3",
+                "Battery" to "5400 mAh with 100W SuperVOOC",
+                "Camera" to "50MP Sony LYT-808 + 64MP 3x Periscope + 48MP Ultra Wide",
+                "RAM/ROM" to "12GB RAM / 256GB ROM",
+                "Storage" to "256 GB"
+            ),
+            offers = listOf(
+                RetailerOfferDto(
+                    retailerId = "amazon_in",
+                    retailerName = "Amazon India",
+                    price = 59999.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.amazon.in/dp/B0CSKPT55P",
+                    observedAtTimestamp = System.currentTimeMillis() - 1500000L,
+                    condition = "NEW",
+                    sellerRating = 4.7,
+                    deliveryInfo = "Prime Next Day"
+                ),
+                RetailerOfferDto(
+                    retailerId = "croma",
+                    retailerName = "Croma",
+                    price = 61999.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.croma.com/p/304120",
+                    observedAtTimestamp = System.currentTimeMillis() - 3600000L,
+                    condition = "NEW",
+                    sellerRating = 4.5,
+                    deliveryInfo = "Home Delivery or Store Pickup"
+                ),
+                RetailerOfferDto(
+                    retailerId = "reliance_digital",
+                    retailerName = "Reliance Digital",
+                    price = 61999.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.reliancedigital.in/p/494200192",
+                    observedAtTimestamp = System.currentTimeMillis() - 5000000L,
+                    condition = "NEW",
+                    sellerRating = 4.3,
+                    deliveryInfo = "Delivery in 2 days"
+                )
+            ),
+            unavailableRetailers = listOf(
+                UnavailableRetailerDto(
+                    retailerId = "flipkart",
+                    retailerName = "Flipkart",
+                    reason = "Out of stock from authorized seller"
+                )
+            ),
+            confidenceScore = 0.98,
+            lastRefreshedTimestamp = System.currentTimeMillis() - 1500000L
+        ),
+
+        "prod_dell_xps13" to ProductOffersDto(
+            productId = "prod_dell_xps13",
+            productTitle = "Dell XPS 13 9315 Laptop (Intel Core i7 12th Gen, 16GB, 512GB SSD)",
+            brand = "Dell",
+            modelNumber = "XPS9315-7001SLV",
+            category = "Laptop",
+            imageUrl = "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed",
+            description = "Our thinnest and lightest 13-inch XPS is built for a lifestyle on the move. Features 12th Gen Intel Core processors.",
+            specifications = mapOf(
+                "Processor" to "Intel Core i7-1250U 10-core (Up to 4.7GHz)",
+                "Display" to "13.4-inch FHD+ 500 nits Anti-glare",
+                "Memory" to "16GB LPDDR5 dual-channel",
+                "Storage" to "512GB PCIe NVMe SSD",
+                "Weight" to "1.17 kg",
+                "Battery" to "Up to 12 hours"
+            ),
+            offers = listOf(
+                RetailerOfferDto(
+                    retailerId = "amazon_in",
+                    retailerName = "Amazon India",
+                    price = 79990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.amazon.in/dp/B0B9ZJ7W5M",
+                    observedAtTimestamp = System.currentTimeMillis() - 2000000L,
+                    condition = "NEW",
+                    sellerRating = 4.5,
+                    deliveryInfo = "Prime Next Day"
+                ),
+                RetailerOfferDto(
+                    retailerId = "reliance_digital",
+                    retailerName = "Reliance Digital",
+                    price = 81990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.reliancedigital.in/p/493120194",
+                    observedAtTimestamp = System.currentTimeMillis() - 4000000L,
+                    condition = "NEW",
+                    sellerRating = 4.4,
+                    deliveryInfo = "Standard Delivery"
+                ),
+                RetailerOfferDto(
+                    retailerId = "croma",
+                    retailerName = "Croma",
+                    price = 82990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.croma.com/p/271920",
+                    observedAtTimestamp = System.currentTimeMillis() - 6000000L,
+                    condition = "NEW",
+                    sellerRating = 4.3,
+                    deliveryInfo = "Store Pickup Available"
+                )
+            ),
+            unavailableRetailers = listOf(
+                UnavailableRetailerDto(
+                    retailerId = "flipkart",
+                    retailerName = "Flipkart",
+                    reason = "Seller inventory awaiting restock"
+                ),
+                UnavailableRetailerDto(
+                    retailerId = "vijay_sales",
+                    retailerName = "Vijay Sales",
+                    reason = "Configuration not carried in offline network"
+                )
+            ),
+            confidenceScore = 0.97,
+            lastRefreshedTimestamp = System.currentTimeMillis() - 2000000L
+        ),
+
         // Product configured for uncertain match testing (confidence < 0.85)
         "prod_uncertain_match" to ProductOffersDto(
             productId = "prod_uncertain_match",
@@ -358,7 +613,11 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     false
                 } else {
                     val targetText = "${product.productTitle} ${product.brand.orEmpty()} ${product.modelNumber.orEmpty()}".lowercase()
-                    tokens.all { token -> targetText.contains(token) }
+                    val matchesOfferUrl = product.offers.any { offer ->
+                        offer.productUrl.contains(trimmed, ignoreCase = true) ||
+                            (trimmed.length > 10 && trimmed.contains(offer.productUrl, ignoreCase = true))
+                    }
+                    matchesOfferUrl || tokens.all { token -> targetText.contains(token) }
                 }
             }
             .map { it.toSummaryDto() }
@@ -413,6 +672,17 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
             .take(4)
             .map { it.toSummaryDto() }
         return AdapterResult.Success(trending)
+    }
+
+    override suspend fun getProductAlternatives(productId: String): AdapterResult<List<ProductOffersDto>> {
+        val target = catalog[productId] ?: return AdapterResult.Success(emptyList())
+        val targetCategory = target.category ?: return AdapterResult.Success(emptyList())
+
+        val alternatives = catalog.values
+            .filter { it.productId != productId && it.category.equals(targetCategory, ignoreCase = true) && it.confidenceScore >= 0.85 }
+            .toList()
+
+        return AdapterResult.Success(alternatives)
     }
 
     private fun ProductOffersDto.toSummaryDto(): ProductSummaryDto {

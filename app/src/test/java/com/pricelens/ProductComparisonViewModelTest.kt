@@ -94,6 +94,9 @@ class ProductComparisonViewModelTest {
         }
 
         override suspend fun getTrendingProducts(): Result<List<ProductSummary>> = Result.success(emptyList())
+
+        override suspend fun getProductAlternatives(productId: String): Result<List<com.pricelens.domain.model.ProductAlternative>> =
+            Result.success(emptyList())
     }
 
     private lateinit var catalogRepo: FakeProductCatalogRepository
@@ -188,5 +191,19 @@ class ProductComparisonViewModelTest {
         assertNull(state.errorMessage)
         assertNotNull(state.comparisonDetails)
         assertEquals("Sony WH-1000XM5 Wireless Headphones", state.comparisonDetails!!.name)
+    }
+
+    @Test
+    fun `selecting alternative switches comparison details to chosen product`() = runTest {
+        val savedStateHandle = SavedStateHandle(mapOf("productId" to "prod_sony_wh1000xm5"))
+        val viewModel = ProductComparisonViewModel(getComparisonUseCase, savedStateHandle)
+        advanceUntilIdle()
+
+        assertNotNull(viewModel.uiState.value.comparisonDetails)
+
+        viewModel.onEvent(ProductComparisonUiEvent.SelectAlternative("prod_bose_qc45", "Bose QC45"))
+        advanceUntilIdle()
+
+        assertEquals("prod_bose_qc45", viewModel.uiState.value.productId)
     }
 }

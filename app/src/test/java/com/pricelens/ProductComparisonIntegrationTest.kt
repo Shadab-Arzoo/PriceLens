@@ -40,7 +40,7 @@ class ProductComparisonIntegrationTest {
     @Before
     fun setUp() {
         sandboxAdapter = SandboxRetailerAdapter()
-        remoteDataSource = ProductCatalogRemoteDataSourceImpl(sandboxAdapter)
+        remoteDataSource = ProductCatalogRemoteDataSourceImpl(sandboxAdapter, com.pricelens.domain.service.AlternativesService())
         catalogRepository = ProductCatalogRepositoryImpl(remoteDataSource)
         dashboardRepository = InMemoryDashboardRepository()
         val saveRecentSearchUseCase = SaveRecentSearchUseCase(dashboardRepository)

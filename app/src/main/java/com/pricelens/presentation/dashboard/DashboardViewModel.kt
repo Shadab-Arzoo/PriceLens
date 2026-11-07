@@ -57,7 +57,8 @@ class DashboardViewModel @Inject constructor(
                     it.copy(
                         isPasteUrlSheetOpen = true,
                         pasteUrlInput = "",
-                        urlValidation = null
+                        urlValidation = null,
+                        confirmedIdentity = null
                     )
                 }
             }
@@ -66,7 +67,8 @@ class DashboardViewModel @Inject constructor(
                     it.copy(
                         isPasteUrlSheetOpen = false,
                         pasteUrlInput = "",
-                        urlValidation = null
+                        urlValidation = null,
+                        confirmedIdentity = null
                     )
                 }
             }
@@ -76,17 +78,40 @@ class DashboardViewModel @Inject constructor(
                 } else {
                     null
                 }
+                val suggested = (validation as? UrlValidationResult.Supported)?.suggestedIdentity
                 _uiState.update {
                     it.copy(
                         pasteUrlInput = event.url,
-                        urlValidation = validation
+                        urlValidation = validation,
+                        confirmedIdentity = suggested
+                    )
+                }
+            }
+            is DashboardUiEvent.ConfirmedIdentityChanged -> {
+                _uiState.update { current ->
+                    current.copy(
+                        confirmedIdentity = current.confirmedIdentity?.withCorrections(event.name, event.brand, event.model)
+                    )
+                }
+            }
+            is DashboardUiEvent.ConfirmProductAndNavigate -> {
+                _uiState.update {
+                    it.copy(
+                        isPasteUrlSheetOpen = false,
+                        confirmedIdentity = event.identity.confirm()
                     )
                 }
             }
             DashboardUiEvent.SubmitPastedUrl -> {
                 val currentInput = _uiState.value.pasteUrlInput
                 val validation = validateProductUrlUseCase(currentInput)
-                _uiState.update { it.copy(urlValidation = validation) }
+                val suggested = (validation as? UrlValidationResult.Supported)?.suggestedIdentity
+                _uiState.update {
+                    it.copy(
+                        urlValidation = validation,
+                        confirmedIdentity = it.confirmedIdentity ?: suggested
+                    )
+                }
             }
             DashboardUiEvent.RetryLoad -> {
                 loadDashboardData()

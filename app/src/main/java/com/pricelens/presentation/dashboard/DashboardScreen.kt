@@ -189,14 +189,31 @@ fun DashboardScreen(
             PasteUrlBottomSheet(
                 urlInput = uiState.pasteUrlInput,
                 validationResult = uiState.urlValidation,
+                confirmedIdentity = uiState.confirmedIdentity,
                 onUrlChange = { onEvent(DashboardUiEvent.PasteUrlInputChanged(it)) },
+                onIdentityChange = { name, brand, model ->
+                    onEvent(DashboardUiEvent.ConfirmedIdentityChanged(name, brand, model))
+                },
+                onSubmitConfirmedUrl = { confirmed ->
+                    onEvent(DashboardUiEvent.ConfirmProductAndNavigate(confirmed))
+                    if (!confirmed.resolvedProductId.isNullOrBlank()) {
+                        onNavigateToComparison(confirmed.resolvedProductId, confirmed.effectiveTitle)
+                    } else {
+                        onNavigateToSearch(confirmed.effectiveTitle)
+                    }
+                },
                 onSubmitUrl = {
                     onEvent(DashboardUiEvent.SubmitPastedUrl)
-                    // If supported, trigger search/comparison with normalized URL
                     if (uiState.urlValidation is com.pricelens.domain.usecase.UrlValidationResult.Supported) {
                         val supported = uiState.urlValidation as com.pricelens.domain.usecase.UrlValidationResult.Supported
-                        onEvent(DashboardUiEvent.ClosePasteUrlSheet)
-                        onNavigateToSearch(supported.normalizedUrl)
+                        val identity = supported.suggestedIdentity
+                        if (identity != null && !identity.resolvedProductId.isNullOrBlank()) {
+                            onEvent(DashboardUiEvent.ClosePasteUrlSheet)
+                            onNavigateToComparison(identity.resolvedProductId, identity.effectiveTitle)
+                        } else {
+                            onEvent(DashboardUiEvent.ClosePasteUrlSheet)
+                            onNavigateToSearch(supported.normalizedUrl)
+                        }
                     }
                 },
                 onDismiss = { onEvent(DashboardUiEvent.ClosePasteUrlSheet) }

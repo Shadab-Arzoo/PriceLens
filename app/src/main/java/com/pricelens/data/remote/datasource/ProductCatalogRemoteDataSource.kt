@@ -1,5 +1,6 @@
 package com.pricelens.data.remote.datasource
 
+import com.pricelens.domain.model.ProductAlternative
 import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.ProductSummary
 import com.pricelens.domain.model.RetailerOffer
@@ -9,4 +10,5 @@ interface ProductCatalogRemoteDataSource {
     suspend fun getProductOffers(productId: String): Result<List<RetailerOffer>>
     suspend fun getProductComparison(productId: String): Result<ProductComparisonDetails>
     suspend fun getTrendingProducts(): Result<List<ProductSummary>>
+    suspend fun getProductAlternatives(productId: String): Result<List<ProductAlternative>>
 }

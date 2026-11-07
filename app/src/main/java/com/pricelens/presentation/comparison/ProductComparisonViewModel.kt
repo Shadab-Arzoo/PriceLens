@@ -42,6 +42,9 @@ class ProductComparisonViewModel @Inject constructor(
             ProductComparisonUiEvent.RefreshOffers -> {
                 loadComparisonDetails(_uiState.value.productId)
             }
+            is ProductComparisonUiEvent.SelectAlternative -> {
+                loadForProduct(event.productId, event.productName)
+            }
         }
     }
 

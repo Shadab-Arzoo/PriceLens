@@ -59,4 +59,11 @@ class LiveRetailerPricingAdapter @Inject constructor(
         }
         return AdapterResult.Success(emptyList())
     }
+
+    override suspend fun getProductAlternatives(productId: String): AdapterResult<List<ProductOffersDto>> {
+        if (!config.isLiveProviderApproved) {
+            return AdapterResult.Success(emptyList())
+        }
+        return AdapterResult.Success(emptyList())
+    }
 }

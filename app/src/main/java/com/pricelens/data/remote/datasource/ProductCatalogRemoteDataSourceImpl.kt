@@ -7,16 +7,19 @@ import com.pricelens.data.remote.model.ProductSummaryDto
 import com.pricelens.data.remote.model.RetailerOfferDto
 import com.pricelens.data.remote.model.UnavailableRetailerDto
 import com.pricelens.domain.model.PriceLensException
+import com.pricelens.domain.model.ProductAlternative
 import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.ProductSummary
 import com.pricelens.domain.model.RetailerOffer
 import com.pricelens.domain.model.UnavailableRetailer
+import com.pricelens.domain.service.AlternativesService
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class ProductCatalogRemoteDataSourceImpl @Inject constructor(
-    private val pricingAdapter: RetailerPricingAdapter
+    private val pricingAdapter: RetailerPricingAdapter,
+    private val alternativesService: AlternativesService
 ) : ProductCatalogRemoteDataSource {
 
     override suspend fun searchProducts(query: String): Result<List<ProductSummary>> {
@@ -94,7 +97,10 @@ class ProductCatalogRemoteDataSourceImpl @Inject constructor(
                         )
                     )
                 } else {
-                    Result.success(dto.toDomain())
+                    val baseDetails = dto.toDomain()
+                    val alternativesResult = getProductAlternatives(productId)
+                    val alternatives = alternativesResult.getOrDefault(emptyList())
+                    Result.success(baseDetails.copy(alternatives = alternatives))
                 }
             }
             is AdapterResult.ProviderError -> {
@@ -130,6 +136,44 @@ class ProductCatalogRemoteDataSourceImpl @Inject constructor(
                 Result.failure(PriceLensException.NetworkConnectionException(result.message, result.safeUserMessage))
             }
         }
+    }
+
+    override suspend fun getProductAlternatives(productId: String): Result<List<ProductAlternative>> {
+        val targetResult = pricingAdapter.getProductOffers(productId)
+        if (targetResult !is AdapterResult.Success) {
+            return Result.success(emptyList())
+        }
+        val targetDto = targetResult.data
+        val altResult = pricingAdapter.getProductAlternatives(productId)
+        val candidateDtos = if (altResult is AdapterResult.Success) altResult.data else emptyList()
+
+        val lowestOffer = targetDto.offers.filter { it.isAvailable && it.price != null }.minByOrNull { it.price!! }
+        val candidates = candidateDtos.map { it.toCandidateProduct() }
+
+        val alternatives = alternativesService.findAlternatives(
+            targetId = targetDto.productId,
+            targetTitle = targetDto.productTitle,
+            targetCategory = targetDto.category,
+            targetPrice = lowestOffer?.price,
+            targetSpecs = targetDto.specifications,
+            candidates = candidates
+        )
+        return Result.success(alternatives)
+    }
+
+    private fun ProductOffersDto.toCandidateProduct(): AlternativesService.CandidateProduct {
+        val lowestOffer = offers.filter { it.isAvailable && it.price != null }.minByOrNull { it.price!! }
+        return AlternativesService.CandidateProduct(
+            id = productId,
+            title = productTitle,
+            brand = brand,
+            modelNumber = modelNumber,
+            imageUrl = imageUrl,
+            category = category,
+            lowestPrice = lowestOffer?.price,
+            currency = lowestOffer?.currency ?: "INR",
+            specifications = specifications
+        )
     }
 
     private fun ProductSummaryDto.toDomain(): ProductSummary =

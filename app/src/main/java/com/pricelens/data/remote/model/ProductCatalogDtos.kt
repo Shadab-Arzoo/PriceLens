@@ -78,6 +78,8 @@ data class ProductOffersDto(
     val imageUrl: String? = null,
     @SerializedName("description")
     val description: String? = null,
+    @SerializedName("category")
+    val category: String? = null,
     @SerializedName("specifications")
     val specifications: Map<String, String> = emptyMap(),
     @SerializedName("offers")

@@ -26,4 +26,9 @@ interface RetailerPricingAdapter {
      * Retrieves trending products with verified price observations.
      */
     suspend fun getTrendingProducts(): AdapterResult<List<ProductSummaryDto>>
+
+    /**
+     * Retrieves verified catalog alternatives for a given product ID.
+     */
+    suspend fun getProductAlternatives(productId: String): AdapterResult<List<ProductOffersDto>>
 }
