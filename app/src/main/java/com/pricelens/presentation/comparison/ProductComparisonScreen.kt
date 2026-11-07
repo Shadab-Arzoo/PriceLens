@@ -199,7 +199,11 @@ private fun ComparisonDetailsContent(
             )
         }
 
-        // 4. Retailer Offers Section
+        item {
+            PriceHistoryCard(history = details.priceHistory)
+        }
+
+        // 5. Retailer Offers Section
         if (details.offers.isNotEmpty()) {
             item {
                 Text(
@@ -224,7 +228,7 @@ private fun ComparisonDetailsContent(
             }
         }
 
-        // 5. Explicit Unavailable Retailers Section
+        // 6. Explicit Unavailable Retailers Section
         if (details.unavailableRetailers.isNotEmpty()) {
             item {
                 Text(
@@ -244,7 +248,7 @@ private fun ComparisonDetailsContent(
             }
         }
 
-        // 6. Specifications Section
+        // 7. Specifications Section
         if (details.specifications.isNotEmpty()) {
             item {
                 Text(
@@ -265,6 +269,53 @@ private fun ComparisonDetailsContent(
         item {
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+@Composable
+private fun PriceHistoryCard(
+    history: List<com.pricelens.domain.model.PriceHistoryPoint>,
+    modifier: Modifier = Modifier
+) {
+    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+    GlassCard(modifier = modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Recorded price history",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = PriceLensTheme.glassColors.textPrimary
+            )
+            if (history.size < 2) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "History is not available yet. We will show statistics after recorded observations accumulate.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = PriceLensTheme.glassColors.textSecondary
+                )
+            } else {
+                val ordered = history.sortedBy { it.timestamp }
+                val prices = ordered.map { it.price }
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    HistoryStat("Current", currencyFormatter.format(ordered.last().price))
+                    HistoryStat("Low", currencyFormatter.format(prices.minOrNull()!!))
+                    HistoryStat("High", currencyFormatter.format(prices.maxOrNull()!!))
+                    HistoryStat("Average", currencyFormatter.format(prices.average()))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryStat(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = PriceLensTheme.glassColors.textSecondary)
+        Text(value, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = PriceLensTheme.glassColors.textPrimary)
     }
 }
 
