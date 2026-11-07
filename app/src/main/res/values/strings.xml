@@ -40,4 +40,42 @@
     <string name="unavailable_retailers_title">Retailers Without Active Offers</string>
     <string name="specifications_title">Specifications</string>
     <string name="timestamp_prefix">Prices verified:</string>
+
+    <!-- Permissions & Privacy -->
+    <string name="camera_permission_title">Camera Access Required</string>
+    <string name="camera_permission_desc">PriceLens requires camera access to scan retail barcodes and product labels in real time. Video frames are processed strictly on-device and are never uploaded or stored.</string>
+    <string name="camera_permission_feature_1">Instant retail barcode (UPC, EAN, QR) scanning</string>
+    <string name="camera_permission_feature_2">On-device packaging &amp; label text recognition</string>
+    <string name="camera_permission_feature_3">100% private: no images or recordings saved</string>
+    <string name="grant_camera_permission">Allow Camera Access</string>
+    <string name="permission_granted">Permission Granted</string>
+    <string name="permission_denied_settings">Open Device Settings</string>
+    <string name="notifications_permission_title">Price-Drop Notifications</string>
+    <string name="notifications_permission_desc">Receive instant alerts when tracked products drop to or below your target price.</string>
+    <string name="grant_notification_permission">Enable Price Alerts</string>
+
+    <!-- Scanner Features -->
+    <string name="scanner_title">Scan Product / Barcode</string>
+    <string name="scanner_subtitle">Point camera at a retail barcode or product label</string>
+    <string name="scanner_align_frame">Align barcode within frame</string>
+    <string name="scanner_instruction">Instant on-device recognition finds best online prices</string>
+    <string name="scanner_torch">Flashlight</string>
+    <string name="scanner_gallery">Choose Photo</string>
+    <string name="scanner_sample_title">Try Demo Barcode</string>
+    <string name="scanner_simulating">Scanning product…</string>
+
+    <!-- Intro & Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_tour_tooltip">App Tour</string>
+    <string name="intro_slide1_title">Smart Price Comparison</string>
+    <string name="intro_slide1_desc">Compare real-time prices across Amazon, Flipkart, Croma, Reliance Digital, and Vijay Sales in one tap.</string>
+    <string name="intro_slide2_title">Apple-Grade Liquid Glass</string>
+    <string name="intro_slide2_desc">Crafted with specular edge highlights, fluid spring animations, translucent glass depth, and accessible contrast.</string>
+    <string name="intro_slide3_title">In-Store Barcode Scanner</string>
+    <string name="intro_slide3_desc">Point your camera at any retail barcode or box label to instantly discover lower online prices before you buy.</string>
+    <string name="intro_slide4_title">Permissions &amp; Privacy</string>
+    <string name="intro_slide4_desc">Grant camera and alert permissions to unlock instant barcode scans and price drop notifications.</string>
+    <string name="intro_privacy_guarantee">Your privacy is guaranteed: camera feeds are processed on-device and never leave your phone.</string>
 </resources>

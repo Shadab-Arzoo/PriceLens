@@ -66,6 +66,7 @@ fun DashboardRoute(
     onNavigateToSearch: (String) -> Unit,
     onNavigateToWatchlist: () -> Unit,
     onNavigateToComparison: (productId: String, productName: String) -> Unit = { _, _ -> },
+    onNavigateToOnboarding: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -77,6 +78,7 @@ fun DashboardRoute(
         onNavigateToSearch = onNavigateToSearch,
         onNavigateToWatchlist = onNavigateToWatchlist,
         onNavigateToComparison = onNavigateToComparison,
+        onNavigateToOnboarding = onNavigateToOnboarding,
         modifier = modifier
     )
 }
@@ -89,6 +91,7 @@ fun DashboardScreen(
     onNavigateToSearch: (String) -> Unit,
     onNavigateToWatchlist: () -> Unit,
     onNavigateToComparison: (productId: String, productName: String) -> Unit = { _, _ -> },
+    onNavigateToOnboarding: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -105,7 +108,8 @@ fun DashboardScreen(
                 PriceLensTopBar(
                     title = stringResource(R.string.dashboard_title),
                     subtitle = stringResource(R.string.dashboard_subtitle),
-                    onWatchlistClick = onNavigateToWatchlist
+                    onWatchlistClick = onNavigateToWatchlist,
+                    onTourClick = onNavigateToOnboarding
                 )
             }
 

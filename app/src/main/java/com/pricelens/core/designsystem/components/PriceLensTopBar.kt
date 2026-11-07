@@ -1,6 +1,7 @@
 package com.pricelens.core.designsystem.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -22,8 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.pricelens.R
 import com.pricelens.core.designsystem.CyanAccent
 import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.PriceLensTheme
@@ -33,6 +38,7 @@ fun PriceLensTopBar(
     title: String,
     subtitle: String,
     onWatchlistClick: () -> Unit,
+    onTourClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -72,20 +78,41 @@ fun PriceLensTopBar(
                 )
             }
 
-            IconButton(
-                onClick = onWatchlistClick,
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(
-                        color = ElectricBlue.copy(alpha = 0.1f),
-                        shape = CircleShape
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (onTourClick != null) {
+                    IconButton(
+                        onClick = onTourClick,
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(PriceLensTheme.glassColors.surfaceHighlight)
+                            .border(1.dp, PriceLensTheme.glassColors.specularBorder, CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = stringResource(R.string.onboarding_tour_tooltip),
+                            tint = PriceLensTheme.glassColors.textPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                }
+
+                IconButton(
+                    onClick = onWatchlistClick,
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(ElectricBlue.copy(alpha = 0.12f))
+                        .border(1.dp, ElectricBlue.copy(alpha = 0.35f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.BookmarkBorder,
+                        contentDescription = "Watchlist",
+                        tint = ElectricBlue,
+                        modifier = Modifier.size(22.dp)
                     )
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.BookmarkBorder,
-                    contentDescription = "Watchlist",
-                    tint = ElectricBlue
-                )
+                }
             }
         }
     }
