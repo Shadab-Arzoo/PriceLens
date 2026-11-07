@@ -1,0 +1,6 @@
+[tools]
+java = "temurin-17.0.21+9"
+
+[env]
+ANDROID_HOME = "/home/zbss/Android/Sdk"
+ANDROID_SDK_ROOT = "/home/zbss/Android/Sdk"

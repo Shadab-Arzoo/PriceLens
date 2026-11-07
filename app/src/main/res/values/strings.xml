@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PriceLens</string>
+    <string name="tagline">Smart Price Comparison &amp; History</string>
+    <string name="search_hint">Search products, brands, or models…</string>
+    <string name="scan_barcode_title">Scan Barcode / Product</string>
+    <string name="scan_barcode_desc">Scan a barcode or product using your camera</string>
+    <string name="paste_url_title">Paste Product Link</string>
+    <string name="paste_url_desc">Compare prices from supported Indian retailers</string>
+    <string name="paste_url_hint">https://www.amazon.in/dp/…</string>
+    <string name="paste_url_submit">Compare Price</string>
+    <string name="paste_url_invalid">Please enter a valid product URL from an authorized retailer.</string>
+    <string name="dashboard_title">PriceLens</string>
+    <string name="dashboard_subtitle">Search, compare and track best prices</string>
+    <string name="section_quick_actions">Quick Actions</string>
+    <string name="section_recent_searches">Recent Searches</string>
+    <string name="section_watchlist">Your Watchlist</string>
+    <string name="section_trending">Trending Comparisons</string>
+    <string name="empty_recent_title">No recent searches</string>
+    <string name="empty_recent_subtitle">Searches will appear here once you explore products.</string>
+    <string name="empty_watchlist_title">Watchlist is empty</string>
+    <string name="empty_watchlist_subtitle">Save items or set target price alerts to track their price changes.</string>
+    <string name="empty_trending_title">No live trends yet</string>
+    <string name="empty_trending_subtitle">Trending comparisons will display once real retail observations are recorded.</string>
+    <string name="state_loading">Loading PriceLens dashboard…</string>
+    <string name="state_error_title">Something went wrong</string>
+    <string name="state_error_retry">Retry</string>
+    <string name="camera_permission_required">Camera permission is required to scan products and barcodes.</string>
+    <string name="grant_permission">Grant Permission</string>
+</resources>
