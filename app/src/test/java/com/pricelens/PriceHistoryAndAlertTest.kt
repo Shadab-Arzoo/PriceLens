@@ -50,6 +50,46 @@ class PriceHistoryAndAlertTest {
         assertEquals(1, duplicate.notifications.size)
     }
 
+    @Test
+    fun `outside website tracking evaluates only for designated retailer or site`() {
+        val evaluator = AlertEvaluator()
+        val outsideWebsiteAlert = evaluator.createAlert(
+            productId = "product-1",
+            targetPrice = 25000.0,
+            currency = "INR",
+            retailerName = "Vijay Sales",
+            websiteUrl = "https://www.vijaysales.com/deal"
+        )
+
+        // Croma price drops to 24000, but the tracker is for Vijay Sales
+        val cromaObs = PriceObservation(
+            id = "croma-obs-1",
+            productId = "product-1",
+            retailerId = "croma",
+            retailerName = "Croma",
+            price = 24000.0,
+            currency = "INR",
+            observedAt = 1000L
+        )
+        val cromaEvaluation = evaluator.evaluate(outsideWebsiteAlert, cromaObs)
+        assertFalse("Should not trigger alert when different retailer drops", cromaEvaluation.reached)
+        assertEquals(0, cromaEvaluation.notifications.size)
+
+        // Vijay Sales price drops to 24500
+        val vijayObs = PriceObservation(
+            id = "vijay-obs-1",
+            productId = "product-1",
+            retailerId = "vijay_sales",
+            retailerName = "Vijay Sales",
+            price = 24500.0,
+            currency = "INR",
+            observedAt = 2000L
+        )
+        val vijayEvaluation = evaluator.evaluate(outsideWebsiteAlert, vijayObs)
+        assertTrue("Should trigger alert when designated outside website drops below target", vijayEvaluation.reached)
+        assertEquals(1, vijayEvaluation.notifications.size)
+    }
+
     private fun observation(price: Double, timestamp: Long) = PriceObservation(
         id = "observation-$timestamp",
         productId = "product-1",

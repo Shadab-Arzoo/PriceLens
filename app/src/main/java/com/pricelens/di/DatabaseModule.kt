@@ -61,6 +61,13 @@ object DatabaseModule {
         }
     }
 
+    private val alertWebsiteTrackingMigration = object : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE target_price_alerts ADD COLUMN retailer_name TEXT")
+            database.execSQL("ALTER TABLE target_price_alerts ADD COLUMN website_url TEXT")
+        }
+    }
+
     @Provides
     @Singleton
     fun providePriceLensDatabase(
@@ -70,7 +77,7 @@ object DatabaseModule {
             context,
             PriceLensDatabase::class.java,
             "pricelens.db"
-        ).addMigrations(priceHistoryMigration).build()
+        ).addMigrations(priceHistoryMigration, alertWebsiteTrackingMigration).build()
     }
 
     @Provides

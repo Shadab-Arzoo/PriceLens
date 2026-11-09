@@ -8,10 +8,16 @@ import com.pricelens.domain.model.PriceObservation
 import com.pricelens.domain.model.TargetPriceAlert
 import com.pricelens.domain.repository.TargetPriceAlertRepository
 import com.pricelens.domain.service.AlertEvaluator
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 interface PriceAlertNotificationSender {
-    suspend fun send(record: NotificationRecord)
+    suspend fun send(
+        record: NotificationRecord,
+        alert: TargetPriceAlert,
+        observation: PriceObservation
+    )
 }
 
 class TargetPriceAlertRepositoryImpl @Inject constructor(
@@ -22,6 +28,16 @@ class TargetPriceAlertRepositoryImpl @Inject constructor(
     override suspend fun save(alert: TargetPriceAlert) {
         dao.upsertAlert(TargetPriceAlertEntity.fromDomain(alert))
     }
+
+    override suspend fun getActiveAlerts(productId: String): List<TargetPriceAlert> =
+        dao.getActiveAlerts(productId).map { it.toDomain() }
+
+    override suspend fun deleteAlert(alertId: String) {
+        dao.deleteAlert(alertId)
+    }
+
+    override fun observeAlerts(productId: String): Flow<List<TargetPriceAlert>> =
+        dao.observeAlerts(productId).map { list -> list.map { it.toDomain() } }
 
     override suspend fun evaluate(
         alert: TargetPriceAlert,
@@ -34,7 +50,9 @@ class TargetPriceAlertRepositoryImpl @Inject constructor(
             .drop(existing.size)
             .forEach { record ->
                 dao.insertNotification(NotificationRecordEntity.fromDomain(record))
-                notificationSender.send(record)
+                runCatching {
+                    notificationSender.send(record, evaluation.alert, observation)
+                }
             }
         return evaluation.alert
     }

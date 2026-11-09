@@ -2,11 +2,19 @@ package com.pricelens.presentation.comparison
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,12 +27,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.AddAlert
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.RemoveShoppingCart
 import androidx.compose.material.icons.filled.Schedule
@@ -38,6 +52,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,20 +63,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pricelens.R
 import com.pricelens.core.designsystem.AmberAlert
+import com.pricelens.core.designsystem.CyanAccent
 import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
+import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
+import com.pricelens.core.designsystem.components.LiquidGlassSecondaryButton
+import com.pricelens.domain.model.ProductAlternative
 import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.RetailerOffer
+import com.pricelens.domain.model.TargetPriceAlert
 import com.pricelens.domain.model.UnavailableRetailer
-import java.text.DateFormat
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
@@ -117,10 +140,12 @@ fun ProductComparisonScreen(
                 }
 
                 Text(
-                    text = stringResource(R.string.comparison_title),
+                    text = uiState.productName.ifBlank { stringResource(R.string.comparison_title) },
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = PriceLensTheme.glassColors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -130,6 +155,62 @@ fun ProductComparisonScreen(
                         contentDescription = "Refresh offers",
                         tint = PriceLensTheme.glassColors.textPrimary
                     )
+                }
+            }
+
+            // Notification Banner
+            AnimatedVisibility(
+                visible = uiState.userNotificationBanner != null,
+                enter = fadeIn() + slideInVertically(),
+                exit = fadeOut() + slideOutVertically()
+            ) {
+                uiState.userNotificationBanner?.let { bannerText ->
+                    Surface(
+                        color = MintSuccess.copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, MintSuccess.copy(alpha = 0.35f)),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MintSuccess,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = bannerText,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PriceLensTheme.glassColors.textPrimary,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            IconButton(
+                                onClick = { onEvent(ProductComparisonUiEvent.DismissBanner) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Dismiss",
+                                    tint = PriceLensTheme.glassColors.textSecondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -152,14 +233,35 @@ fun ProductComparisonScreen(
                     uiState.comparisonDetails != null -> {
                         ComparisonDetailsContent(
                             details = uiState.comparisonDetails,
+                            activeAlerts = uiState.activeAlerts,
                             onOpenOfferUrl = onOpenOfferUrl,
                             onSelectAlternative = { id, name ->
                                 onEvent(ProductComparisonUiEvent.SelectAlternative(id, name))
+                            },
+                            onOpenTrackDialog = { retailer, price, url ->
+                                onEvent(ProductComparisonUiEvent.OpenTrackPriceDialog(retailer, price, url))
+                            },
+                            onDeleteAlert = { alertId ->
+                                onEvent(ProductComparisonUiEvent.DeletePriceAlert(alertId))
                             }
                         )
                     }
                 }
             }
+        }
+
+        // Track Outside Website Dialog
+        if (uiState.isTrackingDialogVisible) {
+            TrackOutsidePriceDialog(
+                retailerName = uiState.trackingTargetRetailer.orEmpty(),
+                targetPrice = uiState.trackingTargetPrice,
+                websiteUrl = uiState.trackingWebsiteUrl,
+                onRetailerChange = { onEvent(ProductComparisonUiEvent.TargetRetailerChanged(it)) },
+                onPriceChange = { onEvent(ProductComparisonUiEvent.TargetPriceChanged(it)) },
+                onUrlChange = { onEvent(ProductComparisonUiEvent.TargetWebsiteUrlChanged(it)) },
+                onConfirm = { onEvent(ProductComparisonUiEvent.SubmitTrackPrice) },
+                onDismiss = { onEvent(ProductComparisonUiEvent.DismissTrackPriceDialog) }
+            )
         }
     }
 }
@@ -167,8 +269,11 @@ fun ProductComparisonScreen(
 @Composable
 private fun ComparisonDetailsContent(
     details: ProductComparisonDetails,
+    activeAlerts: List<TargetPriceAlert>,
     onOpenOfferUrl: (String) -> Unit,
     onSelectAlternative: (productId: String, productName: String) -> Unit = { _, _ -> },
+    onOpenTrackDialog: (retailer: String?, price: Double?, url: String?) -> Unit,
+    onDeleteAlert: (alertId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
@@ -195,7 +300,17 @@ private fun ComparisonDetailsContent(
             }
         }
 
-        // 3. Observed Timestamp & Authorized Feed Badge
+        // 3. Track Outside Website & Price Drop Section
+        item {
+            TrackedAlertsSection(
+                activeAlerts = activeAlerts,
+                currencyFormatter = currencyFormatter,
+                onOpenTrackDialog = { onOpenTrackDialog(null, details.lowestPriceOffer?.price, null) },
+                onDeleteAlert = onDeleteAlert
+            )
+        }
+
+        // 4. Observed Timestamp & Confidence
         item {
             ObservedTimestampCard(
                 timestamp = details.lastRefreshedTimestamp,
@@ -203,20 +318,46 @@ private fun ComparisonDetailsContent(
             )
         }
 
+        // 5. Price History Card
         item {
             PriceHistoryCard(history = details.priceHistory)
         }
 
-        // 5. Retailer Offers Section
+        // 6. Retailer Offers Section
         if (details.offers.isNotEmpty()) {
             item {
-                Text(
-                    text = stringResource(R.string.available_offers_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = PriceLensTheme.glassColors.textPrimary,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.available_offers_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textPrimary
+                    )
+                    OutlinedButton(
+                        onClick = { onOpenTrackDialog(null, null, null) },
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AddAlert,
+                            contentDescription = null,
+                            tint = CyanAccent,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "+ Track Outside Site",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = CyanAccent
+                        )
+                    }
+                }
             }
 
             items(
@@ -227,12 +368,15 @@ private fun ComparisonDetailsContent(
                     offer = offer,
                     currencyFormatter = currencyFormatter,
                     isLowest = offer.retailerId == details.lowestPriceOffer?.retailerId,
-                    onOpenOfferUrl = onOpenOfferUrl
+                    onOpenOfferUrl = onOpenOfferUrl,
+                    onTrackPrice = {
+                        onOpenTrackDialog(offer.retailerName, offer.price, offer.productUrl)
+                    }
                 )
             }
         }
 
-        // 6. Explicit Unavailable Retailers Section
+        // 7. Explicit Unavailable Retailers Section
         if (details.unavailableRetailers.isNotEmpty()) {
             item {
                 Text(
@@ -248,11 +392,16 @@ private fun ComparisonDetailsContent(
                 items = details.unavailableRetailers,
                 key = { it.retailerId }
             ) { unavailable ->
-                UnavailableRetailerCard(unavailable = unavailable)
+                UnavailableRetailerCard(
+                    unavailable = unavailable,
+                    onTrackRetailer = {
+                        onOpenTrackDialog(unavailable.retailerName, null, null)
+                    }
+                )
             }
         }
 
-        // 7. Specifications Section
+        // 8. Specifications Section
         if (details.specifications.isNotEmpty()) {
             item {
                 Text(
@@ -269,7 +418,7 @@ private fun ComparisonDetailsContent(
             }
         }
 
-        // 8. Similar & Cheaper Alternatives Section
+        // 9. Similar & Cheaper Alternatives Section
         if (details.alternatives.isNotEmpty()) {
             item {
                 Column(modifier = Modifier.padding(top = 16.dp)) {
@@ -307,38 +456,314 @@ private fun ComparisonDetailsContent(
 }
 
 @Composable
-private fun PriceHistoryCard(
-    history: List<com.pricelens.domain.model.PriceHistoryPoint>,
+private fun TrackedAlertsSection(
+    activeAlerts: List<TargetPriceAlert>,
+    currencyFormatter: NumberFormat,
+    onOpenTrackDialog: () -> Unit,
+    onDeleteAlert: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     GlassCard(modifier = modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.NotificationsActive,
+                        contentDescription = null,
+                        tint = CyanAccent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Price Drop & Website Tracker",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textPrimary
+                    )
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = CyanAccent.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = "${activeAlerts.size} Active",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = CyanAccent,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
             Text(
-                text = "Recorded price history",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = PriceLensTheme.glassColors.textPrimary
+                text = "Get notified instantly when this item drops below your target price on supported or custom outside websites.",
+                style = MaterialTheme.typography.bodySmall,
+                color = PriceLensTheme.glassColors.textSecondary
             )
-            if (history.size < 2) {
-                Spacer(modifier = Modifier.height(6.dp))
+
+            if (activeAlerts.isNotEmpty()) {
+                activeAlerts.forEach { alert ->
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f),
+                        border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.4f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                val targetSite = alert.retailerName ?: "Any Retailer / Outside Website"
+                                Text(
+                                    text = targetSite,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = PriceLensTheme.glassColors.textPrimary
+                                )
+                                Text(
+                                    text = "Target Price: ${currencyFormatter.format(alert.targetPrice)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MintSuccess
+                                )
+                                if (!alert.websiteUrl.isNullOrBlank()) {
+                                    Text(
+                                        text = alert.websiteUrl,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = PriceLensTheme.glassColors.textTertiary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+
+                            IconButton(
+                                onClick = { onDeleteAlert(alert.id) },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Tracker",
+                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            LiquidGlassSecondaryButton(
+                text = "+ Track Outside Website Price",
+                icon = Icons.Default.Language,
+                onClick = onOpenTrackDialog,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TrackOutsidePriceDialog(
+    retailerName: String,
+    targetPrice: String,
+    websiteUrl: String,
+    onRetailerChange: (String) -> Unit,
+    onPriceChange: (String) -> Unit,
+    onUrlChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val quickRetailers = listOf(
+        "Amazon India", "Flipkart", "Croma", "Reliance Digital",
+        "Vijay Sales", "Tata CLiQ", "Other Website"
+    )
+
+    Dialog(onDismissRequest = onDismiss) {
+        GlassCard(
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Track Price & Alert",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textPrimary
+                    )
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = PriceLensTheme.glassColors.textSecondary
+                        )
+                    }
+                }
+
                 Text(
-                    text = "History is not available yet. We will show statistics after recorded observations accumulate.",
+                    text = "Select a website or enter a custom outside site. PriceLens will monitor prices and trigger system notifications when prices drop.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = PriceLensTheme.glassColors.textSecondary
+                )
+
+                // Quick retailer chips
+                Text(
+                    text = "Select Retailer / Website",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PriceLensTheme.glassColors.textPrimary
+                )
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    quickRetailers.forEach { name ->
+                        val isSelected = retailerName.equals(name, ignoreCase = true)
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (isSelected) ElectricBlue else PriceLensTheme.glassColors.surfaceHighlight,
+                            border = BorderStroke(
+                                1.dp,
+                                if (isSelected) CyanAccent else PriceLensTheme.glassColors.specularBorder
+                            ),
+                            modifier = Modifier.clickable { onRetailerChange(name) }
+                        ) {
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) androidx.compose.ui.graphics.Color.White else PriceLensTheme.glassColors.textPrimary,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+                }
+
+                OutlinedTextField(
+                    value = retailerName,
+                    onValueChange = onRetailerChange,
+                    label = { Text("Retailer / Site Name") },
+                    placeholder = { Text("e.g. Amazon India or Custom Store") },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = PriceLensTheme.glassColors.textPrimary,
+                        unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = targetPrice,
+                    onValueChange = onPriceChange,
+                    label = { Text("Target Price (₹)") },
+                    placeholder = { Text("e.g. 24999") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = PriceLensTheme.glassColors.textPrimary,
+                        unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = websiteUrl,
+                    onValueChange = onUrlChange,
+                    label = { Text("Outside Website URL (Optional)") },
+                    placeholder = { Text("https://www.example.com/product") },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = PriceLensTheme.glassColors.textPrimary,
+                        unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                LiquidGlassPrimaryButton(
+                    text = "Save & Enable Notification",
+                    icon = Icons.Default.AddAlert,
+                    onClick = onConfirm,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PriceHistoryCard(history: List<com.pricelens.domain.model.PriceHistoryPoint>) {
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Price History",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PriceLensTheme.glassColors.textPrimary
+                )
+                Text(
+                    text = if (history.size >= 2) "${history.size} observations" else "History unavailable",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = PriceLensTheme.glassColors.textSecondary
+                )
+            }
+
+            if (history.size < 2) {
+                Text(
+                    text = "History graphs and price drop trends are only displayed after at least two verified observations are recorded.",
                     style = MaterialTheme.typography.bodySmall,
                     color = PriceLensTheme.glassColors.textSecondary
                 )
             } else {
-                val ordered = history.sortedBy { it.timestamp }
-                val prices = ordered.map { it.price }
-                Spacer(modifier = Modifier.height(12.dp))
+                val prices = history.map { it.price }
+                val low = prices.minOrNull() ?: 0.0
+                val high = prices.maxOrNull() ?: 0.0
+                val average = prices.average()
+                val current = history.last().price
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    HistoryStat("Current", currencyFormatter.format(ordered.last().price))
-                    HistoryStat("Low", currencyFormatter.format(prices.minOrNull()!!))
-                    HistoryStat("High", currencyFormatter.format(prices.maxOrNull()!!))
-                    HistoryStat("Average", currencyFormatter.format(prices.average()))
+                    HistoryStat(label = "Current", value = "₹${"%,.0f".format(current)}")
+                    HistoryStat(label = "Lowest", value = "₹${"%,.0f".format(low)}")
+                    HistoryStat(label = "Highest", value = "₹${"%,.0f".format(high)}")
+                    HistoryStat(label = "Average", value = "₹${"%,.0f".format(average)}")
                 }
             }
         }
@@ -348,8 +773,17 @@ private fun PriceHistoryCard(
 @Composable
 private fun HistoryStat(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = PriceLensTheme.glassColors.textSecondary)
-        Text(value, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = PriceLensTheme.glassColors.textPrimary)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = PriceLensTheme.glassColors.textSecondary
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = PriceLensTheme.glassColors.textPrimary
+        )
     }
 }
 
@@ -552,38 +986,10 @@ private fun ProductHeaderCard(
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Confidence badge
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MintSuccess.copy(alpha = 0.12f)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Verified,
-                            contentDescription = null,
-                            tint = MintSuccess,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            text = "${(details.confidenceScore * 100).toInt()}% Match",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MintSuccess
-                        )
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Title
             Text(
                 text = details.name,
                 style = MaterialTheme.typography.titleLarge,
@@ -595,7 +1001,7 @@ private fun ProductHeaderCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = details.description,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = PriceLensTheme.glassColors.textSecondary
                 )
             }
@@ -705,40 +1111,57 @@ private fun ObservedTimestampCard(
     confidenceScore: Double,
     modifier: Modifier = Modifier
 ) {
-    val dateText = if (timestamp > 0) {
-        val formatter = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale("en", "IN"))
-        formatter.format(Date(timestamp))
-    } else {
-        "Just now"
-    }
+    val dateFormat = SimpleDateFormat("MMM d, yyyy • h:mm a", Locale.getDefault())
+    val formattedDate = dateFormat.format(Date(timestamp))
 
     GlassCard(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Schedule,
-                contentDescription = null,
-                tint = PriceLensTheme.glassColors.textTertiary,
-                modifier = Modifier.size(18.dp)
-            )
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = null,
+                    tint = PriceLensTheme.glassColors.textSecondary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "${stringResource(R.string.timestamp_prefix)} $dateText",
-                    style = MaterialTheme.typography.labelMedium,
+                    text = "${stringResource(R.string.timestamp_prefix)} $formattedDate",
+                    style = MaterialTheme.typography.bodySmall,
                     color = PriceLensTheme.glassColors.textSecondary
                 )
-                Text(
-                    text = "Truthful pricing directly from authorized partner feeds. No fabricated discounts.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PriceLensTheme.glassColors.textTertiary
-                )
+            }
+
+            Surface(
+                shape = CircleShape,
+                color = ElectricBlue.copy(alpha = 0.12f)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Verified,
+                        contentDescription = null,
+                        tint = ElectricBlue,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Match ${(confidenceScore * 100).toInt()}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = ElectricBlue
+                    )
+                }
             }
         }
     }
@@ -750,6 +1173,7 @@ private fun RetailerOfferCard(
     currencyFormatter: NumberFormat,
     isLowest: Boolean,
     onOpenOfferUrl: (String) -> Unit,
+    onTrackPrice: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     GlassCard(modifier = modifier.fillMaxWidth()) {
@@ -821,24 +1245,35 @@ private fun RetailerOfferCard(
                     color = PriceLensTheme.glassColors.textPrimary
                 )
 
-                OutlinedButton(
-                    onClick = { onOpenOfferUrl(offer.productUrl) },
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder)
-                ) {
-                    Text(
-                        text = "Store",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = ElectricBlue
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = null,
-                        tint = ElectricBlue,
-                        modifier = Modifier.size(12.dp)
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    IconButton(onClick = onTrackPrice, modifier = Modifier.size(28.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.AddAlert,
+                            contentDescription = "Track",
+                            tint = CyanAccent,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { onOpenOfferUrl(offer.productUrl) },
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder)
+                    ) {
+                        Text(
+                            text = "Store",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = ElectricBlue
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                            contentDescription = null,
+                            tint = ElectricBlue,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
                 }
             }
         }
@@ -848,6 +1283,7 @@ private fun RetailerOfferCard(
 @Composable
 private fun UnavailableRetailerCard(
     unavailable: UnavailableRetailer,
+    onTrackRetailer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     GlassCard(
@@ -859,49 +1295,61 @@ private fun UnavailableRetailerCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Surface(
-                modifier = Modifier.size(38.dp),
-                shape = RoundedCornerShape(10.dp),
-                color = AmberAlert.copy(alpha = 0.12f)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.RemoveShoppingCart,
-                        contentDescription = null,
-                        tint = AmberAlert,
-                        modifier = Modifier.size(20.dp)
+                Surface(
+                    modifier = Modifier.size(36.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    color = AmberAlert.copy(alpha = 0.12f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.RemoveShoppingCart,
+                            contentDescription = null,
+                            tint = AmberAlert,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(
+                        text = unavailable.retailerName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = PriceLensTheme.glassColors.textPrimary
+                    )
+                    Text(
+                        text = unavailable.reason,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PriceLensTheme.glassColors.textSecondary
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = unavailable.retailerName,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PriceLensTheme.glassColors.textPrimary
-                )
-                Text(
-                    text = unavailable.reason,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PriceLensTheme.glassColors.textSecondary
-                )
-            }
-
-            Surface(
-                shape = RoundedCornerShape(6.dp),
-                color = AmberAlert.copy(alpha = 0.15f)
+            OutlinedButton(
+                onClick = onTrackRetailer,
+                shape = RoundedCornerShape(8.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
             ) {
+                Icon(
+                    imageVector = Icons.Default.AddAlert,
+                    contentDescription = null,
+                    tint = CyanAccent,
+                    modifier = Modifier.size(12.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "Unavailable",
+                    text = "Track",
                     style = MaterialTheme.typography.labelSmall,
-                    color = AmberAlert,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    color = CyanAccent
                 )
             }
         }

@@ -13,7 +13,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -25,7 +24,14 @@ data class GlassColors(
     val specularBorder: Color,
     val textPrimary: Color,
     val textSecondary: Color,
-    val textTertiary: Color
+    val textTertiary: Color,
+    val specularBorderBrush: Brush = Brush.verticalGradient(
+        listOf(LightGlassSpecularTop, LightGlassSpecularBottom)
+    ),
+    val primaryGradientBrush: Brush = Brush.horizontalGradient(
+        listOf(ElectricBlue, ElectricBlueLight)
+    ),
+    val ambientGlow: Color = CyanAccent
 )
 
 private val LightGlassColors = GlassColors(
@@ -35,7 +41,14 @@ private val LightGlassColors = GlassColors(
     specularBorder = LightGlassBorder,
     textPrimary = LightTextPrimary,
     textSecondary = LightTextSecondary,
-    textTertiary = LightTextTertiary
+    textTertiary = LightTextTertiary,
+    specularBorderBrush = Brush.verticalGradient(
+        listOf(LightGlassSpecularTop, LightGlassSpecularBottom)
+    ),
+    primaryGradientBrush = Brush.horizontalGradient(
+        listOf(ElectricBlue, ElectricBlueLight)
+    ),
+    ambientGlow = CyanAccent
 )
 
 private val DarkGlassColors = GlassColors(
@@ -45,7 +58,14 @@ private val DarkGlassColors = GlassColors(
     specularBorder = DarkGlassBorder,
     textPrimary = DarkTextPrimary,
     textSecondary = DarkTextSecondary,
-    textTertiary = DarkTextTertiary
+    textTertiary = DarkTextTertiary,
+    specularBorderBrush = Brush.verticalGradient(
+        listOf(DarkGlassSpecularTop, DarkGlassSpecularBottom)
+    ),
+    primaryGradientBrush = Brush.horizontalGradient(
+        listOf(ElectricBlue, CyanAccent)
+    ),
+    ambientGlow = CyanGlow
 )
 
 val LocalGlassColors = staticCompositionLocalOf { LightGlassColors }

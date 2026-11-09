@@ -1,17 +1,25 @@
 package com.pricelens
 
 import androidx.lifecycle.SavedStateHandle
+import com.pricelens.domain.model.NotificationRecord
 import com.pricelens.domain.model.PriceLensException
+import com.pricelens.domain.model.PriceObservation
 import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.ProductSummary
 import com.pricelens.domain.model.RetailerOffer
+import com.pricelens.domain.model.TargetPriceAlert
 import com.pricelens.domain.model.UnavailableRetailer
 import com.pricelens.domain.repository.ProductCatalogRepository
+import com.pricelens.domain.repository.TargetPriceAlertRepository
+import com.pricelens.domain.service.AlertEvaluator
 import com.pricelens.domain.usecase.GetProductComparisonUseCase
 import com.pricelens.presentation.comparison.ProductComparisonUiEvent
 import com.pricelens.presentation.comparison.ProductComparisonViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -99,13 +107,46 @@ class ProductComparisonViewModelTest {
             Result.success(emptyList())
     }
 
+    private class FakeTargetPriceAlertRepository : TargetPriceAlertRepository {
+        val alerts = mutableListOf<TargetPriceAlert>()
+        private val alertsFlow = MutableStateFlow<List<TargetPriceAlert>>(emptyList())
+
+        override suspend fun save(alert: TargetPriceAlert) {
+            alerts.removeAll { it.id == alert.id }
+            alerts.add(alert)
+            alertsFlow.value = alerts.toList()
+        }
+
+        override suspend fun getActiveAlerts(productId: String): List<TargetPriceAlert> =
+            alerts.filter { it.productId == productId && it.isActive }
+
+        override suspend fun deleteAlert(alertId: String) {
+            alerts.removeAll { it.id == alertId }
+            alertsFlow.value = alerts.toList()
+        }
+
+        override fun observeAlerts(productId: String): Flow<List<TargetPriceAlert>> =
+            alertsFlow.asStateFlow()
+
+        override suspend fun evaluate(
+            alert: TargetPriceAlert,
+            observation: PriceObservation
+        ): TargetPriceAlert = alert
+
+        override suspend fun notifications(alertId: String): List<NotificationRecord> = emptyList()
+    }
+
     private lateinit var catalogRepo: FakeProductCatalogRepository
+    private lateinit var alertRepo: FakeTargetPriceAlertRepository
+    private lateinit var evaluator: AlertEvaluator
     private lateinit var getComparisonUseCase: GetProductComparisonUseCase
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         catalogRepo = FakeProductCatalogRepository()
+        alertRepo = FakeTargetPriceAlertRepository()
+        evaluator = AlertEvaluator()
         getComparisonUseCase = GetProductComparisonUseCase(catalogRepo)
     }
 
@@ -117,7 +158,9 @@ class ProductComparisonViewModelTest {
     @Test
     fun `initial load with productId loads details and lowest price offer correctly`() = runTest {
         val savedStateHandle = SavedStateHandle(mapOf("productId" to "prod_sony_wh1000xm5"))
-        val viewModel = ProductComparisonViewModel(getComparisonUseCase, savedStateHandle)
+        val viewModel = ProductComparisonViewModel(
+            getComparisonUseCase, alertRepo, evaluator, savedStateHandle
+        )
 
         advanceUntilIdle()
 
@@ -138,6 +181,64 @@ class ProductComparisonViewModelTest {
     }
 
     @Test
+    fun `setting outside website price tracker saves alert and updates ui banner`() = runTest {
+        val savedStateHandle = SavedStateHandle(mapOf("productId" to "prod_sony_wh1000xm5"))
+        val viewModel = ProductComparisonViewModel(
+            getComparisonUseCase, alertRepo, evaluator, savedStateHandle
+        )
+        advanceUntilIdle()
+
+        // Open dialog for outside website tracking
+        viewModel.onEvent(
+            ProductComparisonUiEvent.OpenTrackPriceDialog(
+                retailerName = "Tata CLiQ",
+                currentPrice = 27000.0,
+                websiteUrl = "https://www.tatacliq.com/item"
+            )
+        )
+        assertTrue(viewModel.uiState.value.isTrackingDialogVisible)
+        assertEquals("Tata CLiQ", viewModel.uiState.value.trackingTargetRetailer)
+
+        // Change target price and submit
+        viewModel.onEvent(ProductComparisonUiEvent.TargetPriceChanged("24999"))
+        viewModel.onEvent(ProductComparisonUiEvent.SubmitTrackPrice)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isTrackingDialogVisible)
+        assertNotNull(viewModel.uiState.value.userNotificationBanner)
+        assertTrue(viewModel.uiState.value.userNotificationBanner!!.contains("Tata CLiQ"))
+        assertEquals(1, alertRepo.alerts.size)
+        assertEquals("Tata CLiQ", alertRepo.alerts[0].retailerName)
+        assertEquals(24999.0, alertRepo.alerts[0].targetPrice, 0.01)
+    }
+
+    @Test
+    fun `deleting price alert removes it from repository`() = runTest {
+        val savedStateHandle = SavedStateHandle(mapOf("productId" to "prod_sony_wh1000xm5"))
+        val viewModel = ProductComparisonViewModel(
+            getComparisonUseCase, alertRepo, evaluator, savedStateHandle
+        )
+        advanceUntilIdle()
+
+        viewModel.onEvent(
+            ProductComparisonUiEvent.OpenTrackPriceDialog(
+                retailerName = "Reliance Digital",
+                currentPrice = 28000.0
+            )
+        )
+        viewModel.onEvent(ProductComparisonUiEvent.TargetPriceChanged("25000"))
+        viewModel.onEvent(ProductComparisonUiEvent.SubmitTrackPrice)
+        advanceUntilIdle()
+        assertEquals(1, alertRepo.alerts.size)
+
+        val alertId = alertRepo.alerts[0].id
+        viewModel.onEvent(ProductComparisonUiEvent.DeletePriceAlert(alertId))
+        advanceUntilIdle()
+
+        assertEquals(0, alertRepo.alerts.size)
+    }
+
+    @Test
     fun `provider error displays safe error message`() = runTest {
         catalogRepo.shouldFail = true
         catalogRepo.failureException = PriceLensException.ProviderUnavailableException(
@@ -146,7 +247,9 @@ class ProductComparisonViewModelTest {
         )
 
         val savedStateHandle = SavedStateHandle(mapOf("productId" to "prod_sony_wh1000xm5"))
-        val viewModel = ProductComparisonViewModel(getComparisonUseCase, savedStateHandle)
+        val viewModel = ProductComparisonViewModel(
+            getComparisonUseCase, alertRepo, evaluator, savedStateHandle
+        )
 
         advanceUntilIdle()
 
@@ -164,7 +267,9 @@ class ProductComparisonViewModelTest {
         )
 
         val savedStateHandle = SavedStateHandle(mapOf("productId" to "prod_uncertain"))
-        val viewModel = ProductComparisonViewModel(getComparisonUseCase, savedStateHandle)
+        val viewModel = ProductComparisonViewModel(
+            getComparisonUseCase, alertRepo, evaluator, savedStateHandle
+        )
 
         advanceUntilIdle()
 
@@ -178,7 +283,9 @@ class ProductComparisonViewModelTest {
     fun `retry event reloads comparison details after failure is resolved`() = runTest {
         catalogRepo.shouldFail = true
         val savedStateHandle = SavedStateHandle(mapOf("productId" to "prod_sony_wh1000xm5"))
-        val viewModel = ProductComparisonViewModel(getComparisonUseCase, savedStateHandle)
+        val viewModel = ProductComparisonViewModel(
+            getComparisonUseCase, alertRepo, evaluator, savedStateHandle
+        )
 
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value.errorMessage != null)
@@ -196,7 +303,9 @@ class ProductComparisonViewModelTest {
     @Test
     fun `selecting alternative switches comparison details to chosen product`() = runTest {
         val savedStateHandle = SavedStateHandle(mapOf("productId" to "prod_sony_wh1000xm5"))
-        val viewModel = ProductComparisonViewModel(getComparisonUseCase, savedStateHandle)
+        val viewModel = ProductComparisonViewModel(
+            getComparisonUseCase, alertRepo, evaluator, savedStateHandle
+        )
         advanceUntilIdle()
 
         assertNotNull(viewModel.uiState.value.comparisonDetails)

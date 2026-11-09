@@ -14,16 +14,25 @@ data class AlertEvaluation(
 /**
  * Evaluates one observation at a time. Persisting lastEvaluatedObservationId and
  * the notification record makes retries safe at the repository boundary.
+ * Supports tracking specific outside website/retailer prices as well as product-wide lowest prices.
  */
 class AlertEvaluator(
     private val now: () -> Long = { System.currentTimeMillis() }
 ) {
-    fun createAlert(productId: String, targetPrice: Double, currency: String): TargetPriceAlert =
+    fun createAlert(
+        productId: String,
+        targetPrice: Double,
+        currency: String,
+        retailerName: String? = null,
+        websiteUrl: String? = null
+    ): TargetPriceAlert =
         TargetPriceAlert(
             id = UUID.randomUUID().toString(),
             productId = productId,
             targetPrice = targetPrice,
-            currency = currency
+            currency = currency,
+            retailerName = retailerName,
+            websiteUrl = websiteUrl
         )
 
     fun evaluate(
@@ -38,7 +47,10 @@ class AlertEvaluator(
             return AlertEvaluation(alert, reached = false, notifications = existingNotifications)
         }
 
-        val reached = observation.price <= alert.targetPrice && alert.reachedAt == null
+        val matchesRetailer = alert.retailerName.isNullOrBlank() ||
+            observation.retailerName.equals(alert.retailerName, ignoreCase = true)
+
+        val reached = matchesRetailer && observation.price <= alert.targetPrice && alert.reachedAt == null
         val notification = if (reached) {
             NotificationRecord(
                 id = "${alert.id}:${observation.id}",

@@ -16,6 +16,12 @@ interface TargetPriceAlertDao {
     @Query("SELECT * FROM target_price_alerts WHERE product_id = :productId ORDER BY id")
     fun observeAlerts(productId: String): Flow<List<TargetPriceAlertEntity>>
 
+    @Query("SELECT * FROM target_price_alerts WHERE product_id = :productId AND is_active = 1")
+    suspend fun getActiveAlerts(productId: String): List<TargetPriceAlertEntity>
+
+    @Query("DELETE FROM target_price_alerts WHERE id = :alertId")
+    suspend fun deleteAlert(alertId: String)
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertNotification(record: NotificationRecordEntity)
 

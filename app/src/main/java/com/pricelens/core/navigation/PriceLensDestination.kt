@@ -4,6 +4,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 sealed class PriceLensDestination(val route: String) {
+    data object Onboarding : PriceLensDestination("onboarding")
     data object Dashboard : PriceLensDestination("dashboard")
     data object Scanner : PriceLensDestination("scanner")
     data object Watchlist : PriceLensDestination("watchlist")
