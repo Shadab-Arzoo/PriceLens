@@ -1,8 +1,12 @@
 package com.pricelens.presentation.pasteurl
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -79,6 +83,7 @@ fun PasteUrlBottomSheet(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 32.dp)
+                .animateContentSize(animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f))
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(

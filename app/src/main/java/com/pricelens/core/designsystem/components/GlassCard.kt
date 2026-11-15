@@ -1,6 +1,7 @@
 package com.pricelens.core.designsystem.components
 
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
@@ -27,7 +28,8 @@ import androidx.compose.ui.unit.dp
 import com.pricelens.core.designsystem.PriceLensTheme
 
 /**
- * Modern frosted glass card with tactile spring response and specular perimeter bevel.
+ * Modern frosted glass card with responsive spring physics, dynamic elevation,
+ * and specular perimeter bevel.
  */
 @Composable
 fun GlassCard(
@@ -46,12 +48,21 @@ fun GlassCard(
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && onClick != null) 0.975f else 1f,
+        targetValue = if (isPressed && onClick != null) 0.972f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
             stiffness = Spring.StiffnessMediumLow
         ),
         label = "glassCardSpring"
+    )
+
+    val currentElevation by animateDpAsState(
+        targetValue = if (isPressed && onClick != null) 0.5.dp else elevation,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "glassCardElevation"
     )
 
     val effectiveBorderStroke = when {
@@ -77,7 +88,7 @@ fun GlassCard(
                 scaleY = scale
             }
             .shadow(
-                elevation = elevation,
+                elevation = currentElevation,
                 shape = shape,
                 ambientColor = Color.Black.copy(alpha = 0.05f),
                 spotColor = Color.Black.copy(alpha = 0.08f),

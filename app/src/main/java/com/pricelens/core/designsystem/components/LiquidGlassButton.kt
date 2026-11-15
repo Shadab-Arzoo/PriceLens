@@ -1,9 +1,16 @@
 package com.pricelens.core.designsystem.components
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,7 +51,7 @@ import com.pricelens.core.designsystem.PriceLensTheme
 
 /**
  * Premium Liquid Glass primary button with soft gradient, specular top highlight,
- * and fluid spring physics.
+ * dynamic elevation, and fluid spring physics.
  */
 @Composable
 fun LiquidGlassPrimaryButton(
@@ -63,12 +70,33 @@ fun LiquidGlassPrimaryButton(
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled && !loading) 0.965f else 1f,
+        targetValue = if (isPressed && enabled && !loading) 0.962f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
             stiffness = Spring.StiffnessMediumLow
         ),
         label = "primaryButtonScale"
+    )
+
+    val currentElevation by animateDpAsState(
+        targetValue = if (isPressed && enabled) 2.dp else if (enabled) 6.dp else 1.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "primaryButtonElevation"
+    )
+
+    // Subtle specular gloss pulse
+    val glintTransition = rememberInfiniteTransition(label = "buttonGlint")
+    val glintAlpha by glintTransition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.70f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glintAlpha"
     )
 
     Surface(
@@ -78,7 +106,7 @@ fun LiquidGlassPrimaryButton(
                 scaleY = scale
             }
             .shadow(
-                elevation = if (enabled) 6.dp else 1.dp,
+                elevation = currentElevation,
                 shape = shape,
                 ambientColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.25f),
                 spotColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f)
@@ -114,7 +142,7 @@ fun LiquidGlassPrimaryButton(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            // Subtle specular glass highlight along top edge
+            // Subtle specular glass highlight along top edge with soft breathing
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -124,7 +152,7 @@ fun LiquidGlassPrimaryButton(
                         Brush.horizontalGradient(
                             listOf(
                                 Color.Transparent,
-                                Color.White.copy(alpha = 0.5f),
+                                Color.White.copy(alpha = glintAlpha),
                                 Color.Transparent
                             )
                         )
@@ -177,7 +205,7 @@ fun LiquidGlassPrimaryButton(
 
 /**
  * Secondary liquid glass button with frosted translucent fill, specular outline,
- * and tactile spring compression.
+ * dynamic elevation, and tactile spring compression.
  */
 @Composable
 fun LiquidGlassSecondaryButton(
@@ -193,12 +221,21 @@ fun LiquidGlassSecondaryButton(
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.965f else 1f,
+        targetValue = if (isPressed && enabled) 0.962f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
             stiffness = Spring.StiffnessMediumLow
         ),
         label = "secondaryButtonScale"
+    )
+
+    val currentElevation by animateDpAsState(
+        targetValue = if (isPressed && enabled) 0.5.dp else 2.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "secondaryButtonElevation"
     )
 
     Surface(
@@ -207,7 +244,7 @@ fun LiquidGlassSecondaryButton(
                 scaleX = scale
                 scaleY = scale
             }
-            .shadow(elevation = 2.dp, shape = shape)
+            .shadow(elevation = currentElevation, shape = shape)
             .clip(shape)
             .clickable(
                 enabled = enabled,

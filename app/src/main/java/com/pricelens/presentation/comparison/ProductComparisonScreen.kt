@@ -58,6 +58,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -787,8 +788,22 @@ private fun PriceSparkline(
     val strokeColor = ElectricBlue
     val fillColor = ElectricBlue.copy(alpha = 0.15f)
 
+    var animationTriggered by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(points) {
+        animationTriggered = true
+    }
+
+    val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (animationTriggered) 1f else 0f,
+        animationSpec = androidx.compose.animation.core.tween(
+            durationMillis = 850,
+            easing = androidx.compose.animation.core.FastOutSlowInEasing
+        ),
+        label = "sparklineProgress"
+    )
+
     androidx.compose.foundation.Canvas(modifier = modifier) {
-        if (points.size < 2) return@Canvas
+        if (points.size < 2 || animatedProgress <= 0.01f) return@Canvas
         val width = size.width
         val height = size.height
         val minPrice = points.minOf { it.price }
@@ -796,8 +811,7 @@ private fun PriceSparkline(
         val priceRange = if (maxPrice - minPrice > 0) (maxPrice - minPrice) else 1.0
 
         val stepX = width / (points.size - 1)
-        val path = androidx.compose.ui.graphics.Path()
-        val fillPath = androidx.compose.ui.graphics.Path()
+        val fullStrokePath = androidx.compose.ui.graphics.Path()
 
         points.forEachIndexed { index, point ->
             val x = index * stepX
@@ -805,27 +819,38 @@ private fun PriceSparkline(
             val y = height - (normalizedY * (height - 16.dp.toPx()) + 8.dp.toPx())
 
             if (index == 0) {
-                path.moveTo(x, y)
-                fillPath.moveTo(x, height)
-                fillPath.lineTo(x, y)
+                fullStrokePath.moveTo(x, y)
             } else {
-                path.lineTo(x, y)
-                fillPath.lineTo(x, y)
+                fullStrokePath.lineTo(x, y)
             }
         }
 
-        fillPath.lineTo(width, height)
+        val pathMeasure = androidx.compose.ui.graphics.PathMeasure()
+        pathMeasure.setPath(fullStrokePath, forceClosed = false)
+        val pathLength = pathMeasure.length
+        val animatedPath = androidx.compose.ui.graphics.Path()
+        val currentLength = pathLength * animatedProgress
+        pathMeasure.getSegment(0f, currentLength, animatedPath, startWithMoveTo = true)
+
+        val currentPosition = pathMeasure.getPosition(currentLength)
+
+        // Draw animated fill under the drawn portion
+        val fillPath = androidx.compose.ui.graphics.Path()
+        fillPath.addPath(animatedPath)
+        fillPath.lineTo(currentPosition.x, height)
+        fillPath.lineTo(0f, height)
         fillPath.close()
 
         drawPath(
             path = fillPath,
             brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                listOf(fillColor, androidx.compose.ui.graphics.Color.Transparent)
+                listOf(fillColor.copy(alpha = animatedProgress * 0.18f), androidx.compose.ui.graphics.Color.Transparent)
             )
         )
 
+        // Draw the stroke
         drawPath(
-            path = path,
+            path = animatedPath,
             color = strokeColor,
             style = androidx.compose.ui.graphics.drawscope.Stroke(
                 width = 2.5.dp.toPx(),
@@ -834,14 +859,11 @@ private fun PriceSparkline(
             )
         )
 
-        val lastPoint = points.last()
-        val lastX = width
-        val lastNormY = ((lastPoint.price - minPrice) / priceRange).toFloat()
-        val lastY = height - (lastNormY * (height - 16.dp.toPx()) + 8.dp.toPx())
+        // Draw dot at current leading tip
         drawCircle(
             color = MintSuccess,
-            radius = 4.dp.toPx(),
-            center = androidx.compose.ui.geometry.Offset(lastX, lastY)
+            radius = (3.5f * animatedProgress).dp.toPx(),
+            center = currentPosition
         )
     }
 }
