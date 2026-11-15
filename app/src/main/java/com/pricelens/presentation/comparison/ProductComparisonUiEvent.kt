@@ -16,4 +16,5 @@ sealed interface ProductComparisonUiEvent {
     data object SubmitTrackPrice : ProductComparisonUiEvent
     data class DeletePriceAlert(val alertId: String) : ProductComparisonUiEvent
     data object DismissBanner : ProductComparisonUiEvent
+    data object ToggleWatchlist : ProductComparisonUiEvent
 }

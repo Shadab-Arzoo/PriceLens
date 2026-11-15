@@ -32,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.AddAlert
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -42,8 +43,10 @@ import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.RemoveShoppingCart
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -151,6 +154,45 @@ fun ProductComparisonScreen(
                     modifier = Modifier.weight(1f)
                 )
 
+                // Watchlist Bookmark Toggle
+                IconButton(onClick = { onEvent(ProductComparisonUiEvent.ToggleWatchlist) }) {
+                    Icon(
+                        imageVector = if (uiState.isSavedInWatchlist) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                        contentDescription = if (uiState.isSavedInWatchlist) "Remove from Watchlist" else "Save to Watchlist",
+                        tint = if (uiState.isSavedInWatchlist) ElectricBlue else PriceLensTheme.glassColors.textSecondary
+                    )
+                }
+
+                // Share Deal Button
+                val context = LocalContext.current
+                IconButton(
+                    onClick = {
+                        val details = uiState.comparisonDetails
+                        val lowestOffer = details?.lowestPriceOffer
+                        val productName = details?.name ?: uiState.productName
+                        val currencyFormat = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+                        val shareText = if (lowestOffer != null && lowestOffer.price != null) {
+                            "🔥 PriceLens Deal: $productName is available at the lowest price of ${currencyFormat.format(lowestOffer.price)} on ${lowestOffer.retailerName}!\nCheck offer: ${lowestOffer.productUrl}"
+                        } else {
+                            "🔍 Compare prices for $productName across Amazon, Flipkart, Croma & more on PriceLens!"
+                        }
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                            type = "text/plain"
+                        }
+                        val shareIntent = Intent.createChooser(sendIntent, "Share Price Comparison")
+                        context.startActivity(shareIntent)
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share deal",
+                        tint = PriceLensTheme.glassColors.textSecondary
+                    )
+                }
+
+                // Refresh Button
                 IconButton(onClick = { onEvent(ProductComparisonUiEvent.RefreshOffers) }) {
                     Icon(
                         imageVector = Icons.Default.Refresh,

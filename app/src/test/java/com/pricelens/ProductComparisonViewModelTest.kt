@@ -315,4 +315,21 @@ class ProductComparisonViewModelTest {
 
         assertEquals("prod_bose_qc45", viewModel.uiState.value.productId)
     }
+
+    @Test
+    fun `toggle watchlist adds product to watchlist and shows notification banner`() = runTest {
+        val savedStateHandle = SavedStateHandle(mapOf("productId" to "prod_sony_wh1000xm5"))
+        val viewModel = ProductComparisonViewModel(
+            getComparisonUseCase, alertRepo, evaluator, savedStateHandle
+        )
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isSavedInWatchlist)
+
+        viewModel.onEvent(ProductComparisonUiEvent.ToggleWatchlist)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.isSavedInWatchlist)
+        assertEquals("Added to Watchlist & tracking price alerts", viewModel.uiState.value.userNotificationBanner)
+    }
 }

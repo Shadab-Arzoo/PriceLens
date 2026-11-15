@@ -64,11 +64,13 @@ class ProductComparisonViewModel @Inject constructor(
     val uiState: StateFlow<ProductComparisonUiState> = _uiState.asStateFlow()
 
     private var alertsJob: Job? = null
+    private var watchlistJob: Job? = null
 
     init {
         if (initialProductId.isNotBlank()) {
             loadComparisonDetails(initialProductId)
             observeAlerts(initialProductId)
+            observeWatchlist(initialProductId)
         }
     }
 
@@ -120,6 +122,9 @@ class ProductComparisonViewModel @Inject constructor(
             ProductComparisonUiEvent.DismissBanner -> {
                 _uiState.update { it.copy(userNotificationBanner = null) }
             }
+            ProductComparisonUiEvent.ToggleWatchlist -> {
+                toggleWatchlist()
+            }
         }
     }
 
@@ -127,6 +132,7 @@ class ProductComparisonViewModel @Inject constructor(
         _uiState.update { it.copy(productId = id, productName = name) }
         loadComparisonDetails(id)
         observeAlerts(id)
+        observeWatchlist(id)
     }
 
     private fun observeAlerts(id: String) {
@@ -134,6 +140,53 @@ class ProductComparisonViewModel @Inject constructor(
         alertsJob = viewModelScope.launch {
             targetPriceAlertRepository.observeAlerts(id).collectLatest { alerts ->
                 _uiState.update { it.copy(activeAlerts = alerts) }
+            }
+        }
+    }
+
+    private fun observeWatchlist(id: String) {
+        watchlistJob?.cancel()
+        watchlistJob = viewModelScope.launch {
+            dashboardRepository.getWatchlistItems().collectLatest { items ->
+                val isSaved = items.any { it.productId == id }
+                _uiState.update { it.copy(isSavedInWatchlist = isSaved) }
+            }
+        }
+    }
+
+    private fun toggleWatchlist() {
+        val state = _uiState.value
+        val productId = state.productId
+        if (productId.isBlank()) return
+
+        viewModelScope.launch {
+            if (state.isSavedInWatchlist) {
+                dashboardRepository.removeFromWatchlist(productId)
+                _uiState.update {
+                    it.copy(
+                        isSavedInWatchlist = false,
+                        userNotificationBanner = "Removed from Watchlist"
+                    )
+                }
+            } else {
+                val details = state.comparisonDetails
+                val lowestPrice = details?.lowestPriceOffer?.price
+                val item = WatchlistItem(
+                    productId = productId,
+                    productName = details?.name ?: state.productName,
+                    brand = details?.brand,
+                    targetPrice = lowestPrice,
+                    currentLowestPrice = lowestPrice,
+                    currency = details?.lowestPriceOffer?.currency ?: "INR",
+                    addedAtTimestamp = System.currentTimeMillis()
+                )
+                dashboardRepository.addToWatchlist(item)
+                _uiState.update {
+                    it.copy(
+                        isSavedInWatchlist = true,
+                        userNotificationBanner = "Added to Watchlist & tracking price alerts"
+                    )
+                }
             }
         }
     }

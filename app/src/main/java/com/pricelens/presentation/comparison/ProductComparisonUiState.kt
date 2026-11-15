@@ -14,5 +14,6 @@ data class ProductComparisonUiState(
     val trackingTargetRetailer: String? = null,
     val trackingTargetPrice: String = "",
     val trackingWebsiteUrl: String = "",
-    val userNotificationBanner: String? = null
+    val userNotificationBanner: String? = null,
+    val isSavedInWatchlist: Boolean = false
 )

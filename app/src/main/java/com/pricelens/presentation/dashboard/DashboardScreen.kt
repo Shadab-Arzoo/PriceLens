@@ -131,6 +131,7 @@ fun DashboardScreen(
                 PriceLensTopBar(
                     title = stringResource(R.string.dashboard_title),
                     subtitle = stringResource(R.string.dashboard_subtitle),
+                    watchlistCount = uiState.watchlistItems.size,
                     onWatchlistClick = onNavigateToWatchlist
                 )
             }
@@ -399,20 +400,35 @@ private fun PasteLinkHeroCard(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                listOf("Amazon", "Flipkart", "Croma", "Reliance Digital", "Vijay Sales").forEach { store ->
+                listOf(
+                    "Amazon" to Color(0xFFFF9900),
+                    "Flipkart" to Color(0xFF2874F0),
+                    "Croma" to Color(0xFF00BFA5),
+                    "Reliance Digital" to Color(0xFFE53935),
+                    "Vijay Sales" to Color(0xFFD32F2F)
+                ).forEach { (store, accentColor) ->
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .background(PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
                             .border(0.5.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        Text(
-                            text = store,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = PriceLensTheme.glassColors.textSecondary,
-                            fontSize = 11.sp
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(5.dp)
+                                    .clip(CircleShape)
+                                    .background(accentColor)
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = store,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = PriceLensTheme.glassColors.textSecondary,
+                                fontSize = 11.sp
+                            )
+                        }
                     }
                 }
             }
