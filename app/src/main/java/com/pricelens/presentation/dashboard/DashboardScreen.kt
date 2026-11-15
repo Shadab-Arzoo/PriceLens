@@ -108,13 +108,18 @@ fun DashboardScreen(
     val clipboardText = remember(clipboardManager) {
         clipboardManager.getText()?.text?.trim().orEmpty()
     }
-    val isClipboardProductUrl = remember(clipboardText) {
-        val lower = clipboardText.lowercase()
-        (lower.startsWith("http://") || lower.startsWith("https://")) &&
-            (lower.contains("amazon.") || lower.contains("amzn.") ||
-             lower.contains("flipkart.") || lower.contains("myntra.") ||
-             lower.contains("ajio.") || lower.contains("croma.") ||
-             lower.contains("tatacliq.") || lower.contains("jiomart."))
+    val detectedClipboardUrl = remember(clipboardText) {
+        val regex = Regex("""https?://[^\s<>"{}|\\^`]+""", RegexOption.IGNORE_CASE)
+        val foundUrl = regex.find(clipboardText)?.value
+            ?: if (clipboardText.contains(".") && !clipboardText.contains(" ")) clipboardText else null
+        if (foundUrl != null) {
+            val lower = foundUrl.lowercase()
+            val isSupported = lower.contains("amazon.") || lower.contains("amzn.") || lower.contains("amzn.to") ||
+                lower.contains("flipkart.") || lower.contains("fkrt.it") || lower.contains("myntra.") ||
+                lower.contains("ajio.") || lower.contains("croma.") ||
+                lower.contains("tatacliq.") || lower.contains("jiomart.")
+            if (isSupported) foundUrl else null
+        } else null
     }
 
     Box(
@@ -151,15 +156,15 @@ fun DashboardScreen(
             }
 
             // 2b. Auto-Detected Clipboard URL Banner
-            if (isClipboardProductUrl && clipboardText != dismissedClipboardUrl) {
+            if (detectedClipboardUrl != null && detectedClipboardUrl != dismissedClipboardUrl) {
                 item(key = "clipboard_detected_banner") {
                     ClipboardDetectedBanner(
-                        url = clipboardText,
+                        url = detectedClipboardUrl,
                         onCompare = {
                             onEvent(DashboardUiEvent.OpenPasteUrlSheet)
-                            onEvent(DashboardUiEvent.PasteUrlInputChanged(clipboardText))
+                            onEvent(DashboardUiEvent.PasteUrlInputChanged(detectedClipboardUrl))
                         },
-                        onDismiss = { dismissedClipboardUrl = clipboardText }
+                        onDismiss = { dismissedClipboardUrl = detectedClipboardUrl }
                     )
                 }
             }

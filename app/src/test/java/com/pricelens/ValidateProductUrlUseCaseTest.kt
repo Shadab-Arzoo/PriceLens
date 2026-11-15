@@ -122,4 +122,38 @@ class ValidateProductUrlUseCaseTest {
         val blankResult = useCase("    ")
         assertTrue(blankResult is UrlValidationResult.InvalidUrl)
     }
+
+    @Test
+    fun `amzn in and amzn to shortlinks return supported amazon result`() {
+        val resultIn = useCase("https://amzn.in/d/B0CHX1W1XY")
+        assertTrue(resultIn is UrlValidationResult.Supported)
+        val supportedIn = resultIn as UrlValidationResult.Supported
+        assertEquals("Amazon India", supportedIn.retailerName)
+        assertEquals("prod_iphone_15_128", supportedIn.suggestedIdentity?.resolvedProductId)
+
+        val resultTo = useCase("https://amzn.to/B09XS7JWHH")
+        assertTrue(resultTo is UrlValidationResult.Supported)
+        val supportedTo = resultTo as UrlValidationResult.Supported
+        assertEquals("Amazon India", supportedTo.retailerName)
+        assertEquals("prod_sony_wh1000xm5", supportedTo.suggestedIdentity?.resolvedProductId)
+    }
+
+    @Test
+    fun `fkrt it shortlink returns supported flipkart result`() {
+        val result = useCase("https://fkrt.it/s/itm6ac6485515ae4")
+        assertTrue(result is UrlValidationResult.Supported)
+        val supported = result as UrlValidationResult.Supported
+        assertEquals("Flipkart", supported.retailerName)
+        assertEquals("prod_iphone_15_128", supported.suggestedIdentity?.resolvedProductId)
+    }
+
+    @Test
+    fun `embedded url in shared text message extracts valid url and matches product`() {
+        val sharedText = "Check this deal out! Apple iPhone 15 on Flipkart: https://www.flipkart.com/apple-iphone-15-black-128-gb/p/itm6ac6485515ae4 Don't miss it!"
+        val result = useCase(sharedText)
+        assertTrue(result is UrlValidationResult.Supported)
+        val supported = result as UrlValidationResult.Supported
+        assertEquals("Flipkart", supported.retailerName)
+        assertEquals("prod_iphone_15_128", supported.suggestedIdentity?.resolvedProductId)
+    }
 }

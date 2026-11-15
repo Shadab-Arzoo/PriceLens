@@ -13,20 +13,22 @@
 
 You can download the pre-built, installable Android APK directly from our GitHub Releases:
 
-👉 **[Download PriceLens APK (v1.3.4)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
+👉 **[Download PriceLens APK (v1.3.5)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
 
 ### Installation Instructions
-1. Download `pricelens-v1.3.4.apk` onto your Android device (or transfer via USB / adb).
+1. Download `pricelens-v1.3.5.apk` onto your Android device (or transfer via USB / adb).
 2. Tap the downloaded APK to install. If prompted by Android, allow "Install unknown apps" for your browser or file manager.
 3. Open **PriceLens** and enjoy comparing prices!
 
-*(Alternatively install via adb: `adb install -r pricelens-v1.3.4.apk`)*
+*(Alternatively install via adb: `adb install -r pricelens-v1.3.5.apk`)*
 
 ---
 
 ## ✨ Features
 
 - **🔍 Truthful Multi-Retailer Comparison**: Real-time normalized offers across Amazon, Flipkart, Croma, Reliance Digital, and Vijay Sales with lowest-price badges and explicit out-of-stock / unavailable retailer indicators.
+- **👆 Interactive Price History Touch Scrubbing**: Real-time touch and drag gestures on the Canvas price sparkline with tactile haptic feedback (`HapticFeedbackType.TextHandleMove`), dashed vertical guide, and instant observation callouts showing retailer, timestamp, and historical price.
+- **🔗 Smart Native Shortlinks & Share Text Parsing**: Seamlessly parses short links (`amzn.to`, `amzn.in`, `fkrt.it`) and extracts URLs from full app share messages when sharing directly from Amazon or Flipkart apps.
 - **📲 Android System "Share via PriceLens" (`ACTION_SEND`)**: Tap "Share" directly within Amazon, Flipkart, Myntra, or Chrome and select **PriceLens** from Android's native share sheet for instantaneous comparison without manual copying.
 - **📋 Smart Clipboard Auto-Detection**: Instant floating glass banner when a supported retailer link is detected in your clipboard for one-tap comparison.
 - **📌 Dedicated Tracked Watchlist Screen**: Comprehensive alert dashboard with live price tracker stats, real-time savings badges ("Target met! Price dropped by ₹..."), and instant product navigation.

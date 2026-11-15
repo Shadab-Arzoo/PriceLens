@@ -24,11 +24,16 @@ class ValidateProductUrlUseCase @Inject constructor() {
 
     private val supportedRetailers = listOf(
         "amazon.in" to "Amazon India",
+        "amzn.in" to "Amazon India",
+        "amzn.to" to "Amazon India",
         "flipkart.com" to "Flipkart",
+        "fkrt.it" to "Flipkart",
         "croma.com" to "Croma",
         "reliancedigital.in" to "Reliance Digital",
         "vijaysales.com" to "Vijay Sales"
     )
+
+    private val embeddedUrlRegex = Regex("""https?://[^\s<>"{}|\\^`]+""", RegexOption.IGNORE_CASE)
 
     // Provider-approved mappings for catalog product resolution from supported URL identifiers
     private val urlToProductMappings = mapOf(
@@ -61,10 +66,13 @@ class ValidateProductUrlUseCase @Inject constructor() {
             return UrlValidationResult.InvalidUrl("URL cannot be empty.")
         }
 
-        val urlWithScheme = if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
-            "https://$trimmed"
+        val extractedUrl = embeddedUrlRegex.find(trimmed)?.value
+        val candidateUrl = extractedUrl ?: trimmed
+
+        val urlWithScheme = if (!candidateUrl.startsWith("http://") && !candidateUrl.startsWith("https://")) {
+            "https://$candidateUrl"
         } else {
-            trimmed
+            candidateUrl
         }
 
         val uri = try {
@@ -101,6 +109,8 @@ class ValidateProductUrlUseCase @Inject constructor() {
         // 1. Amazon ASIN extraction
         val amazonAsinMatch = "/dp/([A-Z0-9]{10})".toRegex().find(path)
             ?: "/gp/product/([A-Z0-9]{10})".toRegex().find(path)
+            ?: "/d/([A-Z0-9]{10})".toRegex().find(path)
+            ?: "/([A-Z0-9]{10})$".toRegex().find(path)
         if (amazonAsinMatch != null) {
             val asin = amazonAsinMatch.groupValues[1]
             val mapping = urlToProductMappings[asin]
@@ -138,6 +148,8 @@ class ValidateProductUrlUseCase @Inject constructor() {
 
         // 2. Flipkart item ID extraction
         val flipkartMatch = "/p/([a-zA-Z0-9]+)".toRegex().find(path)
+            ?: "/s/([a-zA-Z0-9]+)".toRegex().find(path)
+            ?: "/dl/([a-zA-Z0-9]+)".toRegex().find(path)
         if (flipkartMatch != null) {
             val itemId = flipkartMatch.groupValues[1]
             val mapping = urlToProductMappings[itemId]

@@ -3,13 +3,24 @@ package com.pricelens.presentation.comparison
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -762,6 +773,13 @@ private fun TrackOutsidePriceDialog(
 
 @Composable
 private fun PriceHistoryCard(history: List<com.pricelens.domain.model.PriceHistoryPoint>) {
+    var selectedPoint by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf<com.pricelens.domain.model.PriceHistoryPoint?>(null)
+    }
+    val dateFormatter = androidx.compose.runtime.remember {
+        SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault())
+    }
+
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
@@ -800,13 +818,67 @@ private fun PriceHistoryCard(history: List<com.pricelens.domain.model.PriceHisto
                 val average = prices.average()
                 val current = history.last().price
 
+                AnimatedVisibility(
+                    visible = selectedPoint != null,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    selectedPoint?.let { pt ->
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = PriceLensTheme.glassColors.surfaceHighlight,
+                            border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.5f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = pt.retailerName.ifBlank { "Recorded Observation" },
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = CyanAccent
+                                    )
+                                    Text(
+                                        text = dateFormatter.format(Date(pt.timestamp)),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = PriceLensTheme.glassColors.textSecondary
+                                    )
+                                }
+                                Text(
+                                    text = "₹${"%,.0f".format(pt.price)}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MintSuccess
+                                )
+                            }
+                        }
+                    }
+                }
+
                 PriceSparkline(
                     points = history,
+                    selectedPoint = selectedPoint,
+                    onPointSelected = { selectedPoint = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(80.dp)
+                        .height(84.dp)
                         .padding(vertical = 4.dp)
                 )
+
+                if (selectedPoint == null) {
+                    Text(
+                        text = "💡 Touch & drag chart to inspect historical price points",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = PriceLensTheme.glassColors.textSecondary.copy(alpha = 0.75f),
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -825,10 +897,13 @@ private fun PriceHistoryCard(history: List<com.pricelens.domain.model.PriceHisto
 @Composable
 private fun PriceSparkline(
     points: List<com.pricelens.domain.model.PriceHistoryPoint>,
+    selectedPoint: com.pricelens.domain.model.PriceHistoryPoint? = null,
+    onPointSelected: (com.pricelens.domain.model.PriceHistoryPoint?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val strokeColor = ElectricBlue
     val fillColor = ElectricBlue.copy(alpha = 0.15f)
+    val haptic = LocalHapticFeedback.current
 
     var animationTriggered by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(points) {
@@ -844,7 +919,38 @@ private fun PriceSparkline(
         label = "sparklineProgress"
     )
 
-    androidx.compose.foundation.Canvas(modifier = modifier) {
+    val scrubModifier = if (points.size >= 2) {
+        Modifier.pointerInput(points) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                val stepWidth = (size.width.toFloat() / (points.size - 1)).coerceAtLeast(1f)
+                var currentIdx = (down.position.x / stepWidth).roundToInt().coerceIn(0, points.lastIndex)
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onPointSelected(points[currentIdx])
+
+                try {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val change = event.changes.firstOrNull() ?: break
+                        if (!change.pressed) break
+                        val newIdx = (change.position.x / stepWidth).roundToInt().coerceIn(0, points.lastIndex)
+                        if (newIdx != currentIdx) {
+                            currentIdx = newIdx
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onPointSelected(points[newIdx])
+                        }
+                        change.consume()
+                    }
+                } finally {
+                    onPointSelected(null)
+                }
+            }
+        }
+    } else {
+        Modifier
+    }
+
+    androidx.compose.foundation.Canvas(modifier = modifier.then(scrubModifier)) {
         if (points.size < 2 || animatedProgress <= 0.01f) return@Canvas
         val width = size.width
         val height = size.height
@@ -886,7 +992,7 @@ private fun PriceSparkline(
         drawPath(
             path = fillPath,
             brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                listOf(fillColor.copy(alpha = animatedProgress * 0.18f), androidx.compose.ui.graphics.Color.Transparent)
+                listOf(fillColor.copy(alpha = animatedProgress * 0.18f), Color.Transparent)
             )
         )
 
@@ -901,12 +1007,54 @@ private fun PriceSparkline(
             )
         )
 
-        // Draw dot at current leading tip
-        drawCircle(
-            color = MintSuccess,
-            radius = (3.5f * animatedProgress).dp.toPx(),
-            center = currentPosition
-        )
+        if (selectedPoint == null) {
+            // Draw dot at current leading tip
+            drawCircle(
+                color = MintSuccess,
+                radius = (3.5f * animatedProgress).dp.toPx(),
+                center = currentPosition
+            )
+        } else {
+            val selectedIdx = points.indexOf(selectedPoint)
+            if (selectedIdx >= 0) {
+                val ptX = selectedIdx * stepX
+                val normalizedPtY = ((selectedPoint.price - minPrice) / priceRange).toFloat()
+                val ptY = height - (normalizedPtY * (height - 16.dp.toPx()) + 8.dp.toPx())
+                val centerPt = Offset(ptX, ptY)
+
+                // Vertical hairline scrub guide
+                drawLine(
+                    color = CyanAccent.copy(alpha = 0.65f),
+                    start = Offset(ptX, 0f),
+                    end = Offset(ptX, height),
+                    strokeWidth = 1.5.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(
+                        floatArrayOf(6.dp.toPx(), 4.dp.toPx()), 0f
+                    )
+                )
+
+                // Glow ring
+                drawCircle(
+                    color = CyanAccent.copy(alpha = 0.25f),
+                    radius = 9.dp.toPx(),
+                    center = centerPt
+                )
+
+                // Solid outer ring
+                drawCircle(
+                    color = CyanAccent,
+                    radius = 5.dp.toPx(),
+                    center = centerPt
+                )
+
+                // Core white dot
+                drawCircle(
+                    color = Color.White,
+                    radius = 2.5.dp.toPx(),
+                    center = centerPt
+                )
+            }
+        }
     }
 }
 
