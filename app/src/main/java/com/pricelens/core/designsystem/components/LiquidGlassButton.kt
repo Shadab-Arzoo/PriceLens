@@ -1,5 +1,7 @@
 package com.pricelens.core.designsystem.components
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
@@ -41,8 +43,8 @@ import androidx.compose.ui.unit.dp
 import com.pricelens.core.designsystem.PriceLensTheme
 
 /**
- * An Apple-style primary liquid glass button with vibrant gradient, specular bevel,
- * and tactile spring compression.
+ * Premium Liquid Glass primary button with soft gradient, specular top highlight,
+ * and fluid spring physics.
  */
 @Composable
 fun LiquidGlassPrimaryButton(
@@ -53,16 +55,19 @@ fun LiquidGlassPrimaryButton(
     trailingIcon: ImageVector? = null,
     enabled: Boolean = true,
     loading: Boolean = false,
-    shape: Shape = RoundedCornerShape(16.dp),
-    height: Dp = 54.dp,
+    shape: Shape = RoundedCornerShape(18.dp),
+    height: Dp = 52.dp,
     gradientBrush: Brush = PriceLensTheme.glassColors.primaryGradientBrush
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled && !loading) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = 0.70f, stiffness = 400f),
+        targetValue = if (isPressed && enabled && !loading) 0.965f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
         label = "primaryButtonScale"
     )
 
@@ -75,8 +80,8 @@ fun LiquidGlassPrimaryButton(
             .shadow(
                 elevation = if (enabled) 6.dp else 1.dp,
                 shape = shape,
-                ambientColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f),
-                spotColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.45f)
+                ambientColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.25f),
+                spotColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f)
             )
             .clip(shape)
             .clickable(
@@ -91,8 +96,8 @@ fun LiquidGlassPrimaryButton(
             1.dp,
             Brush.verticalGradient(
                 listOf(
-                    Color.White.copy(alpha = 0.5f),
-                    Color.White.copy(alpha = 0.15f)
+                    Color.White.copy(alpha = 0.45f),
+                    Color.White.copy(alpha = 0.1f)
                 )
             )
         )
@@ -104,63 +109,65 @@ fun LiquidGlassPrimaryButton(
                 .background(
                     if (enabled) gradientBrush
                     else Brush.horizontalGradient(
-                        listOf(Color.Gray.copy(alpha = 0.4f), Color.Gray.copy(alpha = 0.3f))
+                        listOf(Color.Gray.copy(alpha = 0.35f), Color.Gray.copy(alpha = 0.25f))
                     )
                 ),
             contentAlignment = Alignment.Center
         ) {
-            // Top specular highlight reflection
+            // Subtle specular glass highlight along top edge
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(1.5.dp)
+                    .height(1.dp)
                     .align(Alignment.TopCenter)
                     .background(
                         Brush.horizontalGradient(
                             listOf(
                                 Color.Transparent,
-                                Color.White.copy(alpha = 0.6f),
+                                Color.White.copy(alpha = 0.5f),
                                 Color.Transparent
                             )
                         )
                     )
             )
 
-            if (loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = Color.White,
-                    strokeWidth = 2.5.dp
-                )
-            } else {
-                Row(
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    if (icon != null) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                    }
-                    Text(
-                        text = text,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+            Crossfade(targetState = loading, label = "buttonLoadingTransition") { isLoading ->
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = Color.White,
+                        strokeWidth = 2.5.dp
                     )
-                    if (trailingIcon != null) {
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Icon(
-                            imageVector = trailingIcon,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
+                } else {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        if (icon != null) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(19.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text(
+                            text = text,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
                         )
+                        if (trailingIcon != null) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = trailingIcon,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -169,8 +176,8 @@ fun LiquidGlassPrimaryButton(
 }
 
 /**
- * An Apple-style secondary liquid glass button with frosted translucent fill,
- * specular outline, and spring bounce.
+ * Secondary liquid glass button with frosted translucent fill, specular outline,
+ * and tactile spring compression.
  */
 @Composable
 fun LiquidGlassSecondaryButton(
@@ -179,15 +186,18 @@ fun LiquidGlassSecondaryButton(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(16.dp),
-    height: Dp = 50.dp
+    shape: Shape = RoundedCornerShape(18.dp),
+    height: Dp = 48.dp
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = 0.70f, stiffness = 400f),
+        targetValue = if (isPressed && enabled) 0.965f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
         label = "secondaryButtonScale"
     )
 
@@ -216,7 +226,7 @@ fun LiquidGlassSecondaryButton(
             contentAlignment = Alignment.Center
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 20.dp),
+                modifier = Modifier.padding(horizontal = 18.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {

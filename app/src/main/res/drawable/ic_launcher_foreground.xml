@@ -1,29 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Outer magnifying lens ring -->
+
+    <!-- Lens Glass Surface Fill with Frosted Gradient -->
+    <path android:pathData="M48,27 A21,21 0 1,1 47.9,27 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="32"
+                android:startY="30"
+                android:endX="66"
+                android:endY="66"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#3DFFFFFF" />
+                <item android:offset="0.6" android:color="#1A38BDF8" />
+                <item android:offset="1.0" android:color="#102563EB" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner Refraction Bevel Ring -->
     <path
-        android:fillColor="#00000000"
+        android:pathData="M48,30 A18,18 0 1,1 47.9,30 Z"
+        android:strokeWidth="1.2"
+        android:strokeColor="#26FFFFFF"
+        android:fillColor="#00000000" />
+
+    <!-- Stylized Rupee Currency Symbol (Geometric & Crisp) -->
+    <!-- Top Horizontal Crossbar -->
+    <path
+        android:pathData="M39,39 L57,39"
+        android:strokeWidth="2.8"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Second Horizontal Crossbar -->
+    <path
+        android:pathData="M39,45 L54,45"
+        android:strokeWidth="2.8"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Stem & Upper Curve -->
+    <path
+        android:pathData="M44,39 L44,49 C47.5,49.2 54,48.5 54,44.2 C54,39.5 47,39 44,39"
+        android:strokeWidth="2.8"
+        android:strokeColor="#FFFFFF"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:pathData="M50,30 A22,22 0 1,1 49.9,30 Z" />
-    <!-- Lens handle -->
+        android:fillColor="#00000000" />
+
+    <!-- Diagonal Leg -->
     <path
-        android:fillColor="#00000000"
+        android:pathData="M45,49 L55,59"
+        android:strokeWidth="2.8"
         android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Emerald Best-Deal Focal Gem (Savings indicator at top-right of lens) -->
+    <path
+        android:pathData="M56,36 A3,3 0 1,1 55.9,36 Z"
+        android:fillColor="#10B981" />
+    <path
+        android:pathData="M56,36 A4.5,4.5 0 1,1 55.9,36 Z"
+        android:strokeWidth="0.8"
+        android:strokeColor="#34D399"
+        android:fillColor="#00000000" />
+
+    <!-- Top-Left Glass Glint Arc (Specular Reflection) -->
+    <path
+        android:pathData="M33,43 A17,17 0 0,1 43,33"
+        android:strokeWidth="2.2"
+        android:strokeColor="#80FFFFFF"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Outer Specular Lens Rim -->
+    <path
+        android:pathData="M48,27 A21,21 0 1,1 47.9,27 Z"
+        android:strokeWidth="3.6"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="27"
+                android:startY="27"
+                android:endX="69"
+                android:endY="69"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFFF" />
+                <item android:offset="0.45" android:color="#E0E7FF" />
+                <item android:offset="1.0" android:color="#60A5FA" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Handle Joint Collar Ring -->
+    <path
+        android:pathData="M61,61 L65,65"
+        android:strokeWidth="6"
+        android:strokeColor="#93C5FD"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Ergonomic Lens Handle -->
+    <path
+        android:pathData="M64,64 L79,79"
         android:strokeWidth="5"
-        android:strokeLineCap="round"
-        android:pathData="M66,68 L82,84" />
-    <!-- Center price tag / currency symbol hint -->
-    <path
-        android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="4"
         android:strokeLineCap="round"
-        android:pathData="M43,42 L57,42 M43,48 L55,48 M47,42 C54,44 54,54 45,56 L57,64" />
+        android:fillColor="#00000000" />
+
+    <!-- Subtle Optical Glint Star at Top-Right -->
+    <path
+        android:pathData="M69,27 L70,30 L73,31 L70,32 L69,35 L68,32 L65,31 L68,30 Z"
+        android:fillColor="#7DD3FC" />
 </vector>

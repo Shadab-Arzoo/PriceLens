@@ -1,6 +1,7 @@
 package com.pricelens.core.navigation
 
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -30,8 +31,6 @@ import com.pricelens.presentation.comparison.ProductComparisonViewModel
 import com.pricelens.presentation.dashboard.DashboardRoute
 import com.pricelens.presentation.dashboard.DashboardViewModel
 import com.pricelens.presentation.onboarding.OnboardingScreen
-import com.pricelens.presentation.scanner.ScannerRoute
-import com.pricelens.presentation.scanner.ScannerViewModel
 import com.pricelens.presentation.search.SearchRoute
 import com.pricelens.presentation.search.SearchViewModel
 
@@ -56,27 +55,27 @@ fun PriceLensNavGraph(
         modifier = modifier,
         enterTransition = {
             slideInHorizontally(
-                initialOffsetX = { 350 },
-                animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f)
-            ) + fadeIn()
+                initialOffsetX = { fullWidth -> fullWidth / 4 },
+                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
+            ) + fadeIn(animationSpec = tween(240))
         },
         exitTransition = {
             slideOutHorizontally(
-                targetOffsetX = { -350 },
-                animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f)
-            ) + fadeOut()
+                targetOffsetX = { fullWidth -> -fullWidth / 4 },
+                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
+            ) + fadeOut(animationSpec = tween(240))
         },
         popEnterTransition = {
             slideInHorizontally(
-                initialOffsetX = { -350 },
-                animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f)
-            ) + fadeIn()
+                initialOffsetX = { fullWidth -> -fullWidth / 4 },
+                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
+            ) + fadeIn(animationSpec = tween(240))
         },
         popExitTransition = {
             slideOutHorizontally(
-                targetOffsetX = { 350 },
-                animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f)
-            ) + fadeOut()
+                targetOffsetX = { fullWidth -> fullWidth / 4 },
+                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
+            ) + fadeOut(animationSpec = tween(240))
         }
     ) {
         // 1. Onboarding / Intro Screen
@@ -93,14 +92,11 @@ fun PriceLensNavGraph(
             )
         }
 
-        // 2. Main Dashboard Screen
+        // 2. Main Dashboard Screen (Link-First Experience)
         composable(PriceLensDestination.Dashboard.route) {
             val viewModel: DashboardViewModel = hiltViewModel()
             DashboardRoute(
                 viewModel = viewModel,
-                onNavigateToScan = {
-                    navController.navigate(PriceLensDestination.Scanner.route)
-                },
                 onNavigateToSearch = { query ->
                     navController.navigate(PriceLensDestination.Search.createRoute(query))
                 },
@@ -115,24 +111,7 @@ fun PriceLensNavGraph(
             )
         }
 
-        // 3. Scanner Screen
-        composable(PriceLensDestination.Scanner.route) {
-            val viewModel: ScannerViewModel = hiltViewModel()
-            ScannerRoute(
-                viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToComparison = { productId, productName ->
-                    navController.navigate(
-                        PriceLensDestination.ProductComparison.createRoute(productId, productName)
-                    )
-                },
-                onNavigateToSearch = { query ->
-                    navController.navigate(PriceLensDestination.Search.createRoute(query))
-                }
-            )
-        }
-
-        // 4. Search Screen
+        // 3. Search Screen
         composable(
             route = PriceLensDestination.Search.route,
             arguments = listOf(
@@ -154,7 +133,7 @@ fun PriceLensNavGraph(
             )
         }
 
-        // 5. Product Comparison Screen
+        // 4. Product Comparison Screen
         composable(
             route = PriceLensDestination.ProductComparison.route,
             arguments = listOf(
@@ -174,7 +153,7 @@ fun PriceLensNavGraph(
             )
         }
 
-        // 6. Watchlist Screen
+        // 5. Watchlist Screen
         composable(PriceLensDestination.Watchlist.route) {
             Box(
                 modifier = Modifier

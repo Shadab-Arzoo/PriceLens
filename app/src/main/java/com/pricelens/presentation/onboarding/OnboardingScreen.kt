@@ -15,8 +15,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -42,13 +40,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Icon
@@ -64,7 +59,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -77,9 +71,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.pricelens.R
 import com.pricelens.core.designsystem.CyanAccent
-import com.pricelens.core.designsystem.CyanGlow
 import com.pricelens.core.designsystem.ElectricBlue
-import com.pricelens.core.designsystem.ElectricBlueLight
 import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
@@ -95,15 +87,6 @@ fun OnboardingScreen(
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { 4 })
 
-    var hasCameraPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED
-        )
-    }
-
     var hasNotificationPermission by remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -115,12 +98,6 @@ fun OnboardingScreen(
                 true
             }
         )
-    }
-
-    val cameraPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasCameraPermission = isGranted
     }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -154,7 +131,7 @@ fun OnboardingScreen(
                     Box(
                         modifier = Modifier
                             .size(10.dp)
-                            .background(CyanAccent, CircleShape)
+                            .background(ElectricBlue, CircleShape)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -190,9 +167,7 @@ fun OnboardingScreen(
                     1 -> OnboardingSlide2()
                     2 -> OnboardingSlide3()
                     3 -> OnboardingSlide4(
-                        hasCameraPermission = hasCameraPermission,
                         hasNotificationPermission = hasNotificationPermission,
-                        onRequestCamera = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) },
                         onRequestNotifications = {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -209,7 +184,7 @@ fun OnboardingScreen(
                     .padding(horizontal = 24.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Expanding Apple-style Page Indicator
+                // Expanding Modern Page Indicator
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
@@ -221,7 +196,7 @@ fun OnboardingScreen(
                             animationSpec = spring(dampingRatio = 0.75f, stiffness = 400f),
                             label = "indicatorWidth"
                         )
-                        val color = if (isSelected) CyanAccent else PriceLensTheme.glassColors.specularBorder
+                        val color = if (isSelected) ElectricBlue else PriceLensTheme.glassColors.specularBorder
 
                         Box(
                             modifier = Modifier
@@ -249,8 +224,7 @@ fun OnboardingScreen(
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
                             }
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth()
+                    }
                 )
             }
         }
@@ -258,7 +232,7 @@ fun OnboardingScreen(
 }
 
 /**
- * Slide 1: Welcome & Multi-Retailer Price Comparison
+ * Slide 1: Welcome & Retailer Coverage
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -271,10 +245,10 @@ private fun OnboardingSlide1() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Hero Graphic with Liquid Glass
+        // Floating Hero Badge
         GlassCard(
-            modifier = Modifier.size(130.dp),
-            shape = RoundedCornerShape(32.dp),
+            modifier = Modifier.size(110.dp),
+            shape = CircleShape,
             elevation = 6.dp
         ) {
             Box(
@@ -285,7 +259,7 @@ private fun OnboardingSlide1() {
                     imageVector = Icons.Default.Storefront,
                     contentDescription = null,
                     tint = ElectricBlue,
-                    modifier = Modifier.size(64.dp)
+                    modifier = Modifier.size(54.dp)
                 )
             }
         }
@@ -338,7 +312,7 @@ private fun OnboardingSlide1() {
 }
 
 /**
- * Slide 2: Liquid Glass UI & Fluid Spring Animations
+ * Slide 2: Liquid Glass UI & Deal Confidence
  */
 @Composable
 private fun OnboardingSlide2() {
@@ -350,11 +324,11 @@ private fun OnboardingSlide2() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Simulated Liquid Glass Preview Card
+        // Simulated Preview Card
         GlassCard(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            elevation = 8.dp
+            elevation = 6.dp
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Row(
@@ -366,12 +340,12 @@ private fun OnboardingSlide2() {
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
-                            tint = CyanAccent,
-                            modifier = Modifier.size(24.dp)
+                            tint = ElectricBlue,
+                            modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Live Specular Refraction",
+                            text = "Verified Price Match",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = PriceLensTheme.glassColors.textPrimary
@@ -454,21 +428,10 @@ private fun OnboardingSlide2() {
 }
 
 /**
- * Slide 3: In-Store Barcode Scanner
+ * Slide 3: Instant Store Link Comparison (Replaced barcode scan!)
  */
 @Composable
 private fun OnboardingSlide3() {
-    val infiniteTransition = rememberInfiniteTransition(label = "scannerBeam")
-    val laserPosition by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "laserPosition"
-    )
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -477,41 +440,76 @@ private fun OnboardingSlide3() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Viewfinder simulation
-        Box(
-            modifier = Modifier
-                .size(180.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(Color.Black.copy(alpha = 0.85f))
-                .border(2.dp, CyanAccent, RoundedCornerShape(28.dp)),
-            contentAlignment = Alignment.Center
+        // Link paste simulation card
+        GlassCard(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(22.dp),
+            elevation = 6.dp
         ) {
-            Icon(
-                imageVector = Icons.Default.QrCodeScanner,
-                contentDescription = null,
-                tint = CyanAccent.copy(alpha = 0.7f),
-                modifier = Modifier.size(72.dp)
-            )
-
-            // Animated Laser Beam
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.5.dp)
-                    .offset(y = ((laserPosition - 0.5f) * 120).dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(
-                                Color.Transparent,
-                                CyanGlow,
-                                Color.White,
-                                CyanGlow,
-                                Color.Transparent
-                            )
-                        )
+            Column(modifier = Modifier.padding(18.dp)) {
+                // Mock link input
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(PriceLensTheme.glassColors.surfaceHighlight)
+                        .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Link,
+                        contentDescription = null,
+                        tint = ElectricBlue,
+                        modifier = Modifier.size(18.dp)
                     )
-                    .shadow(elevation = 6.dp, spotColor = CyanGlow)
-            )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "https://amazon.in/dp/B0CHX1W1XY…",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PriceLensTheme.glassColors.textSecondary,
+                        maxLines = 1
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Comparison result preview
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Apple iPhone 15 (128GB)",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textPrimary
+                        )
+                        Text(
+                            text = "Compared across 5 verified retailers",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PriceLensTheme.glassColors.textSecondary
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MintSuccess.copy(alpha = 0.15f))
+                            .border(1.dp, MintSuccess.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "Flipkart ₹64,999",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MintSuccess
+                        )
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(28.dp))
@@ -537,13 +535,11 @@ private fun OnboardingSlide3() {
 }
 
 /**
- * Slide 4: Interactive Permissions & Privacy Primer
+ * Slide 4: Interactive Permissions & Privacy Primer (No camera required!)
  */
 @Composable
 private fun OnboardingSlide4(
-    hasCameraPermission: Boolean,
     hasNotificationPermission: Boolean,
-    onRequestCamera: () -> Unit,
     onRequestNotifications: () -> Unit
 ) {
     Column(
@@ -573,23 +569,11 @@ private fun OnboardingSlide4(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Camera Permission Item
-        PermissionCardItem(
-            icon = Icons.Default.CameraAlt,
-            title = "Camera Access",
-            description = "Required to scan retail barcodes and box labels in stores.",
-            isGranted = hasCameraPermission,
-            actionLabel = "Allow Camera",
-            onAction = onRequestCamera
-        )
-
-        Spacer(modifier = Modifier.height(14.dp))
-
         // Notifications Permission Item
         PermissionCardItem(
             icon = Icons.Default.Notifications,
             title = "Price Drop Alerts",
-            description = "Optional: get notified instantly when items drop to your target price.",
+            description = "Get notified instantly when tracked items drop to or below your target price.",
             isGranted = hasNotificationPermission,
             actionLabel = "Allow Alerts",
             onAction = onRequestNotifications
@@ -688,7 +672,7 @@ private fun PermissionCardItem(
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        text = "Granted",
+                        text = "Active",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MintSuccess
@@ -738,7 +722,7 @@ private fun AmbientLiquidBackground() {
                 .background(
                     Brush.radialGradient(
                         listOf(
-                            ElectricBlue.copy(alpha = 0.09f),
+                            ElectricBlue.copy(alpha = 0.08f),
                             Color.Transparent
                         )
                     ),

@@ -1,9 +1,15 @@
 package com.pricelens.presentation.pasteurl
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,13 +21,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -31,19 +37,23 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.pricelens.core.designsystem.AmberAlert
 import com.pricelens.core.designsystem.CoralError
 import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
+import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
 import com.pricelens.domain.model.ConfirmedProductIdentity
 import com.pricelens.domain.usecase.UrlValidationResult
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun PasteUrlBottomSheet(
     urlInput: String,
@@ -56,6 +66,7 @@ fun PasteUrlBottomSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val clipboardManager = LocalClipboardManager.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -72,7 +83,7 @@ fun PasteUrlBottomSheet(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(42.dp)
                         .background(ElectricBlue.copy(alpha = 0.12f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
@@ -92,15 +103,16 @@ fun PasteUrlBottomSheet(
                         color = PriceLensTheme.glassColors.textPrimary
                     )
                     Text(
-                        text = "Compare prices across authorized Indian retailers",
+                        text = "Real-time comparison across authorized Indian stores",
                         style = MaterialTheme.typography.bodySmall,
                         color = PriceLensTheme.glassColors.textSecondary
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
+            // Text field with Paste button
             OutlinedTextField(
                 value = urlInput,
                 onValueChange = onUrlChange,
@@ -111,6 +123,23 @@ fun PasteUrlBottomSheet(
                         style = MaterialTheme.typography.bodyMedium,
                         color = PriceLensTheme.glassColors.textTertiary
                     )
+                },
+                trailingIcon = {
+                    IconButton(
+                        onClick = {
+                            val text = clipboardManager.getText()?.text
+                            if (!text.isNullOrBlank()) {
+                                onUrlChange(text.trim())
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentPaste,
+                            contentDescription = "Paste from Clipboard",
+                            tint = ElectricBlue,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 },
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -159,7 +188,7 @@ fun PasteUrlBottomSheet(
                         if (identity != null) {
                             GlassCard(
                                 modifier = Modifier.fillMaxWidth(),
-                                borderColor = ElectricBlue.copy(alpha = 0.5f)
+                                borderColor = ElectricBlue.copy(alpha = 0.4f)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
@@ -169,7 +198,7 @@ fun PasteUrlBottomSheet(
                                         color = PriceLensTheme.glassColors.textPrimary
                                     )
                                     Text(
-                                        text = "Verify or edit the identified product before comparing offers:",
+                                        text = "Verify or customize the identified product model:",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = PriceLensTheme.glassColors.textSecondary
                                     )
@@ -180,7 +209,7 @@ fun PasteUrlBottomSheet(
                                         onValueChange = { newName ->
                                             onIdentityChange(newName, identity.editedBrand, identity.editedModel)
                                         },
-                                        label = { Text("Product Name (Editable)") },
+                                        label = { Text("Product Name") },
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(12.dp),
                                         colors = OutlinedTextFieldDefaults.colors(
@@ -232,13 +261,13 @@ fun PasteUrlBottomSheet(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = "Unsupported retailer domain: ${validationResult.domain}",
+                                    text = "Unsupported retailer: ${validationResult.domain}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = PriceLensTheme.glassColors.textPrimary
                                 )
                                 Text(
-                                    text = "PriceLens only compares prices via authorized retailer partner feeds. Web scraping is disabled.",
+                                    text = "PriceLens compares authorized partner feeds (Amazon, Flipkart, Croma, Reliance Digital, Vijay Sales).",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = PriceLensTheme.glassColors.textSecondary
                                 )
@@ -273,22 +302,35 @@ fun PasteUrlBottomSheet(
                 }
                 null -> {
                     // Supported retailers badge list
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        listOf("Amazon.in", "Flipkart", "Croma", "Reliance Digital").forEach { name ->
-                            Text(
-                                text = name,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = PriceLensTheme.glassColors.textSecondary,
-                                modifier = Modifier
-                                    .background(
-                                        color = PriceLensTheme.glassColors.surfaceHighlight,
-                                        shape = RoundedCornerShape(8.dp)
+                    Column {
+                        Text(
+                            text = "Supported Stores",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PriceLensTheme.glassColors.textSecondary
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            listOf("Amazon.in", "Flipkart", "Croma", "Reliance Digital", "Vijay Sales").forEach { name ->
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(PriceLensTheme.glassColors.surfaceHighlight)
+                                        .border(0.5.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = name,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = PriceLensTheme.glassColors.textSecondary,
+                                        fontSize = 11.sp
                                     )
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
+                                }
+                            }
                         }
                     }
                 }
@@ -296,7 +338,9 @@ fun PasteUrlBottomSheet(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Button(
+            LiquidGlassPrimaryButton(
+                text = "Confirm & Compare",
+                enabled = validationResult is UrlValidationResult.Supported,
                 onClick = {
                     val identity = confirmedIdentity ?: (validationResult as? UrlValidationResult.Supported)?.suggestedIdentity
                     if (identity != null) {
@@ -304,23 +348,8 @@ fun PasteUrlBottomSheet(
                     } else {
                         onSubmitUrl()
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                enabled = validationResult is UrlValidationResult.Supported,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ElectricBlue,
-                    contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(
-                    text = "Confirm & Compare",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+                }
+            )
         }
     }
 }

@@ -3,15 +3,15 @@
     <string name="app_name">PriceLens</string>
     <string name="tagline">Smart Price Comparison &amp; History</string>
     <string name="search_hint">Search products, brands, or models…</string>
-    <string name="scan_barcode_title">Scan Barcode / Product</string>
-    <string name="scan_barcode_desc">Scan a barcode or product using your camera</string>
+    <string name="scan_barcode_title">Paste Product Link</string>
+    <string name="scan_barcode_desc">Compare prices from supported Indian retailers</string>
     <string name="paste_url_title">Paste Product Link</string>
     <string name="paste_url_desc">Compare prices from supported Indian retailers</string>
     <string name="paste_url_hint">https://www.amazon.in/dp/…</string>
     <string name="paste_url_submit">Compare Price</string>
     <string name="paste_url_invalid">Please enter a valid product URL from an authorized retailer.</string>
     <string name="dashboard_title">PriceLens</string>
-    <string name="dashboard_subtitle">Search, compare and track best prices</string>
+    <string name="dashboard_subtitle">Compare prices and track price history</string>
     <string name="section_quick_actions">Quick Actions</string>
     <string name="section_recent_searches">Recent Searches</string>
     <string name="section_watchlist">Your Watchlist</string>
@@ -25,7 +25,7 @@
     <string name="state_loading">Loading PriceLens dashboard…</string>
     <string name="state_error_title">Something went wrong</string>
     <string name="state_error_retry">Retry</string>
-    <string name="camera_permission_required">Camera permission is required to scan products and barcodes.</string>
+    <string name="camera_permission_required">Camera permission is no longer required.</string>
     <string name="grant_permission">Grant Permission</string>
 
     <!-- Search & Comparison -->
@@ -42,11 +42,11 @@
     <string name="timestamp_prefix">Prices verified:</string>
 
     <!-- Permissions & Privacy -->
-    <string name="camera_permission_title">Camera Access Required</string>
-    <string name="camera_permission_desc">PriceLens requires camera access to scan retail barcodes and product labels in real time. Video frames are processed strictly on-device and are never uploaded or stored.</string>
-    <string name="camera_permission_feature_1">Instant retail barcode (UPC, EAN, QR) scanning</string>
-    <string name="camera_permission_feature_2">On-device packaging &amp; label text recognition</string>
-    <string name="camera_permission_feature_3">100% private: no images or recordings saved</string>
+    <string name="camera_permission_title">Camera Access</string>
+    <string name="camera_permission_desc">PriceLens processes links directly from supported retailers.</string>
+    <string name="camera_permission_feature_1">Instant retail link comparison</string>
+    <string name="camera_permission_feature_2">Historical price tracking and drop alerts</string>
+    <string name="camera_permission_feature_3">100% private: no browsing history stored</string>
     <string name="grant_camera_permission">Allow Camera Access</string>
     <string name="permission_granted">Permission Granted</string>
     <string name="permission_denied_settings">Open Device Settings</string>
@@ -71,11 +71,11 @@
     <string name="onboarding_tour_tooltip">App Tour</string>
     <string name="intro_slide1_title">Smart Price Comparison</string>
     <string name="intro_slide1_desc">Compare real-time prices across Amazon, Flipkart, Croma, Reliance Digital, and Vijay Sales in one tap.</string>
-    <string name="intro_slide2_title">Apple-Grade Liquid Glass</string>
-    <string name="intro_slide2_desc">Crafted with specular edge highlights, fluid spring animations, translucent glass depth, and accessible contrast.</string>
-    <string name="intro_slide3_title">In-Store Barcode Scanner</string>
-    <string name="intro_slide3_desc">Point your camera at any retail barcode or box label to instantly discover lower online prices before you buy.</string>
-    <string name="intro_slide4_title">Permissions &amp; Privacy</string>
-    <string name="intro_slide4_desc">Grant camera and alert permissions to unlock instant barcode scans and price drop notifications.</string>
-    <string name="intro_privacy_guarantee">Your privacy is guaranteed: camera feeds are processed on-device and never leave your phone.</string>
+    <string name="intro_slide2_title">Price History &amp; Deals</string>
+    <string name="intro_slide2_desc">Track price fluctuations with high-resolution historical trends, deal confidence scoring, and instant savings indicators.</string>
+    <string name="intro_slide3_title">Instant Link Comparison</string>
+    <string name="intro_slide3_desc">Paste any product URL from Amazon, Flipkart, Croma, Reliance Digital, or Vijay Sales to check competitor offers instantly.</string>
+    <string name="intro_slide4_title">Price Drop Notifications</string>
+    <string name="intro_slide4_desc">Enable alerts to get notified the second your tracked items drop below your target price.</string>
+    <string name="intro_privacy_guarantee">Your privacy is guaranteed: PriceLens operates securely without tracking personal web browsing or storing private data.</string>
 </resources>

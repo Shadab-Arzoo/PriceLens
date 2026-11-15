@@ -2,42 +2,43 @@ package com.pricelens.core.designsystem
 
 import androidx.compose.ui.graphics.Color
 
-// Primary Brand Palette (Electric Cobalt & Liquid Indigo)
-val ElectricBlue = Color(0xFF0D5BFF)
-val ElectricBlueLight = Color(0xFF437FFF)
-val DeepIndigo = Color(0xFF071B40)
+// Primary Brand Palette (Refined Royal Azure, Deep Indigo & Electric Iris)
+val ElectricBlue = Color(0xFF2563EB)         // Royal Azure - vibrant yet elegant
+val ElectricBlueLight = Color(0xFF60A5FA)    // Soft Azure
+val DeepIndigo = Color(0xFF0F172A)           // Rich Slate / Obsidian
 
-val CyanAccent = Color(0xFF00C6FF)
-val CyanGlow = Color(0xFF00E5FF)
-val ElectricBlueGlow = Color(0xFF3D7BFF)
-val MintSuccess = Color(0xFF00B074)
-val AmberAlert = Color(0xFFFF9500)
-val CoralError = Color(0xFFFF3B30)
+val CyanAccent = Color(0xFF38BDF8)           // Sky Accent
+val CyanGlow = Color(0xFF7DD3FC)             // Soft Ambient Cyan Glow
+val ElectricBlueGlow = Color(0xFF3B82F6)     // Ambient Azure Glow
+val MintSuccess = Color(0xFF10B981)          // Emerald Green
+val MintSuccessLight = Color(0xFF34D399)     // Soft Emerald
+val AmberAlert = Color(0xFFF59E0B)           // Warm Amber
+val CoralError = Color(0xFFF43F5E)           // Rose Crimson
 
-// Light Theme Glass & Background
-val LightBackgroundStart = Color(0xFFF3F6FC)
-val LightBackgroundEnd = Color(0xFFE8EEF8)
+// Light Theme Glass & Background (Airy Porcelain & Frosted Mist)
+val LightBackgroundStart = Color(0xFFF8FAFC)
+val LightBackgroundEnd = Color(0xFFEEF2F6)
 val LightSurface = Color(0xFFFFFFFF)
-val LightSurfaceVariant = Color(0xFFE9F0FA)
-val LightGlassSurface = Color(0xE6FFFFFF) // 90% opacity
-val LightGlassBorder = Color(0x330D5BFF) // Specular cobalt border
-val LightGlassHighlight = Color(0x66FFFFFF)
-val LightGlassSpecularTop = Color(0x99FFFFFF)
-val LightGlassSpecularBottom = Color(0x260D5BFF)
-val LightTextPrimary = Color(0xFF0B1320)
-val LightTextSecondary = Color(0xFF55657E)
-val LightTextTertiary = Color(0xFF8899B0)
+val LightSurfaceVariant = Color(0xFFF1F5F9)
+val LightGlassSurface = Color(0xF5FFFFFF)    // 96% opacity frosted white
+val LightGlassBorder = Color(0x1A0F172A)     // 10% subtle slate border
+val LightGlassHighlight = Color(0x80FFFFFF)
+val LightGlassSpecularTop = Color(0xCCFFFFFF)
+val LightGlassSpecularBottom = Color(0x102563EB)
+val LightTextPrimary = Color(0xFF0F172A)     // Slate 900
+val LightTextSecondary = Color(0xFF475569)   // Slate 600
+val LightTextTertiary = Color(0xFF94A3B8)    // Slate 400
 
-// Dark Theme Glass & Background (Obsidian & Liquid Glass)
-val DarkBackgroundStart = Color(0xFF090D16)
-val DarkBackgroundEnd = Color(0xFF101726)
-val DarkSurface = Color(0xFF131A29)
-val DarkSurfaceVariant = Color(0xFF1B2438)
-val DarkGlassSurface = Color(0xCC131A29) // 80% opacity
-val DarkGlassBorder = Color(0x2698B9FF) // Specular cyan/blue border
+// Dark Theme Glass & Background (Obsidian & Deep Slate Glass)
+val DarkBackgroundStart = Color(0xFF0A0D14)
+val DarkBackgroundEnd = Color(0xFF0F1523)
+val DarkSurface = Color(0xFF141A29)
+val DarkSurfaceVariant = Color(0xFF1E2638)
+val DarkGlassSurface = Color(0xEE131927)     // 93% opacity obsidian glass
+val DarkGlassBorder = Color(0x24FFFFFF)      // 14% white hairline border
 val DarkGlassHighlight = Color(0x1AFFFFFF)
-val DarkGlassSpecularTop = Color(0x4DFFFFFF)
-val DarkGlassSpecularBottom = Color(0x1400C6FF)
-val DarkTextPrimary = Color(0xFFF0F4FC)
-val DarkTextSecondary = Color(0xFFA2B4CD)
-val DarkTextTertiary = Color(0xFF6E809A)
+val DarkGlassSpecularTop = Color(0x38FFFFFF)
+val DarkGlassSpecularBottom = Color(0x0C38BDF8)
+val DarkTextPrimary = Color(0xFFF8FAFC)      // Slate 50
+val DarkTextSecondary = Color(0xFF94A3B8)    // Slate 400
+val DarkTextTertiary = Color(0xFF64748B)     // Slate 500

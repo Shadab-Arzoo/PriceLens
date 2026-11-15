@@ -4,10 +4,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,17 +25,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,15 +42,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pricelens.R
 import com.pricelens.core.designsystem.ElectricBlue
+import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
+import com.pricelens.core.designsystem.components.DashboardSkeleton
 import com.pricelens.core.designsystem.components.EmptyStateCard
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.PriceLensSearchBar
@@ -58,11 +62,12 @@ import com.pricelens.core.designsystem.components.PriceLensTopBar
 import com.pricelens.domain.model.RecentSearch
 import com.pricelens.domain.model.WatchlistItem
 import com.pricelens.presentation.pasteurl.PasteUrlBottomSheet
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun DashboardRoute(
     viewModel: DashboardViewModel,
-    onNavigateToScan: () -> Unit,
     onNavigateToSearch: (String) -> Unit,
     onNavigateToWatchlist: () -> Unit,
     onNavigateToComparison: (productId: String, productName: String) -> Unit = { _, _ -> },
@@ -73,7 +78,6 @@ fun DashboardRoute(
     DashboardScreen(
         uiState = uiState,
         onEvent = viewModel::onEvent,
-        onNavigateToScan = onNavigateToScan,
         onNavigateToSearch = onNavigateToSearch,
         onNavigateToWatchlist = onNavigateToWatchlist,
         onNavigateToComparison = onNavigateToComparison,
@@ -85,7 +89,6 @@ fun DashboardRoute(
 fun DashboardScreen(
     uiState: DashboardUiState,
     onEvent: (DashboardUiEvent) -> Unit,
-    onNavigateToScan: () -> Unit,
     onNavigateToSearch: (String) -> Unit,
     onNavigateToWatchlist: () -> Unit,
     onNavigateToComparison: (productId: String, productName: String) -> Unit = { _, _ -> },
@@ -109,7 +112,7 @@ fun DashboardScreen(
                 )
             }
 
-            // 2. Search Input
+            // 2. Search Input Bar
             item {
                 PriceLensSearchBar(
                     query = uiState.searchQuery,
@@ -123,18 +126,17 @@ fun DashboardScreen(
                 )
             }
 
-            // 3. Quick Action Buttons (Scan & Paste URL)
+            // 3. Hero Action: Compare by Store Link (Direct Link-First Experience)
             item {
-                QuickActionsRow(
-                    onScanClick = onNavigateToScan,
-                    onPasteUrlClick = { onEvent(DashboardUiEvent.OpenPasteUrlSheet) }
+                PasteLinkHeroCard(
+                    onOpenPasteSheet = { onEvent(DashboardUiEvent.OpenPasteUrlSheet) }
                 )
             }
 
-            // 4. Loading State
+            // 4. Loading State with Fluid Skeleton
             if (uiState.isLoading) {
                 item {
-                    DashboardLoadingState()
+                    DashboardSkeleton()
                 }
             }
 
@@ -222,87 +224,148 @@ fun DashboardScreen(
     }
 }
 
+/**
+ * Premier Hero Card for Pasting Links and Instant Comparison
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun QuickActionsRow(
-    onScanClick: () -> Unit,
-    onPasteUrlClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        QuickActionCard(
-            title = stringResource(R.string.scan_barcode_title),
-            subtitle = "Barcode & Camera OCR",
-            icon = Icons.Default.QrCodeScanner,
-            onClick = onScanClick,
-            modifier = Modifier.weight(1f)
-        )
-
-        QuickActionCard(
-            title = stringResource(R.string.paste_url_title),
-            subtitle = "Supported Indian Stores",
-            icon = Icons.Default.Link,
-            onClick = onPasteUrlClick,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun QuickActionCard(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
+private fun PasteLinkHeroCard(
+    onOpenPasteSheet: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     GlassCard(
-        modifier = modifier,
-        onClick = onClick,
-        elevation = 2.dp
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        shape = RoundedCornerShape(22.dp),
+        onClick = onOpenPasteSheet,
+        elevation = 3.dp
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(18.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = ElectricBlue.copy(alpha = 0.12f),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = ElectricBlue,
-                    modifier = Modifier.size(22.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(ElectricBlue, Color(0xFF4F46E5))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Link,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Column {
+                        Text(
+                            text = "Compare by Product Link",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textPrimary
+                        )
+                        Text(
+                            text = "Paste any URL from 5 verified Indian retailers",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PriceLensTheme.glassColors.textSecondary
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(ElectricBlue.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Open Link Input",
+                        tint = ElectricBlue,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Simulated interactive paste bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(PriceLensTheme.glassColors.surfaceHighlight)
+                    .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(14.dp))
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "amazon.in, flipkart.com, croma.com…",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = PriceLensTheme.glassColors.textTertiary
                 )
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(PriceLensTheme.glassColors.primaryGradientBrush)
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "Paste & Track",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = PriceLensTheme.glassColors.textPrimary
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = PriceLensTheme.glassColors.textSecondary
-            )
+            // Supported store pills
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                listOf("Amazon", "Flipkart", "Croma", "Reliance Digital", "Vijay Sales").forEach { store ->
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
+                            .border(0.5.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = store,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PriceLensTheme.glassColors.textSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -337,13 +400,13 @@ private fun RecentSearchesSection(
                         imageVector = Icons.Default.DeleteOutline,
                         contentDescription = "Clear all searches",
                         tint = PriceLensTheme.glassColors.textTertiary,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         if (recentSearches.isEmpty()) {
             EmptyStateCard(
@@ -357,13 +420,14 @@ private fun RecentSearchesSection(
             ) {
                 items(recentSearches, key = { it.query }) { search ->
                     GlassCard(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(14.dp),
                         elevation = 1.dp,
                         onClick = { onSelectSearch(search.query) }
                     ) {
                         Text(
                             text = search.query,
                             style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
                             color = PriceLensTheme.glassColors.textPrimary,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                         )
@@ -385,12 +449,25 @@ private fun WatchlistSection(
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
     ) {
-        Text(
-            text = stringResource(R.string.section_watchlist),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = PriceLensTheme.glassColors.textPrimary
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.section_watchlist),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = PriceLensTheme.glassColors.textPrimary
+            )
+            if (watchlistItems.isNotEmpty()) {
+                Text(
+                    text = "${watchlistItems.size} items",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = PriceLensTheme.glassColors.textSecondary
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -416,12 +493,14 @@ private fun WatchlistSection(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                                 Text(
                                     text = item.productName,
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = PriceLensTheme.glassColors.textPrimary
+                                    color = PriceLensTheme.glassColors.textPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 item.brand?.let {
                                     Text(
@@ -474,7 +553,7 @@ private fun TrendingSection(
                 subtitle = stringResource(R.string.empty_trending_subtitle)
             )
         } else {
-            val currencyFormatter = java.text.NumberFormat.getCurrencyInstance(java.util.Locale("en", "IN"))
+            val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 trendingProducts.forEach { product ->
                     GlassCard(
@@ -488,14 +567,14 @@ private fun TrendingSection(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                                 Text(
                                     text = product.name,
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold,
                                     color = PriceLensTheme.glassColors.textPrimary,
                                     maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
                                     text = "${product.brand.orEmpty()} • ${product.retailerCount} stores compared",
@@ -508,37 +587,13 @@ private fun TrendingSection(
                                     text = currencyFormatter.format(product.lowestPrice),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = com.pricelens.core.designsystem.MintSuccess
+                                    color = MintSuccess
                                 )
                             }
                         }
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun DashboardLoadingState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 40.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator(
-                color = ElectricBlue,
-                modifier = Modifier.size(36.dp),
-                strokeWidth = 3.dp
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-            Text(
-                text = stringResource(R.string.state_loading),
-                style = MaterialTheme.typography.bodyMedium,
-                color = PriceLensTheme.glassColors.textSecondary
-            )
         }
     }
 }

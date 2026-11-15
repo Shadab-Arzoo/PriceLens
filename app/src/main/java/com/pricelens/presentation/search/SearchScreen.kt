@@ -51,6 +51,7 @@ import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.EmptyStateCard
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.PriceLensSearchBar
+import com.pricelens.core.designsystem.components.SkeletonBox
 import com.pricelens.domain.model.ProductSummary
 import java.text.NumberFormat
 import java.util.Locale
@@ -288,23 +289,36 @@ private fun ProductSummaryCard(
 
 @Composable
 private fun SearchLoadingState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            CircularProgressIndicator(
-                color = ElectricBlue,
-                modifier = Modifier.size(44.dp)
-            )
-            Text(
-                text = "Searching authorized retailer feeds…",
-                style = MaterialTheme.typography.bodyMedium,
-                color = PriceLensTheme.glassColors.textSecondary
-            )
+        repeat(4) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SkeletonBox(
+                        modifier = Modifier.size(56.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        height = 56.dp,
+                        width = 56.dp
+                    )
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        SkeletonBox(height = 16.dp, width = 180.dp)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        SkeletonBox(height = 12.dp, width = 120.dp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        SkeletonBox(height = 18.dp, width = 85.dp)
+                    }
+                }
+            }
         }
     }
 }

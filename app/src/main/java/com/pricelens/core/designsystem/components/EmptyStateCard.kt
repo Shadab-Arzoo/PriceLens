@@ -41,14 +41,14 @@ fun EmptyStateCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 28.dp),
+                .padding(horizontal = 24.dp, vertical = 26.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(52.dp)
                     .background(
-                        color = ElectricBlue.copy(alpha = 0.12f),
+                        color = ElectricBlue.copy(alpha = 0.10f),
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -57,11 +57,11 @@ fun EmptyStateCard(
                     imageVector = icon,
                     contentDescription = null,
                     tint = ElectricBlue,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Text(
                 text = title,
@@ -71,24 +71,24 @@ fun EmptyStateCard(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = PriceLensTheme.glassColors.textSecondary,
                 textAlign = TextAlign.Center
             )
 
             if (actionLabel != null && onActionClick != null) {
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = onActionClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = ElectricBlue,
                         contentColor = Color.White
                     ),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
                 ) {
                     Text(
                         text = actionLabel,

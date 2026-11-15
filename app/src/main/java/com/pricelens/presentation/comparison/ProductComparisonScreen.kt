@@ -77,6 +77,7 @@ import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
 import com.pricelens.core.designsystem.components.LiquidGlassSecondaryButton
+import com.pricelens.core.designsystem.components.SkeletonBox
 import com.pricelens.domain.model.ProductAlternative
 import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.RetailerOffer
@@ -756,6 +757,14 @@ private fun PriceHistoryCard(history: List<com.pricelens.domain.model.PriceHisto
                 val average = prices.average()
                 val current = history.last().price
 
+                PriceSparkline(
+                    points = history,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .padding(vertical = 4.dp)
+                )
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -767,6 +776,73 @@ private fun PriceHistoryCard(history: List<com.pricelens.domain.model.PriceHisto
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PriceSparkline(
+    points: List<com.pricelens.domain.model.PriceHistoryPoint>,
+    modifier: Modifier = Modifier
+) {
+    val strokeColor = ElectricBlue
+    val fillColor = ElectricBlue.copy(alpha = 0.15f)
+
+    androidx.compose.foundation.Canvas(modifier = modifier) {
+        if (points.size < 2) return@Canvas
+        val width = size.width
+        val height = size.height
+        val minPrice = points.minOf { it.price }
+        val maxPrice = points.maxOf { it.price }
+        val priceRange = if (maxPrice - minPrice > 0) (maxPrice - minPrice) else 1.0
+
+        val stepX = width / (points.size - 1)
+        val path = androidx.compose.ui.graphics.Path()
+        val fillPath = androidx.compose.ui.graphics.Path()
+
+        points.forEachIndexed { index, point ->
+            val x = index * stepX
+            val normalizedY = ((point.price - minPrice) / priceRange).toFloat()
+            val y = height - (normalizedY * (height - 16.dp.toPx()) + 8.dp.toPx())
+
+            if (index == 0) {
+                path.moveTo(x, y)
+                fillPath.moveTo(x, height)
+                fillPath.lineTo(x, y)
+            } else {
+                path.lineTo(x, y)
+                fillPath.lineTo(x, y)
+            }
+        }
+
+        fillPath.lineTo(width, height)
+        fillPath.close()
+
+        drawPath(
+            path = fillPath,
+            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                listOf(fillColor, androidx.compose.ui.graphics.Color.Transparent)
+            )
+        )
+
+        drawPath(
+            path = path,
+            color = strokeColor,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = 2.5.dp.toPx(),
+                cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                join = androidx.compose.ui.graphics.StrokeJoin.Round
+            )
+        )
+
+        val lastPoint = points.last()
+        val lastX = width
+        val lastNormY = ((lastPoint.price - minPrice) / priceRange).toFloat()
+        val lastY = height - (lastNormY * (height - 16.dp.toPx()) + 8.dp.toPx())
+        drawCircle(
+            color = MintSuccess,
+            radius = 4.dp.toPx(),
+            center = androidx.compose.ui.geometry.Offset(lastX, lastY)
+        )
     }
 }
 
@@ -1403,23 +1479,59 @@ private fun SpecificationsCard(
 
 @Composable
 private fun ComparisonLoadingState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            CircularProgressIndicator(
-                color = ElectricBlue,
-                modifier = Modifier.size(44.dp)
-            )
-            Text(
-                text = "Comparing retailer offers…",
-                style = MaterialTheme.typography.bodyMedium,
-                color = PriceLensTheme.glassColors.textSecondary
-            )
+        // Product Header Skeleton
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                SkeletonBox(height = 14.dp, width = 80.dp)
+                Spacer(modifier = Modifier.height(8.dp))
+                SkeletonBox(height = 20.dp, width = 240.dp)
+                Spacer(modifier = Modifier.height(8.dp))
+                SkeletonBox(height = 14.dp, width = 160.dp)
+            }
+        }
+
+        // Spotlight Skeleton
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    SkeletonBox(height = 12.dp, width = 100.dp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SkeletonBox(height = 24.dp, width = 120.dp)
+                }
+                SkeletonBox(height = 40.dp, width = 110.dp, shape = RoundedCornerShape(12.dp))
+            }
+        }
+
+        // Offers Skeleton
+        repeat(3) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        SkeletonBox(height = 16.dp, width = 120.dp)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        SkeletonBox(height = 12.dp, width = 80.dp)
+                    }
+                    SkeletonBox(height = 22.dp, width = 75.dp)
+                }
+            }
         }
     }
 }

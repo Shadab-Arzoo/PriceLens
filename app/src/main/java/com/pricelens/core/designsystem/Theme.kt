@@ -2,7 +2,6 @@ package com.pricelens.core.designsystem
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -29,7 +28,7 @@ data class GlassColors(
         listOf(LightGlassSpecularTop, LightGlassSpecularBottom)
     ),
     val primaryGradientBrush: Brush = Brush.horizontalGradient(
-        listOf(ElectricBlue, ElectricBlueLight)
+        listOf(ElectricBlue, Color(0xFF4F46E5))
     ),
     val ambientGlow: Color = CyanAccent
 )
@@ -46,9 +45,9 @@ private val LightGlassColors = GlassColors(
         listOf(LightGlassSpecularTop, LightGlassSpecularBottom)
     ),
     primaryGradientBrush = Brush.horizontalGradient(
-        listOf(ElectricBlue, ElectricBlueLight)
+        listOf(ElectricBlue, Color(0xFF4F46E5))
     ),
-    ambientGlow = CyanAccent
+    ambientGlow = ElectricBlueGlow
 )
 
 private val DarkGlassColors = GlassColors(
@@ -63,7 +62,7 @@ private val DarkGlassColors = GlassColors(
         listOf(DarkGlassSpecularTop, DarkGlassSpecularBottom)
     ),
     primaryGradientBrush = Brush.horizontalGradient(
-        listOf(ElectricBlue, CyanAccent)
+        listOf(ElectricBlue, Color(0xFF6366F1))
     ),
     ambientGlow = CyanGlow
 )
@@ -73,12 +72,12 @@ val LocalGlassColors = staticCompositionLocalOf { LightGlassColors }
 private val LightColorScheme = lightColorScheme(
     primary = ElectricBlue,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFD6E3FF),
-    onPrimaryContainer = DeepIndigo,
-    secondary = Color(0xFF535F70),
+    primaryContainer = Color(0xFFDBEAFE),
+    onPrimaryContainer = Color(0xFF1E3A8A),
+    secondary = Color(0xFF475569),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFD7E3F8),
-    onSecondaryContainer = Color(0xFF101C2B),
+    secondaryContainer = Color(0xFFF1F5F9),
+    onSecondaryContainer = Color(0xFF0F172A),
     background = LightBackgroundStart,
     onBackground = LightTextPrimary,
     surface = LightSurface,
@@ -92,12 +91,12 @@ private val LightColorScheme = lightColorScheme(
 private val DarkColorScheme = darkColorScheme(
     primary = ElectricBlueLight,
     onPrimary = DeepIndigo,
-    primaryContainer = Color(0xFF0040A8),
-    onPrimaryContainer = Color(0xFFD6E3FF),
-    secondary = Color(0xFFBBC7DB),
-    onSecondary = Color(0xFF253141),
-    secondaryContainer = Color(0xFF3B4858),
-    onSecondaryContainer = Color(0xFFD7E3F8),
+    primaryContainer = Color(0xFF1E3A8A),
+    onPrimaryContainer = Color(0xFFDBEAFE),
+    secondary = Color(0xFF94A3B8),
+    onSecondary = Color(0xFF0F172A),
+    secondaryContainer = Color(0xFF1E2638),
+    onSecondaryContainer = Color(0xFFF8FAFC),
     background = DarkBackgroundStart,
     onBackground = DarkTextPrimary,
     surface = DarkSurface,
