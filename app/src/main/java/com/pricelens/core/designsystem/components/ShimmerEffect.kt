@@ -38,13 +38,13 @@ import com.pricelens.core.designsystem.PriceLensTheme
  */
 @Composable
 fun shimmerBrush(
-    targetValue: Float = 1000f,
-    durationMillis: Int = 1200
+    targetValue: Float = 1200f,
+    durationMillis: Int = 2000
 ): Brush {
     val shimmerColors = listOf(
-        PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.2f),
-        PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.65f),
-        PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.2f)
+        PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.05f),
+        PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.16f),
+        PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.05f)
     )
 
     val transition = rememberInfiniteTransition(label = "shimmerTransition")

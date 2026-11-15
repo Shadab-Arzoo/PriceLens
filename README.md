@@ -13,14 +13,14 @@
 
 You can download the pre-built, installable Android APK directly from our GitHub Releases:
 
-👉 **[Download PriceLens APK (v1.3.0)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
+👉 **[Download PriceLens APK (v1.3.1)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
 
 ### Installation Instructions
-1. Download `pricelens-v1.3.0.apk` onto your Android device (or transfer via USB / adb).
+1. Download `pricelens-v1.3.1.apk` onto your Android device (or transfer via USB / adb).
 2. Tap the downloaded APK to install. If prompted by Android, allow "Install unknown apps" for your browser or file manager.
 3. Open **PriceLens** and enjoy comparing prices!
 
-*(Alternatively install via adb: `adb install -r pricelens-v1.3.0.apk`)*
+*(Alternatively install via adb: `adb install -r pricelens-v1.3.1.apk`)*
 
 ---
 

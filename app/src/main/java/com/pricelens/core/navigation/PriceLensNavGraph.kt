@@ -1,11 +1,9 @@
 package com.pricelens.core.navigation
 
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
@@ -61,39 +59,27 @@ fun PriceLensNavGraph(
         modifier = modifier,
         enterTransition = {
             slideInHorizontally(
-                initialOffsetX = { fullWidth -> fullWidth / 5 },
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
-            ) + fadeIn(animationSpec = tween(240)) + scaleIn(
-                initialScale = 0.96f,
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
-            )
+                initialOffsetX = { fullWidth -> fullWidth / 4 },
+                animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+            ) + fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing))
         },
         exitTransition = {
             slideOutHorizontally(
-                targetOffsetX = { fullWidth -> -fullWidth / 5 },
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
-            ) + fadeOut(animationSpec = tween(220)) + scaleOut(
-                targetScale = 0.96f,
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
-            )
+                targetOffsetX = { fullWidth -> -fullWidth / 4 },
+                animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+            ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
         },
         popEnterTransition = {
             slideInHorizontally(
-                initialOffsetX = { fullWidth -> -fullWidth / 5 },
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
-            ) + fadeIn(animationSpec = tween(240)) + scaleIn(
-                initialScale = 0.96f,
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
-            )
+                initialOffsetX = { fullWidth -> -fullWidth / 4 },
+                animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+            ) + fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing))
         },
         popExitTransition = {
             slideOutHorizontally(
-                targetOffsetX = { fullWidth -> fullWidth / 5 },
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
-            ) + fadeOut(animationSpec = tween(220)) + scaleOut(
-                targetScale = 1.04f,
-                animationSpec = spring(dampingRatio = 0.85f, stiffness = 380f)
-            )
+                targetOffsetX = { fullWidth -> fullWidth / 4 },
+                animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+            ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
         }
     ) {
         // 1. Onboarding / Intro Screen

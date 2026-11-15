@@ -1,16 +1,10 @@
 package com.pricelens.core.designsystem.components
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -87,18 +81,6 @@ fun LiquidGlassPrimaryButton(
         label = "primaryButtonElevation"
     )
 
-    // Subtle specular gloss pulse
-    val glintTransition = rememberInfiniteTransition(label = "buttonGlint")
-    val glintAlpha by glintTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 0.70f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glintAlpha"
-    )
-
     Surface(
         modifier = modifier
             .graphicsLayer {
@@ -142,7 +124,7 @@ fun LiquidGlassPrimaryButton(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            // Subtle specular glass highlight along top edge with soft breathing
+            // Subtle specular glass highlight along top edge
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -152,7 +134,7 @@ fun LiquidGlassPrimaryButton(
                         Brush.horizontalGradient(
                             listOf(
                                 Color.Transparent,
-                                Color.White.copy(alpha = glintAlpha),
+                                Color.White.copy(alpha = 0.28f),
                                 Color.Transparent
                             )
                         )

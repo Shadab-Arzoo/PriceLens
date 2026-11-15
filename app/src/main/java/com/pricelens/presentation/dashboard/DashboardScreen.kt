@@ -2,15 +2,8 @@ package com.pricelens.presentation.dashboard
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -277,17 +270,6 @@ private fun PasteLinkHeroCard(
     onOpenPasteSheet: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val iconPulse = rememberInfiniteTransition(label = "heroIconPulse")
-    val pulseScale by iconPulse.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.07f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseScale"
-    )
-
     GlassCard(
         modifier = modifier
             .fillMaxWidth()
@@ -314,10 +296,6 @@ private fun PasteLinkHeroCard(
                     Box(
                         modifier = Modifier
                             .size(44.dp)
-                            .graphicsLayer {
-                                scaleX = pulseScale
-                                scaleY = pulseScale
-                            }
                             .clip(CircleShape)
                             .background(
                                 Brush.linearGradient(

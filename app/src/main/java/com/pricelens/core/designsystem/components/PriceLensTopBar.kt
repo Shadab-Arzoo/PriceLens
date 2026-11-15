@@ -1,11 +1,5 @@
 package com.pricelens.core.designsystem.components
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,27 +39,6 @@ fun PriceLensTopBar(
     onWatchlistClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Pulsing live radar beacon animation
-    val beaconTransition = rememberInfiniteTransition(label = "liveBeacon")
-    val beaconScale by beaconTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 2.4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "beaconScale"
-    )
-    val beaconAlpha by beaconTransition.animateFloat(
-        initialValue = 0.75f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "beaconAlpha"
-    )
-
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -80,28 +53,12 @@ fun PriceLensTopBar(
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
-                        modifier = Modifier.size(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Expanding wave
-                        Box(
-                            modifier = Modifier
-                                .size(9.dp)
-                                .graphicsLayer {
-                                    scaleX = beaconScale
-                                    scaleY = beaconScale
-                                    alpha = beaconAlpha
-                                }
-                                .background(MintSuccess, CircleShape)
-                        )
-                        // Solid core
-                        Box(
-                            modifier = Modifier
-                                .size(9.dp)
-                                .background(MintSuccess, CircleShape)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(6.dp))
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(MintSuccess)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = title,
                         style = MaterialTheme.typography.headlineLarge,
