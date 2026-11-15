@@ -21,4 +21,7 @@ interface WatchlistDao {
 
     @Query("DELETE FROM watchlist_items WHERE product_id = :productId")
     suspend fun deleteById(productId: String)
+
+    @Query("UPDATE watchlist_items SET current_lowest_price = :lowestPrice WHERE product_id = :productId")
+    suspend fun updateLowestPrice(productId: String, lowestPrice: Double)
 }

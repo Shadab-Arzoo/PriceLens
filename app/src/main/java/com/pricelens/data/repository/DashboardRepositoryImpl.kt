@@ -3,6 +3,7 @@ package com.pricelens.data.repository
 import com.pricelens.data.local.dao.RecentSearchDao
 import com.pricelens.data.local.dao.WatchlistDao
 import com.pricelens.data.local.entity.RecentSearchEntity
+import com.pricelens.data.local.entity.WatchlistEntity
 import com.pricelens.domain.model.RecentSearch
 import com.pricelens.domain.model.WatchlistItem
 import com.pricelens.domain.repository.DashboardRepository
@@ -40,5 +41,17 @@ class DashboardRepositoryImpl @Inject constructor(
 
     override suspend fun clearRecentSearches() {
         recentSearchDao.clearAll()
+    }
+
+    override suspend fun addToWatchlist(item: WatchlistItem) {
+        watchlistDao.insertItem(WatchlistEntity.fromDomain(item))
+    }
+
+    override suspend fun removeFromWatchlist(productId: String) {
+        watchlistDao.deleteById(productId)
+    }
+
+    override suspend fun updateLowestPrice(productId: String, lowestPrice: Double) {
+        watchlistDao.updateLowestPrice(productId, lowestPrice)
     }
 }

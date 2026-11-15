@@ -36,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.History
@@ -47,11 +48,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,6 +71,7 @@ import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.DashboardSkeleton
 import com.pricelens.core.designsystem.components.EmptyStateCard
 import com.pricelens.core.designsystem.components.GlassCard
+import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
 import com.pricelens.core.designsystem.components.PriceLensSearchBar
 import com.pricelens.core.designsystem.components.PriceLensTopBar
 import com.pricelens.domain.model.RecentSearch
@@ -102,6 +109,20 @@ fun DashboardScreen(
     onNavigateToComparison: (productId: String, productName: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
+    val clipboardManager = LocalClipboardManager.current
+    var dismissedClipboardUrl by rememberSaveable { mutableStateOf<String?>(null) }
+    val clipboardText = remember(clipboardManager) {
+        clipboardManager.getText()?.text?.trim().orEmpty()
+    }
+    val isClipboardProductUrl = remember(clipboardText) {
+        val lower = clipboardText.lowercase()
+        (lower.startsWith("http://") || lower.startsWith("https://")) &&
+            (lower.contains("amazon.") || lower.contains("amzn.") ||
+             lower.contains("flipkart.") || lower.contains("myntra.") ||
+             lower.contains("ajio.") || lower.contains("croma.") ||
+             lower.contains("tatacliq.") || lower.contains("jiomart."))
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -132,6 +153,20 @@ fun DashboardScreen(
                         }
                     }
                 )
+            }
+
+            // 2b. Auto-Detected Clipboard URL Banner
+            if (isClipboardProductUrl && clipboardText != dismissedClipboardUrl) {
+                item(key = "clipboard_detected_banner") {
+                    ClipboardDetectedBanner(
+                        url = clipboardText,
+                        onCompare = {
+                            onEvent(DashboardUiEvent.OpenPasteUrlSheet)
+                            onEvent(DashboardUiEvent.PasteUrlInputChanged(clipboardText))
+                        },
+                        onDismiss = { dismissedClipboardUrl = clipboardText }
+                    )
+                }
             }
 
             // 3. Hero Action: Compare by Store Link (Direct Link-First Experience)
@@ -176,7 +211,8 @@ fun DashboardScreen(
                 item {
                     WatchlistSection(
                         watchlistItems = uiState.watchlistItems,
-                        onViewWatchlist = onNavigateToWatchlist
+                        onViewWatchlist = onNavigateToWatchlist,
+                        onProductClick = onNavigateToComparison
                     )
                 }
 
@@ -463,9 +499,82 @@ private fun RecentSearchesSection(
 }
 
 @Composable
+private fun ClipboardDetectedBanner(
+    url: String,
+    onCompare: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    GlassCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        backgroundColor = ElectricBlue.copy(alpha = 0.12f),
+        borderColor = ElectricBlue.copy(alpha = 0.45f),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(ElectricBlue.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Link,
+                    contentDescription = null,
+                    tint = ElectricBlue,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Product link in clipboard",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = PriceLensTheme.glassColors.textPrimary
+                )
+                Text(
+                    text = url,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = PriceLensTheme.glassColors.textSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            LiquidGlassPrimaryButton(
+                text = "Compare",
+                onClick = onCompare,
+                modifier = Modifier.height(36.dp)
+            )
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier.size(30.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Dismiss",
+                    tint = PriceLensTheme.glassColors.textSecondary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun WatchlistSection(
     watchlistItems: List<WatchlistItem>,
     onViewWatchlist: () -> Unit,
+    onProductClick: (productId: String, productName: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -508,7 +617,7 @@ private fun WatchlistSection(
                 watchlistItems.take(3).forEach { item ->
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = onViewWatchlist
+                        onClick = { onProductClick(item.productId, item.productName) }
                     ) {
                         Row(
                             modifier = Modifier

@@ -32,4 +32,16 @@ data class WatchlistEntity(
         currency = currency,
         addedAtTimestamp = addedAt
     )
+
+    companion object {
+        fun fromDomain(item: WatchlistItem): WatchlistEntity = WatchlistEntity(
+            productId = item.productId,
+            productName = item.productName,
+            brand = item.brand,
+            targetPrice = item.targetPrice,
+            currentLowestPrice = item.currentLowestPrice,
+            currency = item.currency,
+            addedAt = item.addedAtTimestamp
+        )
+    }
 }

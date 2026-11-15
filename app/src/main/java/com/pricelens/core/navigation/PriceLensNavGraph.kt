@@ -35,12 +35,16 @@ import com.pricelens.presentation.dashboard.DashboardViewModel
 import com.pricelens.presentation.onboarding.OnboardingScreen
 import com.pricelens.presentation.search.SearchRoute
 import com.pricelens.presentation.search.SearchViewModel
+import com.pricelens.presentation.watchlist.WatchlistRoute
+import com.pricelens.presentation.watchlist.WatchlistViewModel
 
 @Composable
 fun PriceLensNavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    startDestination: String? = null
+    startDestination: String? = null,
+    sharedUrl: String? = null,
+    sharedProductId: String? = null
 ) {
     val context = LocalContext.current
     val userPreferences = remember { UserPreferencesRepository(context.applicationContext) }
@@ -109,6 +113,22 @@ fun PriceLensNavGraph(
         // 2. Main Dashboard Screen (Link-First Experience)
         composable(PriceLensDestination.Dashboard.route) {
             val viewModel: DashboardViewModel = hiltViewModel()
+
+            androidx.compose.runtime.LaunchedEffect(sharedUrl) {
+                if (!sharedUrl.isNullOrBlank()) {
+                    viewModel.onEvent(com.pricelens.presentation.dashboard.DashboardUiEvent.OpenPasteUrlSheet)
+                    viewModel.onEvent(com.pricelens.presentation.dashboard.DashboardUiEvent.PasteUrlInputChanged(sharedUrl))
+                }
+            }
+
+            androidx.compose.runtime.LaunchedEffect(sharedProductId) {
+                if (!sharedProductId.isNullOrBlank()) {
+                    navController.navigate(
+                        PriceLensDestination.ProductComparison.createRoute(sharedProductId, "")
+                    )
+                }
+            }
+
             DashboardRoute(
                 viewModel = viewModel,
                 onNavigateToSearch = { query ->
@@ -169,19 +189,19 @@ fun PriceLensNavGraph(
 
         // 5. Watchlist Screen
         composable(PriceLensDestination.Watchlist.route) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(PriceLensTheme.glassColors.backgroundBrush)
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Tracked Price Watchlist",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = PriceLensTheme.glassColors.textPrimary
-                )
-            }
+            val viewModel: WatchlistViewModel = hiltViewModel()
+            WatchlistRoute(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToComparison = { productId, productName ->
+                    navController.navigate(
+                        PriceLensDestination.ProductComparison.createRoute(productId, productName)
+                    )
+                },
+                onNavigateToBrowse = {
+                    navController.popBackStack(PriceLensDestination.Dashboard.route, false)
+                }
+            )
         }
     }
 }

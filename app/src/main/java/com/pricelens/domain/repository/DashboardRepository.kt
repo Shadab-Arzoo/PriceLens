@@ -9,4 +9,7 @@ interface DashboardRepository {
     fun getWatchlistItems(): Flow<List<WatchlistItem>>
     suspend fun saveRecentSearch(query: String)
     suspend fun clearRecentSearches()
+    suspend fun addToWatchlist(item: WatchlistItem) {}
+    suspend fun removeFromWatchlist(productId: String) {}
+    suspend fun updateLowestPrice(productId: String, lowestPrice: Double) {}
 }

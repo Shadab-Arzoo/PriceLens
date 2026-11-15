@@ -7,6 +7,8 @@ import com.pricelens.domain.model.PriceLensException
 import com.pricelens.domain.model.PriceObservation
 import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.TargetPriceAlert
+import com.pricelens.domain.model.WatchlistItem
+import com.pricelens.domain.repository.DashboardRepository
 import com.pricelens.domain.repository.TargetPriceAlertRepository
 import com.pricelens.domain.service.AlertEvaluator
 import com.pricelens.domain.usecase.GetProductComparisonUseCase
@@ -25,8 +27,30 @@ class ProductComparisonViewModel @Inject constructor(
     private val getProductComparisonUseCase: GetProductComparisonUseCase,
     private val targetPriceAlertRepository: TargetPriceAlertRepository,
     private val alertEvaluator: AlertEvaluator,
+    private val dashboardRepository: DashboardRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    constructor(
+        getProductComparisonUseCase: GetProductComparisonUseCase,
+        targetPriceAlertRepository: TargetPriceAlertRepository,
+        alertEvaluator: AlertEvaluator,
+        savedStateHandle: SavedStateHandle
+    ) : this(
+        getProductComparisonUseCase = getProductComparisonUseCase,
+        targetPriceAlertRepository = targetPriceAlertRepository,
+        alertEvaluator = alertEvaluator,
+        dashboardRepository = object : DashboardRepository {
+            override fun getRecentSearches() = kotlinx.coroutines.flow.emptyFlow<List<com.pricelens.domain.model.RecentSearch>>()
+            override fun getWatchlistItems() = kotlinx.coroutines.flow.emptyFlow<List<WatchlistItem>>()
+            override suspend fun saveRecentSearch(query: String) {}
+            override suspend fun clearRecentSearches() {}
+            override suspend fun addToWatchlist(item: WatchlistItem) {}
+            override suspend fun removeFromWatchlist(productId: String) {}
+            override suspend fun updateLowestPrice(productId: String, lowestPrice: Double) {}
+        },
+        savedStateHandle = savedStateHandle
+    )
 
     private val initialProductId: String = savedStateHandle.get<String>("productId").orEmpty()
     private val initialProductName: String = savedStateHandle.get<String>("productName").orEmpty()
@@ -135,6 +159,19 @@ class ProductComparisonViewModel @Inject constructor(
             )
             targetPriceAlertRepository.save(alert)
 
+            val currentLowest = state.comparisonDetails?.lowestPriceOffer?.price
+            dashboardRepository.addToWatchlist(
+                WatchlistItem(
+                    productId = state.productId,
+                    productName = state.comparisonDetails?.name ?: state.productName,
+                    brand = state.comparisonDetails?.brand,
+                    targetPrice = targetPriceDouble,
+                    currentLowestPrice = currentLowest,
+                    currency = state.comparisonDetails?.lowestPriceOffer?.currency ?: "INR",
+                    addedAtTimestamp = System.currentTimeMillis()
+                )
+            )
+
             val retailerName = retailer ?: "Any Retailer / Outside Website"
             _uiState.update {
                 it.copy(
@@ -156,6 +193,10 @@ class ProductComparisonViewModel @Inject constructor(
     private fun deleteAlert(alertId: String) {
         viewModelScope.launch {
             targetPriceAlertRepository.deleteAlert(alertId)
+            val active = targetPriceAlertRepository.getActiveAlerts(_uiState.value.productId)
+            if (active.isEmpty()) {
+                dashboardRepository.removeFromWatchlist(_uiState.value.productId)
+            }
             _uiState.update { it.copy(userNotificationBanner = "Price drop tracker removed.") }
         }
     }
@@ -184,6 +225,9 @@ class ProductComparisonViewModel @Inject constructor(
                     }
                     val activeAlerts = targetPriceAlertRepository.getActiveAlerts(id)
                     evaluateOffers(details, activeAlerts)
+                    details.lowestPriceOffer?.price?.let { lowest ->
+                        dashboardRepository.updateLowestPrice(id, lowest)
+                    }
                 },
                 onFailure = { error ->
                     val safeMessage = when (error) {
