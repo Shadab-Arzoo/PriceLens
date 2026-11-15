@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -140,7 +143,10 @@ fun SearchScreen(
                     }
                     else -> {
                         SearchResultsList(
-                            products = uiState.products,
+                            products = uiState.sortedProducts,
+                            totalCount = uiState.products.size,
+                            currentSortOrder = uiState.sortOrder,
+                            onSortChange = { onEvent(SearchUiEvent.SortOrderChanged(it)) },
                             onProductClick = onProductClick
                         )
                     }
@@ -153,6 +159,9 @@ fun SearchScreen(
 @Composable
 private fun SearchResultsList(
     products: List<ProductSummary>,
+    totalCount: Int,
+    currentSortOrder: SearchSortOrder,
+    onSortChange: (SearchSortOrder) -> Unit,
     onProductClick: (productId: String, productName: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -162,6 +171,58 @@ private fun SearchResultsList(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        item(key = "search_header_and_sort") {
+            Column(
+                modifier = Modifier.padding(bottom = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "Found $totalCount products across 5 retailers",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = PriceLensTheme.glassColors.textSecondary,
+                    fontWeight = FontWeight.Medium
+                )
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val sortOptions = listOf(
+                        SearchSortOrder.RELEVANCE to "Relevance",
+                        SearchSortOrder.PRICE_LOW_TO_HIGH to "Lowest Price 🏷️",
+                        SearchSortOrder.PRICE_HIGH_TO_LOW to "Price: High to Low",
+                        SearchSortOrder.MOST_RETAILERS to "Most Stores 🏪"
+                    )
+                    items(sortOptions, key = { it.first }) { (order, label) ->
+                        val isSelected = currentSortOrder == order
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (isSelected) ElectricBlue.copy(alpha = 0.15f)
+                                    else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f)
+                                )
+                                .border(
+                                    1.dp,
+                                    if (isSelected) ElectricBlue.copy(alpha = 0.6f)
+                                    else PriceLensTheme.glassColors.specularBorder,
+                                    RoundedCornerShape(12.dp)
+                                )
+                                .clickable { onSortChange(order) }
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) ElectricBlue else PriceLensTheme.glassColors.textSecondary
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         items(
             items = products,
             key = { it.id }

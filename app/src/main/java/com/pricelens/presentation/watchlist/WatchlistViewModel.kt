@@ -44,6 +44,9 @@ class WatchlistViewModel @Inject constructor(
             is WatchlistUiEvent.SearchQueryChanged -> {
                 _uiState.update { it.copy(searchQuery = event.query) }
             }
+            is WatchlistUiEvent.FilterChanged -> {
+                _uiState.update { it.copy(activeFilter = event.filter) }
+            }
             is WatchlistUiEvent.RemoveItem -> {
                 viewModelScope.launch {
                     dashboardRepository.removeFromWatchlist(event.productId)

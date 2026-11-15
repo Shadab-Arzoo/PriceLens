@@ -1,6 +1,8 @@
 package com.pricelens.presentation.watchlist
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -162,8 +164,64 @@ fun WatchlistScreen(
                     item(key = "stats_card") {
                         WatchlistStatsCard(
                             totalCount = uiState.totalTrackedCount,
-                            priceDropCount = uiState.priceDropCount
+                            priceDropCount = uiState.priceDropCount,
+                            activeFilter = uiState.activeFilter,
+                            onAllClick = { onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.ALL)) },
+                            onPriceDropsClick = { onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.PRICE_DROPS)) }
                         )
+                    }
+
+                    // Filter Chips Row
+                    item(key = "filter_chips") {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val isAllSelected = uiState.activeFilter == WatchlistFilter.ALL
+                            val isDropSelected = uiState.activeFilter == WatchlistFilter.PRICE_DROPS
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isAllSelected) ElectricBlue.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
+                                    .border(1.dp, if (isAllSelected) ElectricBlue.copy(alpha = 0.6f) else PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
+                                    .clickable { onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.ALL)) }
+                                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = "All (${uiState.totalTrackedCount})",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (isAllSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isAllSelected) ElectricBlue else PriceLensTheme.glassColors.textSecondary
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isDropSelected) MintSuccess.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
+                                    .border(1.dp, if (isDropSelected) MintSuccess.copy(alpha = 0.6f) else PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
+                                    .clickable { onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.PRICE_DROPS)) }
+                                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.TrendingDown,
+                                        contentDescription = null,
+                                        tint = if (isDropSelected) MintSuccess else PriceLensTheme.glassColors.textSecondary,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Price Drops (${uiState.priceDropCount})",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = if (isDropSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isDropSelected) MintSuccess else PriceLensTheme.glassColors.textSecondary
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     // Search Filter
@@ -208,6 +266,46 @@ fun WatchlistScreen(
                                     unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
                                 )
                             )
+                        }
+                    }
+
+                    // Empty filter state
+                    if (uiState.filteredItems.isEmpty()) {
+                        item(key = "empty_filter_state") {
+                            GlassCard(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (uiState.activeFilter == WatchlistFilter.PRICE_DROPS) Icons.AutoMirrored.Filled.TrendingDown else Icons.Default.BookmarkBorder,
+                                        contentDescription = null,
+                                        tint = PriceLensTheme.glassColors.textTertiary,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Text(
+                                        text = if (uiState.activeFilter == WatchlistFilter.PRICE_DROPS) "No Price Drops Active Yet" else "No Matching Products",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.textPrimary
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = if (uiState.activeFilter == WatchlistFilter.PRICE_DROPS) "PriceLens background worker is actively monitoring your saved products for target price drops." else "Try searching with a different keyword or clear the search filter.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = PriceLensTheme.glassColors.textSecondary,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                }
+                            }
                         }
                     }
 
@@ -314,6 +412,9 @@ private fun WatchlistTopBar(
 private fun WatchlistStatsCard(
     totalCount: Int,
     priceDropCount: Int,
+    activeFilter: WatchlistFilter = WatchlistFilter.ALL,
+    onAllClick: () -> Unit = {},
+    onPriceDropsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     GlassCard(
@@ -328,17 +429,24 @@ private fun WatchlistStatsCard(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClick = onAllClick)
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
                 Text(
                     text = totalCount.toString(),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = PriceLensTheme.glassColors.textPrimary
+                    color = if (activeFilter == WatchlistFilter.ALL) ElectricBlue else PriceLensTheme.glassColors.textPrimary
                 )
                 Text(
                     text = "Total Tracked",
                     style = MaterialTheme.typography.labelSmall,
-                    color = PriceLensTheme.glassColors.textSecondary
+                    fontWeight = if (activeFilter == WatchlistFilter.ALL) FontWeight.Bold else FontWeight.Normal,
+                    color = if (activeFilter == WatchlistFilter.ALL) ElectricBlue else PriceLensTheme.glassColors.textSecondary
                 )
             }
 
@@ -349,7 +457,13 @@ private fun WatchlistStatsCard(
                     .background(PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.4f))
             )
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClick = onPriceDropsClick)
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (priceDropCount > 0) {
                         Icon(
@@ -370,6 +484,7 @@ private fun WatchlistStatsCard(
                 Text(
                     text = "Price Drops Active",
                     style = MaterialTheme.typography.labelSmall,
+                    fontWeight = if (activeFilter == WatchlistFilter.PRICE_DROPS) FontWeight.Bold else FontWeight.Normal,
                     color = if (priceDropCount > 0) MintSuccess else PriceLensTheme.glassColors.textSecondary
                 )
             }

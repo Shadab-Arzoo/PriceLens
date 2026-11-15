@@ -182,4 +182,23 @@ class SearchViewModelTest {
         assertNull(state.errorMessage)
         assertEquals(1, state.products.size)
     }
+
+    @Test
+    fun `sort order changed updates sortOrder in uiState and sorts products correctly`() = runTest {
+        catalogRepo.productsToReturn = listOf(
+            ProductSummary(id = "1", name = "Sony A", lowestPrice = 30000.0, retailerCount = 2),
+            ProductSummary(id = "2", name = "Sony B", lowestPrice = 15000.0, retailerCount = 5)
+        )
+        val viewModel = SearchViewModel(searchUseCase, SavedStateHandle())
+        viewModel.onEvent(SearchUiEvent.SubmitSearch("Sony"))
+        advanceUntilIdle()
+
+        assertEquals(2, viewModel.uiState.value.products.size)
+        assertEquals(com.pricelens.presentation.search.SearchSortOrder.RELEVANCE, viewModel.uiState.value.sortOrder)
+
+        viewModel.onEvent(SearchUiEvent.SortOrderChanged(com.pricelens.presentation.search.SearchSortOrder.PRICE_LOW_TO_HIGH))
+        val sorted = viewModel.uiState.value.sortedProducts
+        assertEquals("Sony B", sorted.first().name)
+        assertEquals(15000.0, sorted.first().lowestPrice)
+    }
 }

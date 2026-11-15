@@ -38,6 +38,9 @@ class SearchViewModel @Inject constructor(
             is SearchUiEvent.SubmitSearch -> {
                 performSearch(event.query)
             }
+            is SearchUiEvent.SortOrderChanged -> {
+                _uiState.update { it.copy(sortOrder = event.sortOrder) }
+            }
             SearchUiEvent.RetrySearch -> {
                 performSearch(_uiState.value.query)
             }
