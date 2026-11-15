@@ -88,13 +88,15 @@ fun PasteUrlBottomSheet(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
-                        .background(ElectricBlue.copy(alpha = 0.12f), CircleShape),
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(13.dp))
+                        .background(ElectricBlue.copy(alpha = 0.15f))
+                        .border(1.dp, ElectricBlue.copy(alpha = 0.35f), RoundedCornerShape(13.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Link,
-                        contentDescription = null,
+                        imageVector = Icons.Default.ContentPaste,
+                        contentDescription = "Paste Product Link",
                         tint = ElectricBlue,
                         modifier = Modifier.size(22.dp)
                     )

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.History
@@ -291,24 +292,33 @@ private fun PasteLinkHeroCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 12.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
+                            .size(46.dp)
+                            .clip(RoundedCornerShape(14.dp))
                             .background(
                                 Brush.linearGradient(
                                     listOf(ElectricBlue, Color(0xFF4F46E5))
                                 )
+                            )
+                            .border(
+                                1.dp,
+                                Brush.linearGradient(
+                                    listOf(Color.White.copy(alpha = 0.45f), Color.White.copy(alpha = 0.12f))
+                                ),
+                                RoundedCornerShape(14.dp)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Link,
-                            contentDescription = null,
+                            imageVector = Icons.Default.ContentPaste,
+                            contentDescription = "Compare by Product Link",
                             tint = Color.White,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
@@ -321,6 +331,7 @@ private fun PasteLinkHeroCard(
                             fontWeight = FontWeight.Bold,
                             color = PriceLensTheme.glassColors.textPrimary
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "Paste any URL from 5 verified Indian retailers",
                             style = MaterialTheme.typography.bodySmall,
@@ -331,9 +342,10 @@ private fun PasteLinkHeroCard(
 
                 Box(
                     modifier = Modifier
-                        .size(34.dp)
+                        .size(36.dp)
                         .clip(CircleShape)
-                        .background(ElectricBlue.copy(alpha = 0.1f)),
+                        .background(ElectricBlue.copy(alpha = 0.12f))
+                        .border(1.dp, ElectricBlue.copy(alpha = 0.25f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -494,25 +506,30 @@ private fun ClipboardDetectedBanner(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(ElectricBlue.copy(alpha = 0.2f)),
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(ElectricBlue.copy(alpha = 0.20f))
+                    .border(1.dp, ElectricBlue.copy(alpha = 0.35f), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Link,
-                    contentDescription = null,
+                    imageVector = Icons.Default.ContentPaste,
+                    contentDescription = "Clipboard link",
                     tint = ElectricBlue,
                     modifier = Modifier.size(20.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+            ) {
                 Text(
                     text = "Product link in clipboard",
                     style = MaterialTheme.typography.titleSmall,
@@ -527,21 +544,23 @@ private fun ClipboardDetectedBanner(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Spacer(modifier = Modifier.width(8.dp))
             LiquidGlassPrimaryButton(
                 text = "Compare",
                 onClick = onCompare,
-                modifier = Modifier.height(36.dp)
+                fillMaxWidth = false,
+                modifier = Modifier.height(36.dp),
+                shape = RoundedCornerShape(12.dp)
             )
+            Spacer(modifier = Modifier.width(4.dp))
             IconButton(
                 onClick = onDismiss,
-                modifier = Modifier.size(30.dp)
+                modifier = Modifier.size(32.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Dismiss",
                     tint = PriceLensTheme.glassColors.textSecondary,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }

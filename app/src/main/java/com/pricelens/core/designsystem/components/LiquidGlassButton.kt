@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -56,6 +57,7 @@ fun LiquidGlassPrimaryButton(
     trailingIcon: ImageVector? = null,
     enabled: Boolean = true,
     loading: Boolean = false,
+    fillMaxWidth: Boolean = true,
     shape: Shape = RoundedCornerShape(18.dp),
     height: Dp = 52.dp,
     gradientBrush: Brush = PriceLensTheme.glassColors.primaryGradientBrush
@@ -113,8 +115,7 @@ fun LiquidGlassPrimaryButton(
         )
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = (if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.wrapContentWidth())
                 .height(height)
                 .background(
                     if (enabled) gradientBrush
@@ -150,7 +151,7 @@ fun LiquidGlassPrimaryButton(
                     )
                 } else {
                     Row(
-                        modifier = Modifier.padding(horizontal = 20.dp),
+                        modifier = Modifier.padding(horizontal = if (fillMaxWidth) 20.dp else 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
@@ -196,6 +197,7 @@ fun LiquidGlassSecondaryButton(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     enabled: Boolean = true,
+    fillMaxWidth: Boolean = true,
     shape: Shape = RoundedCornerShape(18.dp),
     height: Dp = 48.dp
 ) {
@@ -239,13 +241,12 @@ fun LiquidGlassSecondaryButton(
         border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorderBrush)
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = (if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.wrapContentWidth())
                 .height(height),
             contentAlignment = Alignment.Center
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 18.dp),
+                modifier = Modifier.padding(horizontal = if (fillMaxWidth) 18.dp else 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
