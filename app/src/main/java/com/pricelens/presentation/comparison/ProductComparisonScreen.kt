@@ -2,16 +2,32 @@ package com.pricelens.presentation.comparison
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.draw.clip
@@ -44,7 +60,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AddAlert
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -873,13 +892,30 @@ private fun androidx.compose.foundation.layout.RowScope.PresetChip(
     label: String,
     onClick: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
+    val interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "presetScale"
+    )
+
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.12f),
-        border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f)),
+        color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (isPressed) 0.25f else 0.12f),
+        border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (isPressed) 0.6f else 0.35f)),
         modifier = Modifier
             .weight(1f)
-            .clickable(onClick = onClick)
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onClick()
+                }
+            )
     ) {
         Text(
             text = label,
@@ -1952,6 +1988,7 @@ private fun BuyNowVerdictCard(
     if (lowestPrice == null || lowestPrice <= 0.0) return
 
     val minPrice = history.map { it.price }.minOrNull() ?: lowestPrice
+    val maxPrice = history.map { it.price }.maxOrNull() ?: lowestPrice
     val avgPrice = if (history.isNotEmpty()) history.map { it.price }.average() else lowestPrice
 
     val verdict = when {
@@ -1984,15 +2021,38 @@ private fun BuyNowVerdictCard(
         }
     }
 
+    val positionFraction = if (maxPrice > minPrice) {
+        ((lowestPrice - minPrice) / (maxPrice - minPrice)).toFloat().coerceIn(0f, 1f)
+    } else 0f
+
+    val animatedFraction by animateFloatAsState(
+        targetValue = positionFraction,
+        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        label = "priceGaugePosition"
+    )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "verdictGlow")
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.75f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowAlpha"
+    )
+
     GlassCard(
-        modifier = modifier.fillMaxWidth(),
-        borderColor = verdict.badgeColor.copy(alpha = 0.5f)
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize(),
+        borderColor = verdict.badgeColor.copy(alpha = glowAlpha)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -2042,6 +2102,75 @@ private fun BuyNowVerdictCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = PriceLensTheme.glassColors.textSecondary
             )
+
+            // Animated Visual Price Position Gauge
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(PriceLensTheme.glassColors.surfaceHighlight)
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "30-Day Range Spectrum",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                    Text(
+                        text = "Today: ${currencyFormatter.format(lowestPrice)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = verdict.badgeColor
+                    )
+                }
+
+                // Gradient Track
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                colors = listOf(
+                                    MintSuccess,
+                                    ElectricBlue,
+                                    AmberAlert,
+                                    Color(0xFFE53935)
+                                )
+                            )
+                        )
+                )
+
+                // Labels below track
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Low: ${currencyFormatter.format(minPrice)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MintSuccess
+                    )
+                    Text(
+                        text = "Avg: ${currencyFormatter.format(avgPrice)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ElectricBlue
+                    )
+                    Text(
+                        text = "Peak: ${currencyFormatter.format(maxPrice)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                }
+            }
         }
     }
 }
@@ -2067,9 +2196,23 @@ private fun DealAuthenticityCard(
     val advertisedDiscountPercent = (((advertisedListPrice - lowestPrice) / advertisedListPrice) * 100).toInt()
     val trueDiscountPercent = (((median - lowestPrice) / median) * 100).coerceAtLeast(0.0).toInt()
 
+    val rawScore = if (isGenuineDeal) {
+        (85 + (trueDiscountPercent * 1.5).toInt()).coerceAtMost(99)
+    } else {
+        (42 - (advertisedDiscountPercent / 3)).coerceAtLeast(18)
+    }
+
+    val animatedScore by animateFloatAsState(
+        targetValue = rawScore.toFloat(),
+        animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+        label = "trustScore"
+    )
+
     GlassCard(
-        modifier = modifier.fillMaxWidth(),
-        borderColor = if (isGenuineDeal) MintSuccess.copy(alpha = 0.4f) else AmberAlert.copy(alpha = 0.4f)
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize(),
+        borderColor = if (isGenuineDeal) MintSuccess.copy(alpha = 0.45f) else AmberAlert.copy(alpha = 0.45f)
     ) {
         Column(
             modifier = Modifier
@@ -2122,6 +2265,51 @@ private fun DealAuthenticityCard(
                 color = PriceLensTheme.glassColors.textPrimary
             )
 
+            // Animated Trust Score Bar
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(PriceLensTheme.glassColors.surfaceHighlight)
+                    .padding(10.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Authenticity Confidence",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                    Text(
+                        text = "${animatedScore.toInt()}% Trust Index",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isGenuineDeal) MintSuccess else AmberAlert
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(PriceLensTheme.glassColors.specularBorder)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(animatedScore / 100f)
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(if (isGenuineDeal) MintSuccess else AmberAlert)
+                    )
+                }
+            }
+
             // Transparent metrics row
             Row(
                 modifier = Modifier
@@ -2155,6 +2343,7 @@ private fun BankOfferSimulatorCard(
     modifier: Modifier = Modifier
 ) {
     var selectedOfferIndex by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val haptic = LocalHapticFeedback.current
 
     val offers = listOf(
         Triple("Standard Price", 0.0, "No card applied"),
@@ -2168,7 +2357,9 @@ private fun BankOfferSimulatorCard(
     val effectivePrice = (basePrice - discountAmount).coerceAtLeast(0.0)
 
     GlassCard(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize(),
         borderColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.45f)
     ) {
         Column(
@@ -2218,23 +2409,38 @@ private fun BankOfferSimulatorCard(
                 color = PriceLensTheme.glassColors.textSecondary
             )
 
-            // Chips
+            // Chips with scale and spring transitions
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 listOf("None", "10% Card", "5% Cashback", "₹500 UPI").forEachIndexed { idx, label ->
                     val isSelected = selectedOfferIndex == idx
+                    val chipScale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.03f else 1.0f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "chipScale_$idx"
+                    )
+                    val chipBg by animateColorAsState(
+                        targetValue = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.surfaceHighlight,
+                        animationSpec = spring(),
+                        label = "chipBg_$idx"
+                    )
+
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.surfaceHighlight,
+                        color = chipBg,
                         border = BorderStroke(
                             1.dp,
                             if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { selectedOfferIndex = idx }
+                            .graphicsLayer(scaleX = chipScale, scaleY = chipScale)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                selectedOfferIndex = idx
+                            }
                     ) {
                         Text(
                             text = label,
@@ -2250,7 +2456,7 @@ private fun BankOfferSimulatorCard(
                 }
             }
 
-            // Effective Net Price Banner
+            // Effective Net Price Banner with rolling price animation
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -2260,19 +2466,36 @@ private fun BankOfferSimulatorCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = currentOffer.third,
                         style = MaterialTheme.typography.labelSmall,
                         color = PriceLensTheme.glassColors.textSecondary
                     )
-                    if (discountAmount > 0.0) {
-                        Text(
-                            text = "Card savings: -${currencyFormatter.format(discountAmount)}",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MintSuccess
-                        )
+
+                    AnimatedVisibility(
+                        visible = discountAmount > 0.0,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 2.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = MintSuccess,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "Card savings: -${currencyFormatter.format(discountAmount)}",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MintSuccess
+                            )
+                        }
                     }
                 }
 
@@ -2282,12 +2505,22 @@ private fun BankOfferSimulatorCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = PriceLensTheme.glassColors.textSecondary
                     )
-                    Text(
-                        text = currencyFormatter.format(effectivePrice),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = PriceLensTheme.glassColors.ambientGlow
-                    )
+
+                    AnimatedContent(
+                        targetState = effectivePrice,
+                        transitionSpec = {
+                            (slideInVertically { height -> height } + fadeIn())
+                                .togetherWith(slideOutVertically { height -> -height } + fadeOut())
+                        },
+                        label = "effectivePriceAnimation"
+                    ) { targetPrice ->
+                        Text(
+                            text = currencyFormatter.format(targetPrice),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = PriceLensTheme.glassColors.ambientGlow
+                        )
+                    }
                 }
             }
         }

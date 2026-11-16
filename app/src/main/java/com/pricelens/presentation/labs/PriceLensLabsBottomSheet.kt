@@ -1,6 +1,17 @@
 package com.pricelens.presentation.labs
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -8,6 +19,10 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -91,6 +106,23 @@ fun PriceLensLabsBottomSheet(
     var showImportDialog by remember { mutableStateOf(false) }
     var importJsonText by remember { mutableStateOf("") }
     var actionStatusMessage by remember { mutableStateOf<String?>(null) }
+    var isSyncing by remember { mutableStateOf(false) }
+    var isAlerting by remember { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
+
+    val syncRotation by animateFloatAsState(
+        targetValue = if (isSyncing) 360f else 0f,
+        animationSpec = if (isSyncing) tween(700, easing = LinearEasing) else spring(),
+        finishedListener = { isSyncing = false },
+        label = "syncRotation"
+    )
+
+    val alertWiggle by animateFloatAsState(
+        targetValue = if (isAlerting) 15f else 0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh),
+        finishedListener = { isAlerting = false },
+        label = "alertWiggle"
+    )
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -264,7 +296,9 @@ fun PriceLensLabsBottomSheet(
                     ) {
                         FilledTonalButton(
                             onClick = {
+                                isSyncing = true
                                 onTriggerPriceSync()
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 actionStatusMessage = "⚡ Scanning live prices for all tracked items in background!"
                             },
                             modifier = Modifier.weight(1f),
@@ -273,14 +307,22 @@ fun PriceLensLabsBottomSheet(
                                 containerColor = PriceLensTheme.glassColors.surfaceHighlight
                             )
                         ) {
-                            Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .graphicsLayer(rotationZ = syncRotation)
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(text = "Sync Prices", style = MaterialTheme.typography.labelMedium)
                         }
 
                         FilledTonalButton(
                             onClick = {
+                                isAlerting = true
                                 onTriggerTestNotification()
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 actionStatusMessage = "🔔 Test price-drop notification dispatched!"
                             },
                             modifier = Modifier.weight(1f),
@@ -289,7 +331,13 @@ fun PriceLensLabsBottomSheet(
                                 containerColor = PriceLensTheme.glassColors.surfaceHighlight
                             )
                         ) {
-                            Icon(imageVector = Icons.Default.NotificationsActive, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                imageVector = Icons.Default.NotificationsActive,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .graphicsLayer(rotationZ = alertWiggle)
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(text = "Test Alert", style = MaterialTheme.typography.labelMedium)
                         }
@@ -450,9 +498,34 @@ private fun FeatureToggleCard(
     onToggle: (Boolean) -> Unit
 ) {
     val glow = PriceLensTheme.glassColors.ambientGlow
+    val haptic = LocalHapticFeedback.current
+
+    val borderColor by animateColorAsState(
+        targetValue = if (enabled) glow.copy(alpha = 0.5f) else PriceLensTheme.glassColors.specularBorder,
+        animationSpec = spring(),
+        label = "featureBorder"
+    )
+
+    val iconBg by animateColorAsState(
+        targetValue = if (enabled) glow.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight,
+        animationSpec = spring(),
+        label = "featureIconBg"
+    )
+
+    val iconTint by animateColorAsState(
+        targetValue = if (enabled) glow else PriceLensTheme.glassColors.textSecondary,
+        animationSpec = spring(),
+        label = "featureIconTint"
+    )
 
     GlassCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onToggle(!enabled)
+            },
+        borderColor = borderColor,
         shape = RoundedCornerShape(14.dp)
     ) {
         Row(
@@ -463,28 +536,36 @@ private fun FeatureToggleCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(38.dp)
                     .clip(CircleShape)
-                    .background(PriceLensTheme.glassColors.surfaceHighlight),
+                    .background(iconBg)
+                    .border(
+                        1.dp,
+                        if (enabled) glow.copy(alpha = 0.35f) else Color.Transparent,
+                        CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = if (enabled) glow else PriceLensTheme.glassColors.textSecondary,
-                    modifier = Modifier.size(18.dp)
+                    tint = iconTint,
+                    modifier = Modifier.size(19.dp)
                 )
             }
 
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PriceLensTheme.glassColors.textPrimary
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PriceLensTheme.glassColors.textPrimary
+                    )
+                }
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
@@ -494,7 +575,10 @@ private fun FeatureToggleCard(
 
             Switch(
                 checked = enabled,
-                onCheckedChange = onToggle,
+                onCheckedChange = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onToggle(it)
+                },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
                     checkedTrackColor = glow,

@@ -734,14 +734,14 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
             return false
         }
         val productKeywords = listOf(
-            "apple", "iphone", "ipad", "macbook", "airpods", "airpod", "watch", "ultra",
+            "apple", "iphone", "ipad", "macbook", "mac", "airpods", "airpod", "watch", "ultra",
             "samsung", "galaxy", "buds",
-            "sony", "ps5", "playstation", "wh-", "wf-", "bravia",
-            "boat", "rockerz", "airdopes",
+            "sony", "ps5", "playstation", "xbox", "nintendo", "wh-", "wf-", "bravia",
+            "boat", "rockerz", "airdopes", "jbl", "bose", "realme", "oppo", "vivo", "redmi", "xiaomi",
             "puma", "nike", "adidas", "shoes", "shoe", "sneakers",
             "oneplus", "nord", "pixel", "asus", "dell", "hp", "lenovo", "thinkpad",
             "laptop", "phone", "headphone", "earphone", "earbuds", "smartwatch",
-            "television", "tv", "camera", "drone", "tablet", "monitor", "speaker"
+            "television", "tv", "camera", "drone", "tablet", "monitor", "speaker", "kindle"
         )
         return productKeywords.any { lower.contains(it) }
     }
@@ -786,9 +786,16 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
         }
 
         val now = System.currentTimeMillis()
-        val amazonPrice = kotlin.math.round(basePrice * 0.97)
-        val flipkartPrice = kotlin.math.round(basePrice * 1.00)
-        val cromaPrice = kotlin.math.round(basePrice * 1.04)
+        val storageMultiplier = when {
+            lower.contains("1tb") || lower.contains("1 tb") -> 1.35
+            lower.contains("512gb") || lower.contains("512 gb") -> 1.22
+            lower.contains("256gb") || lower.contains("256 gb") -> 1.10
+            else -> 1.0
+        }
+        val adjustedBase = basePrice * storageMultiplier
+        val amazonPrice = kotlin.math.round(adjustedBase * 0.97)
+        val flipkartPrice = kotlin.math.round(adjustedBase * 1.00)
+        val cromaPrice = kotlin.math.round(adjustedBase * 1.04)
 
         return ProductOffersDto(
             productId = id,

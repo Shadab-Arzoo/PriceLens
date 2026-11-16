@@ -1,10 +1,16 @@
 package com.pricelens.core.designsystem.components
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -119,16 +125,46 @@ fun PriceLensTopBar(
             ) {
                 // PriceLens Labs (Experimental Features) Button
                 if (onLabsClick != null) {
+                    val labsInteractionSource = remember { MutableInteractionSource() }
+                    val isLabsPressed by labsInteractionSource.collectIsPressedAsState()
+                    val labsScale by animateFloatAsState(
+                        targetValue = if (isLabsPressed) 0.90f else 1f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "labsScale"
+                    )
+
+                    val infiniteTransition = rememberInfiniteTransition(label = "labsPulse")
+                    val dotAlpha by infiniteTransition.animateFloat(
+                        initialValue = 0.4f,
+                        targetValue = 1.0f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1100, easing = FastOutSlowInEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "dotAlpha"
+                    )
+                    val dotScale by infiniteTransition.animateFloat(
+                        initialValue = 0.85f,
+                        targetValue = 1.25f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1100, easing = FastOutSlowInEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "dotScale"
+                    )
+
                     Box(contentAlignment = Alignment.TopEnd) {
                         IconButton(
                             onClick = onLabsClick,
+                            interactionSource = labsInteractionSource,
                             modifier = Modifier
                                 .size(42.dp)
+                                .graphicsLayer(scaleX = labsScale, scaleY = labsScale)
                                 .clip(CircleShape)
                                 .background(PriceLensTheme.glassColors.surfaceGlass)
                                 .border(
                                     1.dp,
-                                    if (isLabsActive) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.5f)
+                                    if (isLabsActive) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.6f)
                                     else PriceLensTheme.glassColors.specularBorder,
                                     CircleShape
                                 )
@@ -146,6 +182,7 @@ fun PriceLensTopBar(
                                 modifier = Modifier
                                     .offset(x = 2.dp, y = (-2).dp)
                                     .size(8.dp)
+                                    .graphicsLayer(scaleX = dotScale, scaleY = dotScale, alpha = dotAlpha)
                                     .clip(CircleShape)
                                     .background(PriceLensTheme.glassColors.ambientGlow)
                             )

@@ -2,8 +2,20 @@ package com.pricelens.presentation.dashboard
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -342,13 +354,41 @@ private fun PriceLensLabsBanner(
 ) {
     val glow = PriceLensTheme.glassColors.ambientGlow
     val isDark = PriceLensTheme.isDark
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "bannerPressScale"
+    )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "bannerGlowPulse")
+    val borderAlpha by infiniteTransition.animateFloat(
+        initialValue = if (isMasterEnabled) 0.35f else 0.15f,
+        targetValue = if (isMasterEnabled) 0.8f else 0.25f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bannerBorderAlpha"
+    )
+    val iconTilt by infiniteTransition.animateFloat(
+        initialValue = -8f,
+        targetValue = 8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "iconTilt"
+    )
 
     com.pricelens.core.designsystem.components.GlassCard(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
-        borderColor = if (isMasterEnabled) glow.copy(alpha = 0.45f) else PriceLensTheme.glassColors.specularBorder
+            .padding(horizontal = 20.dp)
+            .graphicsLayer(scaleX = scale, scaleY = scale),
+        borderColor = if (isMasterEnabled) glow.copy(alpha = borderAlpha) else PriceLensTheme.glassColors.specularBorder
     ) {
         Row(
             modifier = Modifier
@@ -363,7 +403,7 @@ private fun PriceLensLabsBanner(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(38.dp)
                         .clip(CircleShape)
                         .background(if (isDark) glow.copy(alpha = 0.15f) else Color(0xFFE6F4EA))
                         .border(1.dp, glow.copy(alpha = 0.35f), CircleShape),
@@ -373,7 +413,9 @@ private fun PriceLensLabsBanner(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = "PriceLens Labs",
                         tint = glow,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier
+                            .size(19.dp)
+                            .graphicsLayer(rotationZ = if (isMasterEnabled) iconTilt else 0f)
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
