@@ -32,7 +32,12 @@ import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -204,29 +209,42 @@ fun WatchlistScreen(
                         WatchlistStatsCard(
                             totalCount = uiState.totalTrackedCount,
                             priceDropCount = uiState.priceDropCount,
+                            totalSavings = uiState.totalPotentialSavings,
+                            currencyFormatter = currencyFormatter,
                             activeFilter = uiState.activeFilter,
                             onAllClick = { onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.ALL)) },
-                            onPriceDropsClick = { onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.PRICE_DROPS)) }
+                            onPriceDropsClick = { onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.PRICE_DROPS)) },
+                            onSavingsClick = {
+                                onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.PRICE_DROPS))
+                                onEvent(WatchlistUiEvent.SortOrderChanged(WatchlistSortOrder.BIGGEST_SAVINGS))
+                            }
                         )
                     }
 
-                    // Filter Chips Row
+                    // Filter & Sort Chips Row (Scrollable)
                     item(key = "filter_chips") {
+                        val haptic = LocalHapticFeedback.current
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             val isAllSelected = uiState.activeFilter == WatchlistFilter.ALL
                             val isDropSelected = uiState.activeFilter == WatchlistFilter.PRICE_DROPS
 
+                            // All Filter
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(if (isAllSelected) ElectricBlue.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
                                     .border(1.dp, if (isAllSelected) ElectricBlue.copy(alpha = 0.6f) else PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
-                                    .clickable { onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.ALL)) }
-                                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.ALL))
+                                    }
+                                    .padding(horizontal = 13.dp, vertical = 7.dp)
                             ) {
                                 Text(
                                     text = "All (${uiState.totalTrackedCount})",
@@ -236,13 +254,17 @@ fun WatchlistScreen(
                                 )
                             }
 
+                            // Price Drops Filter
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(if (isDropSelected) MintSuccess.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
                                     .border(1.dp, if (isDropSelected) MintSuccess.copy(alpha = 0.6f) else PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
-                                    .clickable { onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.PRICE_DROPS)) }
-                                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.PRICE_DROPS))
+                                    }
+                                    .padding(horizontal = 13.dp, vertical = 7.dp)
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
@@ -259,6 +281,77 @@ fun WatchlistScreen(
                                         color = if (isDropSelected) MintSuccess else PriceLensTheme.glassColors.textSecondary
                                     )
                                 }
+                            }
+
+                            // Divider
+                            Box(
+                                modifier = Modifier
+                                    .height(20.dp)
+                                    .width(1.dp)
+                                    .background(PriceLensTheme.glassColors.specularBorder)
+                            )
+
+                            // Sort: Price Ascending
+                            val isPriceAsc = uiState.sortOrder == WatchlistSortOrder.PRICE_ASC
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isPriceAsc) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
+                                    .border(1.dp, if (isPriceAsc) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.6f) else PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onEvent(WatchlistUiEvent.SortOrderChanged(if (isPriceAsc) WatchlistSortOrder.LATEST else WatchlistSortOrder.PRICE_ASC))
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 7.dp)
+                            ) {
+                                Text(
+                                    text = "Price 🔼",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (isPriceAsc) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isPriceAsc) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary
+                                )
+                            }
+
+                            // Sort: Price Descending
+                            val isPriceDesc = uiState.sortOrder == WatchlistSortOrder.PRICE_DESC
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isPriceDesc) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
+                                    .border(1.dp, if (isPriceDesc) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.6f) else PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onEvent(WatchlistUiEvent.SortOrderChanged(if (isPriceDesc) WatchlistSortOrder.LATEST else WatchlistSortOrder.PRICE_DESC))
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 7.dp)
+                            ) {
+                                Text(
+                                    text = "Price 🔽",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (isPriceDesc) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isPriceDesc) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary
+                                )
+                            }
+
+                            // Sort: Biggest Savings
+                            val isSavingsSort = uiState.sortOrder == WatchlistSortOrder.BIGGEST_SAVINGS
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSavingsSort) MintSuccess.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
+                                    .border(1.dp, if (isSavingsSort) MintSuccess.copy(alpha = 0.6f) else PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onEvent(WatchlistUiEvent.SortOrderChanged(if (isSavingsSort) WatchlistSortOrder.LATEST else WatchlistSortOrder.BIGGEST_SAVINGS))
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 7.dp)
+                            ) {
+                                Text(
+                                    text = "Savings 🎯",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (isSavingsSort) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSavingsSort) MintSuccess else PriceLensTheme.glassColors.textSecondary
+                                )
                             }
                         }
                     }
@@ -476,9 +569,12 @@ private fun WatchlistTopBar(
 private fun WatchlistStatsCard(
     totalCount: Int,
     priceDropCount: Int,
+    totalSavings: Double = 0.0,
+    currencyFormatter: java.text.NumberFormat,
     activeFilter: WatchlistFilter = WatchlistFilter.ALL,
     onAllClick: () -> Unit = {},
     onPriceDropsClick: () -> Unit = {},
+    onSavingsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val allSelected = activeFilter == WatchlistFilter.ALL
@@ -503,7 +599,7 @@ private fun WatchlistStatsCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(10.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -514,16 +610,16 @@ private fun WatchlistStatsCard(
                     .clip(RoundedCornerShape(14.dp))
                     .background(allBgColor)
                     .clickable(onClick = onAllClick)
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .padding(horizontal = 6.dp, vertical = 8.dp)
             ) {
                 Text(
                     text = totalCount.toString(),
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
                     color = if (allSelected) ElectricBlue else PriceLensTheme.glassColors.textPrimary
                 )
                 Text(
-                    text = "Total Tracked",
+                    text = "Tracked",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (allSelected) FontWeight.Bold else FontWeight.Normal,
                     color = if (allSelected) ElectricBlue else PriceLensTheme.glassColors.textSecondary
@@ -532,7 +628,7 @@ private fun WatchlistStatsCard(
 
             Box(
                 modifier = Modifier
-                    .height(36.dp)
+                    .height(32.dp)
                     .width(1.dp)
                     .background(PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.4f))
             )
@@ -544,7 +640,7 @@ private fun WatchlistStatsCard(
                     .clip(RoundedCornerShape(14.dp))
                     .background(dropsBgColor)
                     .clickable(onClick = onPriceDropsClick)
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .padding(horizontal = 6.dp, vertical = 8.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (priceDropCount > 0) {
@@ -552,22 +648,53 @@ private fun WatchlistStatsCard(
                             imageVector = Icons.AutoMirrored.Filled.TrendingDown,
                             contentDescription = null,
                             tint = MintSuccess,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(2.dp))
                     }
                     Text(
                         text = priceDropCount.toString(),
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
                         color = if (priceDropCount > 0) MintSuccess else PriceLensTheme.glassColors.textPrimary
                     )
                 }
                 Text(
-                    text = "Price Drops Active",
+                    text = "Drops Active",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (dropsSelected) FontWeight.Bold else FontWeight.Normal,
                     color = if (priceDropCount > 0) MintSuccess else PriceLensTheme.glassColors.textSecondary
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .height(32.dp)
+                    .width(1.dp)
+                    .background(PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.4f))
+            )
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(1.2f)
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable(onClick = onSavingsClick)
+                    .padding(horizontal = 6.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = if (totalSavings > 0) currencyFormatter.format(totalSavings) else "₹0",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = if (totalSavings > 0) MintSuccess else PriceLensTheme.glassColors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Savings Caught",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Normal,
+                    color = if (totalSavings > 0) MintSuccess else PriceLensTheme.glassColors.textSecondary
                 )
             }
         }

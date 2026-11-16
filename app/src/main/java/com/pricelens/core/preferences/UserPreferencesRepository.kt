@@ -27,7 +27,8 @@ class UserPreferencesRepository @Inject constructor(
         val enableBuyNowVerdict: Boolean = true,
         val enableBankCardCalculator: Boolean = true,
         val enableAlertPresets: Boolean = true,
-        val enableDynamicSearch: Boolean = true
+        val enableDynamicSearch: Boolean = true,
+        val enablePriceDropForecast: Boolean = true
     )
 
     private val _themeModeFlow = MutableStateFlow(getThemeMode())
@@ -55,7 +56,8 @@ class UserPreferencesRepository @Inject constructor(
             enableBuyNowVerdict = prefs.getBoolean(KEY_EXP_BUY_NOW_VERDICT, true),
             enableBankCardCalculator = prefs.getBoolean(KEY_EXP_BANK_CARD, true),
             enableAlertPresets = prefs.getBoolean(KEY_EXP_ALERT_PRESETS, true),
-            enableDynamicSearch = prefs.getBoolean(KEY_EXP_DYNAMIC_SEARCH, true)
+            enableDynamicSearch = prefs.getBoolean(KEY_EXP_DYNAMIC_SEARCH, true),
+            enablePriceDropForecast = prefs.getBoolean(KEY_EXP_PRICE_DROP_FORECAST, true)
         )
     }
 
@@ -106,5 +108,6 @@ class UserPreferencesRepository @Inject constructor(
         const val KEY_EXP_BANK_CARD = "key_exp_bank_card"
         const val KEY_EXP_ALERT_PRESETS = "key_exp_alert_presets"
         const val KEY_EXP_DYNAMIC_SEARCH = "key_exp_dynamic_search"
+        const val KEY_EXP_PRICE_DROP_FORECAST = "key_exp_price_drop_forecast"
     }
 }

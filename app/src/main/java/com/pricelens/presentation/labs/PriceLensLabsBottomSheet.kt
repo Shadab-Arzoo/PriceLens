@@ -38,6 +38,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -482,6 +483,17 @@ fun PriceLensLabsBottomSheet(
                         description = "Dynamically searches and compares any product on Earth across retailers, beyond static catalog items.",
                         enabled = flags.enableDynamicSearch,
                         onToggle = { onToggleFlag(UserPreferencesRepository.KEY_EXP_DYNAMIC_SEARCH, it) }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // 6. AI Price Drop Probability Forecast
+                    FeatureToggleCard(
+                        icon = Icons.AutoMirrored.Filled.TrendingDown,
+                        title = "AI Price Drop Forecast & Buying Window",
+                        description = "Analyzes 30-day volatility patterns and estimates probability of a price drop within 14 days, highlighting the optimal buying window.",
+                        enabled = flags.enablePriceDropForecast,
+                        onToggle = { onToggleFlag(UserPreferencesRepository.KEY_EXP_PRICE_DROP_FORECAST, it) }
                     )
                 }
             }

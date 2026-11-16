@@ -8,6 +8,7 @@ import com.pricelens.domain.model.WatchlistItem
 import com.pricelens.domain.repository.DashboardRepository
 import com.pricelens.domain.repository.TargetPriceAlertRepository
 import com.pricelens.presentation.watchlist.WatchlistFilter
+import com.pricelens.presentation.watchlist.WatchlistSortOrder
 import com.pricelens.presentation.watchlist.WatchlistUiEvent
 import com.pricelens.presentation.watchlist.WatchlistViewModel
 import kotlinx.coroutines.Dispatchers
@@ -147,5 +148,65 @@ class WatchlistViewModelTest {
 
         assertTrue(dashboardRepo.itemsFlow.value.isEmpty())
         assertEquals("Removed product from watchlist", viewModel.uiState.value.notificationMessage)
+    }
+
+    @Test
+    fun `sorting items by price works correctly`() = runTest {
+        val cheapItem = WatchlistItem(
+            productId = "prod_cheap",
+            productName = "Cheap Product",
+            targetPrice = 200.0,
+            currentLowestPrice = 150.0,
+            currency = "INR",
+            addedAtTimestamp = 1700000000000L
+        )
+        val expensiveItem = WatchlistItem(
+            productId = "prod_expensive",
+            productName = "Expensive Product",
+            targetPrice = 2000.0,
+            currentLowestPrice = 1500.0,
+            currency = "INR",
+            addedAtTimestamp = 1700000000000L
+        )
+        dashboardRepo.itemsFlow.value = listOf(expensiveItem, cheapItem)
+
+        val viewModel = WatchlistViewModel(dashboardRepo, alertRepo)
+        advanceUntilIdle()
+
+        viewModel.onEvent(WatchlistUiEvent.SortOrderChanged(WatchlistSortOrder.PRICE_ASC))
+        assertEquals("prod_cheap", viewModel.uiState.value.filteredItems.first().productId)
+
+        viewModel.onEvent(WatchlistUiEvent.SortOrderChanged(WatchlistSortOrder.PRICE_DESC))
+        assertEquals("prod_expensive", viewModel.uiState.value.filteredItems.first().productId)
+    }
+
+    @Test
+    fun `sorting by biggest savings ranks items by savings correctly`() = runTest {
+        val smallSavingItem = WatchlistItem(
+            productId = "prod_small",
+            productName = "Small Drop",
+            targetPrice = 1000.0,
+            currentLowestPrice = 950.0, // savings = 50
+            currency = "INR",
+            addedAtTimestamp = 1700000000000L
+        )
+        val bigSavingItem = WatchlistItem(
+            productId = "prod_big",
+            productName = "Big Drop",
+            targetPrice = 2000.0,
+            currentLowestPrice = 1200.0, // savings = 800
+            currency = "INR",
+            addedAtTimestamp = 1700000000000L
+        )
+        dashboardRepo.itemsFlow.value = listOf(smallSavingItem, bigSavingItem)
+
+        val viewModel = WatchlistViewModel(dashboardRepo, alertRepo)
+        advanceUntilIdle()
+
+        assertEquals(850.0, viewModel.uiState.value.totalPotentialSavings, 0.01)
+
+        viewModel.onEvent(WatchlistUiEvent.SortOrderChanged(WatchlistSortOrder.BIGGEST_SAVINGS))
+        assertEquals("prod_big", viewModel.uiState.value.filteredItems.first().productId)
+        assertEquals("prod_small", viewModel.uiState.value.filteredItems.last().productId)
     }
 }
