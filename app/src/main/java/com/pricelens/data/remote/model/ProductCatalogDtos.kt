@@ -21,7 +21,11 @@ data class ProductSummaryDto(
     @SerializedName("currency")
     val currency: String = "INR",
     @SerializedName("retailer_count")
-    val retailerCount: Int = 0
+    val retailerCount: Int = 0,
+    @SerializedName("lowest_price_retailer")
+    val lowestPriceRetailer: String? = null,
+    @SerializedName("highest_price")
+    val highestPrice: Double? = null
 )
 
 /**

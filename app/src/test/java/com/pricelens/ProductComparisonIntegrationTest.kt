@@ -122,14 +122,14 @@ class ProductComparisonIntegrationTest {
         val products = searchResult.getOrNull()!!
         val iPhone = products.first { it.id == "prod_iphone_15_128" }
         assertEquals("Apple", iPhone.brand)
-        assertEquals(69900.0, iPhone.lowestPrice!!, 0.01)
+        assertEquals(54999.0, iPhone.lowestPrice!!, 0.01)
 
         val comparisonResult = comparisonUseCase(iPhone.id)
         assertTrue(comparisonResult.isSuccess)
         val details = comparisonResult.getOrNull()!!
 
         assertEquals(4, details.offers.size) // Amazon, Flipkart, Croma, Reliance Digital
-        assertEquals(69900.0, details.lowestPriceOffer!!.price!!, 0.01)
+        assertEquals(54999.0, details.lowestPriceOffer!!.price!!, 0.01)
         assertEquals("amazon_in", details.lowestPriceOffer!!.retailerId)
 
         assertEquals(1, details.unavailableRetailers.size) // Vijay Sales

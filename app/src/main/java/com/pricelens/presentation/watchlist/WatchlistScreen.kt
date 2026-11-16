@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -387,12 +388,17 @@ private fun WatchlistTopBar(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    GlassCard(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(20.dp)
+            .statusBarsPadding()
     ) {
+        GlassCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            shape = RoundedCornerShape(20.dp)
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -464,6 +470,7 @@ private fun WatchlistTopBar(
             }
         }
     }
+}
 }
 
 @Composable

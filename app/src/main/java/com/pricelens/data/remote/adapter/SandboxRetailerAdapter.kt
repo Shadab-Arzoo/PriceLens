@@ -110,7 +110,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                 RetailerOfferDto(
                     retailerId = "amazon_in",
                     retailerName = "Amazon India",
-                    price = 69900.0,
+                    price = 54999.0,
                     currency = "INR",
                     isAvailable = true,
                     productUrl = "https://www.amazon.in/dp/B0CHX1W1XY",
@@ -122,7 +122,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                 RetailerOfferDto(
                     retailerId = "flipkart",
                     retailerName = "Flipkart",
-                    price = 69999.0,
+                    price = 55999.0,
                     currency = "INR",
                     isAvailable = true,
                     productUrl = "https://www.flipkart.com/apple-iphone-15-black-128-gb/p/itm6ac6485515ae4",
@@ -134,7 +134,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                 RetailerOfferDto(
                     retailerId = "croma",
                     retailerName = "Croma",
-                    price = 70900.0,
+                    price = 57990.0,
                     currency = "INR",
                     isAvailable = true,
                     productUrl = "https://www.croma.com/apple-iphone-15-128gb-black-/p/300652",
@@ -146,7 +146,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                 RetailerOfferDto(
                     retailerId = "reliance_digital",
                     retailerName = "Reliance Digital",
-                    price = 71200.0,
+                    price = 58900.0,
                     currency = "INR",
                     isAvailable = true,
                     productUrl = "https://www.reliancedigital.in/apple-iphone-15-128-gb-black/p/493839294",
@@ -686,7 +686,9 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
     }
 
     private fun ProductOffersDto.toSummaryDto(): ProductSummaryDto {
-        val lowestOffer = offers.filter { it.isAvailable && it.price != null }.minByOrNull { it.price!! }
+        val availableOffers = offers.filter { it.isAvailable && it.price != null }
+        val lowestOffer = availableOffers.minByOrNull { it.price!! }
+        val highestOffer = availableOffers.maxByOrNull { it.price!! }
         return ProductSummaryDto(
             id = productId,
             name = productTitle,
@@ -695,7 +697,9 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
             imageUrl = imageUrl,
             lowestPrice = lowestOffer?.price,
             currency = lowestOffer?.currency ?: "INR",
-            retailerCount = offers.count { it.isAvailable }
+            retailerCount = offers.count { it.isAvailable },
+            lowestPriceRetailer = lowestOffer?.retailerName,
+            highestPrice = highestOffer?.price
         )
     }
 }

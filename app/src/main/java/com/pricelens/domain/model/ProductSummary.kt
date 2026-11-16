@@ -8,5 +8,7 @@ data class ProductSummary(
     val imageUrl: String? = null,
     val lowestPrice: Double? = null,
     val currency: String = "INR",
-    val retailerCount: Int = 0
+    val retailerCount: Int = 0,
+    val lowestPriceRetailer: String? = null,
+    val highestPrice: Double? = null
 )

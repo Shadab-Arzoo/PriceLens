@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,14 +13,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Surface
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -59,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pricelens.R
+import com.pricelens.core.designsystem.BrandMint
 import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
@@ -125,24 +131,33 @@ fun DashboardScreen(
         } else null
     }
 
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(brush = PriceLensTheme.glassColors.backgroundBrush)
     ) {
+        // 1. Pinned Top Bar with status bar protection
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = PriceLensTheme.glassColors.surfaceGlass,
+            border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder)
+        ) {
+            PriceLensTopBar(
+                title = stringResource(R.string.dashboard_title),
+                subtitle = stringResource(R.string.dashboard_subtitle),
+                watchlistCount = uiState.watchlistItems.size,
+                onWatchlistClick = onNavigateToWatchlist
+            )
+        }
+
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .navigationBarsPadding(),
+            contentPadding = PaddingValues(top = 14.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            // 1. Top Bar
-            item {
-                PriceLensTopBar(
-                    title = stringResource(R.string.dashboard_title),
-                    subtitle = stringResource(R.string.dashboard_subtitle),
-                    watchlistCount = uiState.watchlistItems.size,
-                    onWatchlistClick = onNavigateToWatchlist
-                )
-            }
 
             // 2. Search Input Bar
             item {
@@ -691,14 +706,35 @@ private fun TrendingSection(
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
     ) {
-        Text(
-            text = stringResource(R.string.section_trending),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = PriceLensTheme.glassColors.textPrimary
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.section_trending),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = PriceLensTheme.glassColors.textPrimary
+            )
 
-        Spacer(modifier = Modifier.height(10.dp))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(BrandMint.copy(alpha = 0.12f))
+                    .border(1.dp, BrandMint.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            ) {
+                Text(
+                    text = "Live Market Verified",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrandMint
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         if (trendingProducts.isEmpty()) {
             EmptyStateCard(
@@ -707,42 +743,111 @@ private fun TrendingSection(
                 subtitle = stringResource(R.string.empty_trending_subtitle)
             )
         } else {
-            val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val currencyFormatter = remember {
+                NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
+                    maximumFractionDigits = 0
+                }
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 trendingProducts.forEach { product ->
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = { onProductClick(product.id, product.name) }
                     ) {
-                        Row(
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(14.dp)
                         ) {
-                            Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                                Text(
-                                    text = product.name,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = PriceLensTheme.glassColors.textPrimary,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = "${product.brand.orEmpty()} • ${product.retailerCount} stores compared",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = PriceLensTheme.glassColors.textSecondary
-                                )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                                    Text(
+                                        text = product.name,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.textPrimary,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.height(3.dp))
+                                    Text(
+                                        text = "${product.brand.orEmpty()} • ${product.retailerCount} stores compared",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = PriceLensTheme.glassColors.textSecondary
+                                    )
+                                }
+
+                                if (product.lowestPrice != null) {
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Text(
+                                            text = currencyFormatter.format(product.lowestPrice),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = BrandMint
+                                        )
+                                        Text(
+                                            text = "Lowest price",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = PriceLensTheme.glassColors.textTertiary
+                                        )
+                                    }
+                                }
                             }
-                            if (product.lowestPrice != null) {
-                                Text(
-                                    text = currencyFormatter.format(product.lowestPrice),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MintSuccess
-                                )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // Comparison & Store savings strip
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(PriceLensTheme.glassColors.surfaceHighlight)
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(6.dp)
+                                            .background(BrandMint, CircleShape)
+                                    )
+                                    val bestStore = product.lowestPriceRetailer?.let { "Best deal on $it" }
+                                        ?: "Verified lowest price"
+                                    Text(
+                                        text = bestStore,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = PriceLensTheme.glassColors.textPrimary
+                                    )
+                                }
+
+                                val savings = if (product.highestPrice != null && product.lowestPrice != null && product.highestPrice > product.lowestPrice) {
+                                    product.highestPrice - product.lowestPrice
+                                } else null
+
+                                if (savings != null && savings > 0) {
+                                    Text(
+                                        text = "Save up to ${currencyFormatter.format(savings)}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = BrandMint
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Compare ➜",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = PriceLensTheme.glassColors.textSecondary
+                                    )
+                                }
                             }
                         }
                     }

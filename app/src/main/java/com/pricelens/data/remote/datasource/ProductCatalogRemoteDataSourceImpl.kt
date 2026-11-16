@@ -185,7 +185,9 @@ class ProductCatalogRemoteDataSourceImpl @Inject constructor(
             imageUrl = imageUrl,
             lowestPrice = lowestPrice,
             currency = currency,
-            retailerCount = retailerCount
+            retailerCount = retailerCount,
+            lowestPriceRetailer = lowestPriceRetailer,
+            highestPrice = highestPrice
         )
 
     private fun RetailerOfferDto.toDomain(): RetailerOffer =
