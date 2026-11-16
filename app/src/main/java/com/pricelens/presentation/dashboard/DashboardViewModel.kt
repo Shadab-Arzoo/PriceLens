@@ -1,7 +1,15 @@
 package com.pricelens.presentation.dashboard
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.pricelens.core.preferences.UserPreferencesRepository
+import com.pricelens.data.notification.AndroidPriceDropNotificationSender
+import com.pricelens.data.worker.PriceCheckWorker
 import com.pricelens.domain.model.WatchlistItem
 import com.pricelens.domain.repository.DashboardRepository
 import com.pricelens.domain.repository.TargetPriceAlertRepository
@@ -12,11 +20,13 @@ import com.pricelens.domain.usecase.SaveRecentSearchUseCase
 import com.pricelens.domain.usecase.UrlValidationResult
 import com.pricelens.domain.usecase.ValidateProductUrlUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -30,15 +40,33 @@ class DashboardViewModel @Inject constructor(
     private val dashboardRepository: DashboardRepository,
     private val targetPriceAlertRepository: TargetPriceAlertRepository? = null,
     private val alertEvaluator: AlertEvaluator = AlertEvaluator(),
-    private val universalProductExtractor: UniversalProductExtractor = UniversalProductExtractor()
+    private val universalProductExtractor: UniversalProductExtractor = UniversalProductExtractor(),
+    private val userPreferencesRepository: UserPreferencesRepository? = null,
+    private val notificationSender: AndroidPriceDropNotificationSender? = null,
+    @ApplicationContext private val appContext: Context? = null
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(DashboardUiState())
+    private val _uiState = MutableStateFlow(
+        DashboardUiState(
+            experimentalFlags = userPreferencesRepository?.getExperimentalFlags() ?: UserPreferencesRepository.ExperimentalFlags()
+        )
+    )
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
     private var extractJob: Job? = null
 
     init {
         loadDashboardData()
+        observeExperimentalFlags()
+    }
+
+    private fun observeExperimentalFlags() {
+        userPreferencesRepository?.let { repo ->
+            viewModelScope.launch {
+                repo.experimentalFlagsFlow.collectLatest { flags ->
+                    _uiState.update { it.copy(experimentalFlags = flags) }
+                }
+            }
+        }
     }
 
     fun onEvent(event: DashboardUiEvent) {
@@ -182,10 +210,49 @@ class DashboardViewModel @Inject constructor(
                     )
                 }
             }
+            DashboardUiEvent.OpenLabsSheet -> {
+                _uiState.update { it.copy(isLabsSheetOpen = true) }
+            }
+            DashboardUiEvent.CloseLabsSheet -> {
+                _uiState.update { it.copy(isLabsSheetOpen = false) }
+            }
+            is DashboardUiEvent.ToggleLabsMaster -> {
+                userPreferencesRepository?.setExperimentalMasterEnabled(event.enabled)
+            }
+            is DashboardUiEvent.ToggleLabsFlag -> {
+                userPreferencesRepository?.setExperimentalFlag(event.key, event.enabled)
+            }
+            DashboardUiEvent.TriggerPriceSync -> {
+                appContext?.let { ctx ->
+                    val workRequest = OneTimeWorkRequestBuilder<PriceCheckWorker>().build()
+                    WorkManager.getInstance(ctx).enqueue(workRequest)
+                }
+            }
+            DashboardUiEvent.TriggerTestNotification -> {
+                viewModelScope.launch {
+                    notificationSender?.sendSampleAlert()
+                }
+            }
+            is DashboardUiEvent.ImportWatchlist -> {
+                viewModelScope.launch {
+                    importWatchlistFromJson(event.json)
+                }
+            }
             DashboardUiEvent.RetryLoad -> {
                 loadDashboardData()
             }
         }
+    }
+
+    private suspend fun importWatchlistFromJson(json: String) {
+        try {
+            val gson = Gson()
+            val type = object : TypeToken<List<WatchlistItem>>() {}.type
+            val items: List<WatchlistItem> = gson.fromJson(json, type)
+            for (item in items) {
+                dashboardRepository.addToWatchlist(item)
+            }
+        } catch (_: Exception) {}
     }
 
     private fun loadDashboardData() {

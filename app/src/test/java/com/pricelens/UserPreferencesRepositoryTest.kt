@@ -105,4 +105,25 @@ class UserPreferencesRepositoryTest {
         assertFalse(preferencesRepository.hasCompletedOnboarding)
         assertFalse(preferencesRepository.hasRequestedCameraPermission)
     }
+
+    @Test
+    fun experimentalFlags_defaultAndTogglesWorkCorrectly() {
+        val initialFlags = preferencesRepository.getExperimentalFlags()
+        assertTrue(initialFlags.isMasterEnabled)
+        assertTrue(initialFlags.enableDealAuthenticity)
+        assertTrue(initialFlags.enableBuyNowVerdict)
+        assertTrue(initialFlags.enableBankCardCalculator)
+        assertTrue(initialFlags.enableAlertPresets)
+        assertTrue(initialFlags.enableDynamicSearch)
+
+        // Toggle master flag off
+        preferencesRepository.setExperimentalMasterEnabled(false)
+        assertFalse(preferencesRepository.getExperimentalFlags().isMasterEnabled)
+        assertFalse(preferencesRepository.experimentalFlagsFlow.value.isMasterEnabled)
+
+        // Toggle specific feature flag off
+        preferencesRepository.setExperimentalFlag(UserPreferencesRepository.KEY_EXP_BANK_CARD, false)
+        assertFalse(preferencesRepository.getExperimentalFlags().enableBankCardCalculator)
+        assertFalse(preferencesRepository.experimentalFlagsFlow.value.enableBankCardCalculator)
+    }
 }

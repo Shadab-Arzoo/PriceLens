@@ -156,6 +156,34 @@ class AndroidPriceDropNotificationSender @Inject constructor(
         notificationManager?.notify(record.id.hashCode(), notification)
         notificationManager?.notify(SUMMARY_NOTIFICATION_ID, summaryNotification)
     }
+
+    suspend fun sendSampleAlert() {
+        val alert = TargetPriceAlert(
+            id = "alert_sample_${System.currentTimeMillis()}",
+            productId = "prod_iphone_15_128",
+            targetPrice = 54000.0,
+            currency = "INR",
+            retailerName = "Amazon India",
+            websiteUrl = "https://www.amazon.in/dp/B0CHX1W1XY"
+        )
+        val obs = PriceObservation(
+            id = "obs_sample_${System.currentTimeMillis()}",
+            productId = "prod_iphone_15_128",
+            retailerId = "amazon_in",
+            retailerName = "Amazon India",
+            price = 51999.0,
+            currency = "INR",
+            observedAt = System.currentTimeMillis()
+        )
+        val rec = NotificationRecord(
+            id = "rec_sample_${System.currentTimeMillis()}",
+            alertId = alert.id,
+            observationId = obs.id,
+            createdAt = System.currentTimeMillis(),
+            delivered = false
+        )
+        send(rec, alert, obs)
+    }
 }
 
 object PriceDropNotificationFormatter {

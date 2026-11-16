@@ -14,6 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
@@ -47,8 +48,10 @@ import androidx.compose.material.icons.filled.AddAlert
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.NotificationsActive
@@ -58,6 +61,7 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -98,6 +102,7 @@ import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
 import com.pricelens.core.designsystem.components.LiquidGlassSecondaryButton
 import com.pricelens.core.designsystem.components.SkeletonBox
 import com.pricelens.core.designsystem.components.ThemeToggleSwitch
+import com.pricelens.core.preferences.UserPreferencesRepository
 import com.pricelens.domain.model.ProductAlternative
 import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.RetailerOffer
@@ -311,6 +316,7 @@ fun ProductComparisonScreen(
                         ComparisonDetailsContent(
                             details = uiState.comparisonDetails,
                             activeAlerts = uiState.activeAlerts,
+                            flags = uiState.experimentalFlags,
                             onOpenOfferUrl = onOpenOfferUrl,
                             onSelectAlternative = { id, name ->
                                 onEvent(ProductComparisonUiEvent.SelectAlternative(id, name))
@@ -333,6 +339,9 @@ fun ProductComparisonScreen(
                 retailerName = uiState.trackingTargetRetailer.orEmpty(),
                 targetPrice = uiState.trackingTargetPrice,
                 websiteUrl = uiState.trackingWebsiteUrl,
+                currentPrice = uiState.comparisonDetails?.lowestPriceOffer?.price,
+                lowestRecordedPrice = uiState.comparisonDetails?.priceHistory?.map { it.price }?.minOrNull(),
+                showPresets = uiState.experimentalFlags.isMasterEnabled && uiState.experimentalFlags.enableAlertPresets,
                 onRetailerChange = { onEvent(ProductComparisonUiEvent.TargetRetailerChanged(it)) },
                 onPriceChange = { onEvent(ProductComparisonUiEvent.TargetPriceChanged(it)) },
                 onUrlChange = { onEvent(ProductComparisonUiEvent.TargetWebsiteUrlChanged(it)) },
@@ -347,6 +356,7 @@ fun ProductComparisonScreen(
 private fun ComparisonDetailsContent(
     details: ProductComparisonDetails,
     activeAlerts: List<TargetPriceAlert>,
+    flags: UserPreferencesRepository.ExperimentalFlags = UserPreferencesRepository.ExperimentalFlags(),
     onOpenOfferUrl: (String) -> Unit,
     onSelectAlternative: (productId: String, productName: String) -> Unit = { _, _ -> },
     onOpenTrackDialog: (retailer: String?, price: Double?, url: String?) -> Unit,
@@ -373,6 +383,40 @@ private fun ComparisonDetailsContent(
                     offer = details.lowestPriceOffer,
                     currencyFormatter = currencyFormatter,
                     onOpenOfferUrl = onOpenOfferUrl
+                )
+            }
+        }
+
+        // 2b. Experimental: "Should I Buy Now?" Recommendation Verdict Badge
+        if (flags.isMasterEnabled && flags.enableBuyNowVerdict && details.lowestPriceOffer?.price != null) {
+            item {
+                BuyNowVerdictCard(
+                    lowestPrice = details.lowestPriceOffer.price,
+                    history = details.priceHistory,
+                    currencyFormatter = currencyFormatter
+                )
+            }
+        }
+
+        // 2c. Experimental: Deal Authenticity & Fake Discount Detector
+        if (flags.isMasterEnabled && flags.enableDealAuthenticity && details.lowestPriceOffer?.price != null) {
+            val highestOfferPrice = details.offers.mapNotNull { it.price }.maxOrNull()
+            item {
+                DealAuthenticityCard(
+                    lowestPrice = details.lowestPriceOffer.price,
+                    highestPrice = highestOfferPrice,
+                    history = details.priceHistory,
+                    currencyFormatter = currencyFormatter
+                )
+            }
+        }
+
+        // 2d. Experimental: Bank Card & Cashback Simulator
+        if (flags.isMasterEnabled && flags.enableBankCardCalculator && details.lowestPriceOffer?.price != null) {
+            item {
+                BankOfferSimulatorCard(
+                    basePrice = details.lowestPriceOffer.price,
+                    currencyFormatter = currencyFormatter
                 )
             }
         }
@@ -662,6 +706,9 @@ private fun TrackOutsidePriceDialog(
     retailerName: String,
     targetPrice: String,
     websiteUrl: String,
+    currentPrice: Double? = null,
+    lowestRecordedPrice: Double? = null,
+    showPresets: Boolean = true,
     onRetailerChange: (String) -> Unit,
     onPriceChange: (String) -> Unit,
     onUrlChange: (String) -> Unit,
@@ -771,6 +818,32 @@ private fun TrackOutsidePriceDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                // Smart Target Alert Presets (Labs Feature)
+                if (showPresets && currentPrice != null && currentPrice > 0.0) {
+                    val p5 = "%.0f".format(currentPrice * 0.95)
+                    val p10 = "%.0f".format(currentPrice * 0.90)
+                    val pAtl = if (lowestRecordedPrice != null && lowestRecordedPrice < currentPrice) {
+                        "%.0f".format(lowestRecordedPrice)
+                    } else "%.0f".format(currentPrice * 0.92)
+
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = "Smart Alert Presets",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PriceLensTheme.glassColors.ambientGlow
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            PresetChip(label = "-5% (₹$p5)", onClick = { onPriceChange(p5) })
+                            PresetChip(label = "-10% (₹$p10)", onClick = { onPriceChange(p10) })
+                            PresetChip(label = "ATL (₹$pAtl)", onClick = { onPriceChange(pAtl) })
+                        }
+                    }
+                }
+
                 OutlinedTextField(
                     value = websiteUrl,
                     onValueChange = onUrlChange,
@@ -792,6 +865,30 @@ private fun TrackOutsidePriceDialog(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.PresetChip(
+    label: String,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.12f),
+        border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f)),
+        modifier = Modifier
+            .weight(1f)
+            .clickable(onClick = onClick)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = PriceLensTheme.glassColors.ambientGlow,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier.padding(vertical = 6.dp, horizontal = 2.dp)
+        )
     }
 }
 
@@ -1831,6 +1928,366 @@ private fun ComparisonErrorState(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = stringResource(R.string.state_error_retry))
+                }
+            }
+        }
+    }
+}
+
+private data class VerdictInfo(
+    val badgeText: String,
+    val badgeColor: Color,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val title: String,
+    val description: String
+)
+
+@Composable
+private fun BuyNowVerdictCard(
+    lowestPrice: Double?,
+    history: List<com.pricelens.domain.model.PriceHistoryPoint>,
+    currencyFormatter: NumberFormat,
+    modifier: Modifier = Modifier
+) {
+    if (lowestPrice == null || lowestPrice <= 0.0) return
+
+    val minPrice = history.map { it.price }.minOrNull() ?: lowestPrice
+    val avgPrice = if (history.isNotEmpty()) history.map { it.price }.average() else lowestPrice
+
+    val verdict = when {
+        lowestPrice <= minPrice * 1.015 -> {
+            VerdictInfo(
+                badgeText = "GREAT PRICE",
+                badgeColor = MintSuccess,
+                icon = Icons.Default.CheckCircle,
+                title = "🟢 Strong Buy — At All-Time Low!",
+                description = "This price is at or within 1.5% of its 30-day recorded low (${currencyFormatter.format(minPrice)}). Excellent time to purchase."
+            )
+        }
+        lowestPrice <= avgPrice -> {
+            VerdictInfo(
+                badgeText = "FAIR DEAL",
+                badgeColor = ElectricBlue,
+                icon = Icons.Default.Info,
+                title = "🟡 Fair Price — Below 30-Day Average",
+                description = "Currently ${currencyFormatter.format(avgPrice - lowestPrice)} lower than the 30-day average (${currencyFormatter.format(avgPrice)}). Decent value to buy now."
+            )
+        }
+        else -> {
+            VerdictInfo(
+                badgeText = "PRICE IS HIGH",
+                badgeColor = AmberAlert,
+                icon = Icons.Default.HourglassEmpty,
+                title = "🔴 Wait — Above Average Price",
+                description = "Price is ${currencyFormatter.format(lowestPrice - avgPrice)} above average. Consider setting a target price alert to get notified on the next drop."
+            )
+        }
+    }
+
+    GlassCard(
+        modifier = modifier.fillMaxWidth(),
+        borderColor = verdict.badgeColor.copy(alpha = 0.5f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = verdict.icon,
+                        contentDescription = null,
+                        tint = verdict.badgeColor,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Should I Buy Now?",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = verdict.badgeColor.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, verdict.badgeColor.copy(alpha = 0.35f))
+                ) {
+                    Text(
+                        text = verdict.badgeText,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = verdict.badgeColor,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = verdict.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = PriceLensTheme.glassColors.textPrimary
+            )
+
+            Text(
+                text = verdict.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = PriceLensTheme.glassColors.textSecondary
+            )
+        }
+    }
+}
+
+@Composable
+private fun DealAuthenticityCard(
+    lowestPrice: Double?,
+    highestPrice: Double?,
+    history: List<com.pricelens.domain.model.PriceHistoryPoint>,
+    currencyFormatter: NumberFormat,
+    modifier: Modifier = Modifier
+) {
+    if (lowestPrice == null || lowestPrice <= 0.0) return
+
+    val median = if (history.isNotEmpty()) {
+        val sorted = history.map { it.price }.sorted()
+        sorted[sorted.size / 2]
+    } else lowestPrice * 1.05
+
+    val advertisedListPrice = highestPrice?.takeIf { it > lowestPrice } ?: (median * 1.15)
+    val trueSavings = (median - lowestPrice).coerceAtLeast(0.0)
+    val isGenuineDeal = trueSavings > 0.0
+    val advertisedDiscountPercent = (((advertisedListPrice - lowestPrice) / advertisedListPrice) * 100).toInt()
+    val trueDiscountPercent = (((median - lowestPrice) / median) * 100).coerceAtLeast(0.0).toInt()
+
+    GlassCard(
+        modifier = modifier.fillMaxWidth(),
+        borderColor = if (isGenuineDeal) MintSuccess.copy(alpha = 0.4f) else AmberAlert.copy(alpha = 0.4f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (isGenuineDeal) Icons.Default.Verified else Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = if (isGenuineDeal) MintSuccess else AmberAlert,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Deal Authenticity Check",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = if (isGenuineDeal) MintSuccess.copy(alpha = 0.15f) else AmberAlert.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = if (isGenuineDeal) "GENUINE DISCOUNT" else "INFLATED MRP DETECTED",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isGenuineDeal) MintSuccess else AmberAlert,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = if (isGenuineDeal) {
+                    "Truthful saving: You save ${currencyFormatter.format(trueSavings)} ($trueDiscountPercent%) compared to the 30-day regular market median."
+                } else {
+                    "Watch out: Advertised as $advertisedDiscountPercent% off, but today's price is close to the standard regular market price. Don't rush into FOMO."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = PriceLensTheme.glassColors.textPrimary
+            )
+
+            // Transparent metrics row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(PriceLensTheme.glassColors.surfaceHighlight)
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("30-Day Median", style = MaterialTheme.typography.labelSmall, color = PriceLensTheme.glassColors.textSecondary)
+                    Text(currencyFormatter.format(median), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = PriceLensTheme.glassColors.textPrimary)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Today's Best", style = MaterialTheme.typography.labelSmall, color = PriceLensTheme.glassColors.textSecondary)
+                    Text(currencyFormatter.format(lowestPrice), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MintSuccess)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Real Savings", style = MaterialTheme.typography.labelSmall, color = PriceLensTheme.glassColors.textSecondary)
+                    Text(if (trueSavings > 0) currencyFormatter.format(trueSavings) else "₹0", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = PriceLensTheme.glassColors.ambientGlow)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BankOfferSimulatorCard(
+    basePrice: Double,
+    currencyFormatter: NumberFormat,
+    modifier: Modifier = Modifier
+) {
+    var selectedOfferIndex by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+
+    val offers = listOf(
+        Triple("Standard Price", 0.0, "No card applied"),
+        Triple("HDFC / ICICI Credit Card", (basePrice * 0.10).coerceAtMost(1500.0), "10% Instant Discount (up to ₹1,500)"),
+        Triple("Amazon Pay / Axis Card", basePrice * 0.05, "5% Unlimited Cashback"),
+        Triple("UPI Instant Discount", if (basePrice >= 5000) 500.0 else 0.0, "Flat ₹500 off on UPI")
+    )
+
+    val currentOffer = offers[selectedOfferIndex]
+    val discountAmount = currentOffer.second
+    val effectivePrice = (basePrice - discountAmount).coerceAtLeast(0.0)
+
+    GlassCard(
+        modifier = modifier.fillMaxWidth(),
+        borderColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.45f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CreditCard,
+                        contentDescription = null,
+                        tint = PriceLensTheme.glassColors.ambientGlow,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Bank Card & Cashback Simulator",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = "LABS",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.ambientGlow,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = "Simulate payment offers to see your net out-of-pocket price:",
+                style = MaterialTheme.typography.bodySmall,
+                color = PriceLensTheme.glassColors.textSecondary
+            )
+
+            // Chips
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                listOf("None", "10% Card", "5% Cashback", "₹500 UPI").forEachIndexed { idx, label ->
+                    val isSelected = selectedOfferIndex == idx
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.surfaceHighlight,
+                        border = BorderStroke(
+                            1.dp,
+                            if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { selectedOfferIndex = idx }
+                    ) {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) Color.Black else PriceLensTheme.glassColors.textPrimary,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+
+            // Effective Net Price Banner
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(PriceLensTheme.glassColors.surfaceHighlight)
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = currentOffer.third,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                    if (discountAmount > 0.0) {
+                        Text(
+                            text = "Card savings: -${currencyFormatter.format(discountAmount)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MintSuccess
+                        )
+                    }
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Net Effective Price",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                    Text(
+                        text = currencyFormatter.format(effectivePrice),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = PriceLensTheme.glassColors.ambientGlow
+                    )
                 }
             }
         }

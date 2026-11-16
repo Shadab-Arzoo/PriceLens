@@ -18,5 +18,7 @@ data class DashboardUiState(
     val urlValidation: UrlValidationResult? = null,
     val confirmedIdentity: ConfirmedProductIdentity? = null,
     val extractedMetadata: com.pricelens.domain.service.UniversalProductMetadata? = null,
-    val isExtractingMetadata: Boolean = false
+    val isExtractingMetadata: Boolean = false,
+    val isLabsSheetOpen: Boolean = false,
+    val experimentalFlags: com.pricelens.core.preferences.UserPreferencesRepository.ExperimentalFlags = com.pricelens.core.preferences.UserPreferencesRepository.ExperimentalFlags()
 )

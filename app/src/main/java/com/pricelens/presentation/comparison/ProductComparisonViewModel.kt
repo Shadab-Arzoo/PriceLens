@@ -3,6 +3,7 @@ package com.pricelens.presentation.comparison
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pricelens.core.preferences.UserPreferencesRepository
 import com.pricelens.domain.model.PriceLensException
 import com.pricelens.domain.model.PriceObservation
 import com.pricelens.domain.model.ProductComparisonDetails
@@ -28,6 +29,7 @@ class ProductComparisonViewModel @Inject constructor(
     private val targetPriceAlertRepository: TargetPriceAlertRepository,
     private val alertEvaluator: AlertEvaluator,
     private val dashboardRepository: DashboardRepository,
+    private val userPreferencesRepository: UserPreferencesRepository? = null,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -49,6 +51,7 @@ class ProductComparisonViewModel @Inject constructor(
             override suspend fun removeFromWatchlist(productId: String) {}
             override suspend fun updateLowestPrice(productId: String, lowestPrice: Double) {}
         },
+        userPreferencesRepository = null,
         savedStateHandle = savedStateHandle
     )
 
@@ -58,7 +61,8 @@ class ProductComparisonViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(
         ProductComparisonUiState(
             productId = initialProductId,
-            productName = initialProductName
+            productName = initialProductName,
+            experimentalFlags = userPreferencesRepository?.getExperimentalFlags() ?: UserPreferencesRepository.ExperimentalFlags()
         )
     )
     val uiState: StateFlow<ProductComparisonUiState> = _uiState.asStateFlow()
@@ -67,10 +71,21 @@ class ProductComparisonViewModel @Inject constructor(
     private var watchlistJob: Job? = null
 
     init {
+        observeExperimentalFlags()
         if (initialProductId.isNotBlank()) {
             loadComparisonDetails(initialProductId)
             observeAlerts(initialProductId)
             observeWatchlist(initialProductId)
+        }
+    }
+
+    private fun observeExperimentalFlags() {
+        userPreferencesRepository?.let { repo ->
+            viewModelScope.launch {
+                repo.experimentalFlagsFlow.collectLatest { flags ->
+                    _uiState.update { it.copy(experimentalFlags = flags) }
+                }
+            }
         }
     }
 

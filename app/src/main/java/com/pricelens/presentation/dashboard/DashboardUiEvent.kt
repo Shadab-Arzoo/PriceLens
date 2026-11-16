@@ -17,5 +17,13 @@ sealed interface DashboardUiEvent {
         val targetPrice: Double
     ) : DashboardUiEvent
 
+    data object OpenLabsSheet : DashboardUiEvent
+    data object CloseLabsSheet : DashboardUiEvent
+    data class ToggleLabsMaster(val enabled: Boolean) : DashboardUiEvent
+    data class ToggleLabsFlag(val key: String, val enabled: Boolean) : DashboardUiEvent
+    data object TriggerPriceSync : DashboardUiEvent
+    data object TriggerTestNotification : DashboardUiEvent
+    data class ImportWatchlist(val json: String) : DashboardUiEvent
+
     data object RetryLoad : DashboardUiEvent
 }

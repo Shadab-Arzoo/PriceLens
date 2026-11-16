@@ -1,5 +1,6 @@
 package com.pricelens.presentation.comparison
 
+import com.pricelens.core.preferences.UserPreferencesRepository
 import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.TargetPriceAlert
 
@@ -15,5 +16,6 @@ data class ProductComparisonUiState(
     val trackingTargetPrice: String = "",
     val trackingWebsiteUrl: String = "",
     val userNotificationBanner: String? = null,
-    val isSavedInWatchlist: Boolean = false
+    val isSavedInWatchlist: Boolean = false,
+    val experimentalFlags: UserPreferencesRepository.ExperimentalFlags = UserPreferencesRepository.ExperimentalFlags()
 )

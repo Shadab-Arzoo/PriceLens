@@ -21,8 +21,20 @@ class UserPreferencesRepository @Inject constructor(
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+    data class ExperimentalFlags(
+        val isMasterEnabled: Boolean = true,
+        val enableDealAuthenticity: Boolean = true,
+        val enableBuyNowVerdict: Boolean = true,
+        val enableBankCardCalculator: Boolean = true,
+        val enableAlertPresets: Boolean = true,
+        val enableDynamicSearch: Boolean = true
+    )
+
     private val _themeModeFlow = MutableStateFlow(getThemeMode())
     val themeModeFlow: StateFlow<ThemeMode> = _themeModeFlow.asStateFlow()
+
+    private val _experimentalFlagsFlow = MutableStateFlow(getExperimentalFlags())
+    val experimentalFlagsFlow: StateFlow<ExperimentalFlags> = _experimentalFlagsFlow.asStateFlow()
 
     var hasCompletedOnboarding: Boolean
         get() = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
@@ -35,6 +47,27 @@ class UserPreferencesRepository @Inject constructor(
     var hasRequestedNotificationPermission: Boolean
         get() = prefs.getBoolean(KEY_REQUESTED_NOTIFICATIONS, false)
         set(value) = prefs.edit().putBoolean(KEY_REQUESTED_NOTIFICATIONS, value).apply()
+
+    fun getExperimentalFlags(): ExperimentalFlags {
+        return ExperimentalFlags(
+            isMasterEnabled = prefs.getBoolean(KEY_EXP_MASTER, true),
+            enableDealAuthenticity = prefs.getBoolean(KEY_EXP_DEAL_AUTHENTICITY, true),
+            enableBuyNowVerdict = prefs.getBoolean(KEY_EXP_BUY_NOW_VERDICT, true),
+            enableBankCardCalculator = prefs.getBoolean(KEY_EXP_BANK_CARD, true),
+            enableAlertPresets = prefs.getBoolean(KEY_EXP_ALERT_PRESETS, true),
+            enableDynamicSearch = prefs.getBoolean(KEY_EXP_DYNAMIC_SEARCH, true)
+        )
+    }
+
+    fun setExperimentalMasterEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_EXP_MASTER, enabled).apply()
+        _experimentalFlagsFlow.value = getExperimentalFlags()
+    }
+
+    fun setExperimentalFlag(key: String, enabled: Boolean) {
+        prefs.edit().putBoolean(key, enabled).apply()
+        _experimentalFlagsFlow.value = getExperimentalFlags()
+    }
 
     fun getThemeMode(): ThemeMode {
         val name = prefs.getString(KEY_THEME_MODE, ThemeMode.DARK.name) ?: ThemeMode.DARK.name
@@ -66,5 +99,12 @@ class UserPreferencesRepository @Inject constructor(
         private const val KEY_REQUESTED_CAMERA = "key_requested_camera"
         private const val KEY_REQUESTED_NOTIFICATIONS = "key_requested_notifications"
         private const val KEY_THEME_MODE = "key_theme_mode"
+
+        const val KEY_EXP_MASTER = "key_exp_master"
+        const val KEY_EXP_DEAL_AUTHENTICITY = "key_exp_deal_authenticity"
+        const val KEY_EXP_BUY_NOW_VERDICT = "key_exp_buy_now_verdict"
+        const val KEY_EXP_BANK_CARD = "key_exp_bank_card"
+        const val KEY_EXP_ALERT_PRESETS = "key_exp_alert_presets"
+        const val KEY_EXP_DYNAMIC_SEARCH = "key_exp_dynamic_search"
     }
 }

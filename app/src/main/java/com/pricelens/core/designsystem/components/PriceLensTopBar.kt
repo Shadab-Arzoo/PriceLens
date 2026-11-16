@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -54,7 +55,9 @@ fun PriceLensTopBar(
     onWatchlistClick: () -> Unit,
     modifier: Modifier = Modifier,
     watchlistCount: Int = 0,
-    onToggleTheme: (() -> Unit)? = null
+    onToggleTheme: (() -> Unit)? = null,
+    onLabsClick: (() -> Unit)? = null,
+    isLabsActive: Boolean = false
 ) {
     val isDark = PriceLensTheme.isDark
     val defaultToggle = LocalThemeToggle.current
@@ -114,6 +117,42 @@ fun PriceLensTopBar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // PriceLens Labs (Experimental Features) Button
+                if (onLabsClick != null) {
+                    Box(contentAlignment = Alignment.TopEnd) {
+                        IconButton(
+                            onClick = onLabsClick,
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(CircleShape)
+                                .background(PriceLensTheme.glassColors.surfaceGlass)
+                                .border(
+                                    1.dp,
+                                    if (isLabsActive) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.5f)
+                                    else PriceLensTheme.glassColors.specularBorder,
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "PriceLens Labs",
+                                tint = if (isLabsActive) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        if (isLabsActive) {
+                            Box(
+                                modifier = Modifier
+                                    .offset(x = 2.dp, y = (-2).dp)
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(PriceLensTheme.glassColors.ambientGlow)
+                            )
+                        }
+                    }
+                }
+
                 // Light Mode / Dark Mode Switch
                 ThemeToggleSwitch(
                     isDark = isDark,

@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
@@ -146,7 +147,9 @@ fun DashboardScreen(
                 title = stringResource(R.string.dashboard_title),
                 subtitle = stringResource(R.string.dashboard_subtitle),
                 watchlistCount = uiState.watchlistItems.size,
-                onWatchlistClick = onNavigateToWatchlist
+                onWatchlistClick = onNavigateToWatchlist,
+                onLabsClick = { onEvent(DashboardUiEvent.OpenLabsSheet) },
+                isLabsActive = uiState.experimentalFlags.isMasterEnabled
             )
         }
 
@@ -191,6 +194,14 @@ fun DashboardScreen(
             item {
                 PasteLinkHeroCard(
                     onOpenPasteSheet = { onEvent(DashboardUiEvent.OpenPasteUrlSheet) }
+                )
+            }
+
+            // 3b. PriceLens Labs Banner
+            item {
+                PriceLensLabsBanner(
+                    isMasterEnabled = uiState.experimentalFlags.isMasterEnabled,
+                    onClick = { onEvent(DashboardUiEvent.OpenLabsSheet) }
                 )
             }
 
@@ -290,6 +301,119 @@ fun DashboardScreen(
                     onNavigateToWebPicker(url, name)
                 },
                 onDismiss = { onEvent(DashboardUiEvent.ClosePasteUrlSheet) }
+            )
+        }
+
+        // PriceLens Labs Bottom Sheet
+        if (uiState.isLabsSheetOpen) {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+            com.pricelens.presentation.labs.PriceLensLabsBottomSheet(
+                flags = uiState.experimentalFlags,
+                onToggleMaster = { onEvent(DashboardUiEvent.ToggleLabsMaster(it)) },
+                onToggleFlag = { key, enabled -> onEvent(DashboardUiEvent.ToggleLabsFlag(key, enabled)) },
+                onTriggerPriceSync = { onEvent(DashboardUiEvent.TriggerPriceSync) },
+                onTriggerTestNotification = { onEvent(DashboardUiEvent.TriggerTestNotification) },
+                onExportWatchlist = {
+                    val gson = com.google.gson.GsonBuilder().setPrettyPrinting().create()
+                    val json = gson.toJson(uiState.watchlistItems)
+                    clipboard.setText(androidx.compose.ui.text.AnnotatedString(json))
+                    val sendIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        putExtra(android.content.Intent.EXTRA_TEXT, json)
+                        type = "application/json"
+                    }
+                    val shareIntent = android.content.Intent.createChooser(sendIntent, "Export Watchlist JSON")
+                    context.startActivity(shareIntent)
+                },
+                onImportWatchlist = { json ->
+                    onEvent(DashboardUiEvent.ImportWatchlist(json))
+                },
+                onDismiss = { onEvent(DashboardUiEvent.CloseLabsSheet) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun PriceLensLabsBanner(
+    isMasterEnabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val glow = PriceLensTheme.glassColors.ambientGlow
+    val isDark = PriceLensTheme.isDark
+
+    com.pricelens.core.designsystem.components.GlassCard(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        borderColor = if (isMasterEnabled) glow.copy(alpha = 0.45f) else PriceLensTheme.glassColors.specularBorder
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(if (isDark) glow.copy(alpha = 0.15f) else Color(0xFFE6F4EA))
+                        .border(1.dp, glow.copy(alpha = 0.35f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = "PriceLens Labs",
+                        tint = glow,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "PriceLens Labs",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textPrimary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = glow.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = if (isMasterEnabled) "ACTIVE" else "BETA",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = glow,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Fake discount detector, buy-now verdict & bank offers",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PriceLensTheme.glassColors.textSecondary,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = PriceLensTheme.glassColors.textSecondary,
+                modifier = Modifier.size(16.dp)
             )
         }
     }
