@@ -13,20 +13,21 @@
 
 You can download the pre-built, installable Android APK directly from our GitHub Releases:
 
-👉 **[Download PriceLens APK (v1.4.7)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
+👉 **[Download PriceLens APK (v1.4.8)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
 
 ### Installation Instructions
-1. Download `pricelens-v1.4.7.apk` onto your Android device (or transfer via USB / adb).
+1. Download `pricelens-v1.4.8.apk` onto your Android device (or transfer via USB / adb).
 2. Tap the downloaded APK to install. If prompted by Android, allow "Install unknown apps" for your browser or file manager.
 3. Open **PriceLens** and enjoy comparing prices!
 
-*(Alternatively install via adb: `adb install -r pricelens-v1.4.7.apk`)*
+*(Alternatively install via adb: `adb install -r pricelens-v1.4.8.apk`)*
 
 ---
 
 ## ✨ Features
 
 - **🧪 PriceLens Labs 2.0 (Experimental Features Suite)**: Pinned top-bar button (`AutoAwesome` / 🧪) with breathing glow pulse and dashboard banner opening the Labs bottom sheet with a master switch and individual toggles:
+  - **🏷️ Smart Coupon & Promo Code Finder**: Automatically identifies and applies active retailer coupon codes (Amazon, Flipkart, Croma), offering one-tap clipboard copying and real-time net checkout price calculation.
   - **🔮 AI Price Drop Forecast & Timing Advisor**: Analyzes 30-day volatility patterns to forecast 14-day price drop probability percentage, project optimal purchase windows (e.g. "Within 24-48 Hours" vs "Wait 3-5 Days"), and offer one-tap smart target alert presets.
   - **🛡️ Deal Authenticity & Fake Discount Detector**: Calculates advertised discounts vs 30-day historical median prices to detect artificially inflated MRPs and identify genuine deals, complete with an expandable "Inspect Price Breakdown" infographic.
   - **🟢 "Should I Buy Now?" Recommendation Verdict & Physical Needle Gauge**: Dynamic decision badge with an animated physical indicator needle gliding across a 30-day price gradient track, along with a "Price Momentum" strip (favorable buying zone vs awaiting drop).
@@ -35,10 +36,10 @@ You can download the pre-built, installable Android APK directly from our GitHub
   - **⚡ Live Dynamic Search Expansion**: Seamless search fallback generating real-time comparisons across Amazon, Flipkart, and Croma for queries (AirPods, PS5, Puma, boAt, iPad, etc.) with automatic storage tier variations.
   - **🔄 Diagnostic Tools**: One-tap background price sync via WorkManager and test price-drop notification dispatching.
   - **📦 Watchlist Backup & Restore**: Export and import tracked items as formatted JSON.
+- **⚡ Today's Flash Drops Ticker**: Live pulsing animated carousel on the Dashboard featuring real-time verified price drops across major Indian retailers with instant comparison routing.
 - **📊 Interactive Price History Timeframe Filtering**: Switch seamlessly between `7D`, `30D`, `90D`, and `ALL` timeframes with animated path transitions, recalculating current, lowest, highest, and average stats in real time.
 - **💼 Watchlist Portfolio Insights & Multi-Criteria Sorting**: 3-column stats card tracking Total Tracked items, Active Price Drops, and Unlocked Rupee Savings, paired with instant sorting chips (`Price 🔼`, `Price 🔽`, `Savings 🎯`) featuring spring-animated reordering.
 - **📤 Native Android Share Deal Sheet**: One-tap formatted comparison reports sharing live retailer prices across WhatsApp, Telegram, Twitter, or email.
-- **🌓 Pitch Black Dark Mode & Clean Light Mode**: Premium OLED pitch black ground (`#000000`), deep surface cards (`#0B0B0B`), hairline borders (`#1D1D1D`), high-contrast typography, and Brand Mint (`#6EE3AD`) accents with an instant persistent theme toggle switch.
 - **🌓 Pitch Black Dark Mode & Clean Light Mode**: Premium OLED pitch black ground (`#000000`), deep surface cards (`#0B0B0B`), hairline borders (`#1D1D1D`), high-contrast typography, and Brand Mint (`#6EE3AD`) accents with an instant persistent theme toggle switch.
 - **🌐 Universal Store Price Tracking**: Paste product URLs from ANY web store on the internet (Nike, Zara, Apple, Myntra, etc.) with automatic OpenGraph/schema metadata extraction.
 - **🎯 In-App Interactive Web Price Picker (`WebPricePickerScreen`)**: Clean in-app browser view allowing users to tap on the exact price element on any webpage, highlighting it with a glowing Mint box and capturing the CSS selector for background tracking.

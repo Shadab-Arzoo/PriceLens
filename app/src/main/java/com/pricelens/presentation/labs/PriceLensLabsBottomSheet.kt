@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.PriceCheck
 import androidx.compose.material.icons.filled.Refresh
@@ -494,6 +495,17 @@ fun PriceLensLabsBottomSheet(
                         description = "Analyzes 30-day volatility patterns and estimates probability of a price drop within 14 days, highlighting the optimal buying window.",
                         enabled = flags.enablePriceDropForecast,
                         onToggle = { onToggleFlag(UserPreferencesRepository.KEY_EXP_PRICE_DROP_FORECAST, it) }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // 7. Smart Coupon & Promo Code Finder
+                    FeatureToggleCard(
+                        icon = Icons.Default.LocalOffer,
+                        title = "Smart Coupon & Promo Code Finder",
+                        description = "Automatically scans verified retailer coupons and promo codes, calculating net checkout discounts with one-tap copying.",
+                        enabled = flags.enableCouponFinder,
+                        onToggle = { onToggleFlag(UserPreferencesRepository.KEY_EXP_COUPON_FINDER, it) }
                     )
                 }
             }

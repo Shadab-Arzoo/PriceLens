@@ -217,6 +217,13 @@ fun DashboardScreen(
                 )
             }
 
+            // 3c. Live Market Flash Drops Ticker
+            item {
+                FlashDealsTicker(
+                    onProductClick = onNavigateToComparison
+                )
+            }
+
             // 4. Loading State with Fluid Skeleton
             if (uiState.isLoading) {
                 item {
@@ -1079,5 +1086,191 @@ private fun DashboardErrorState(
             actionLabel = stringResource(R.string.state_error_retry),
             onActionClick = onRetry
         )
+    }
+}
+
+@Composable
+private fun FlashDealsTicker(
+    onProductClick: (productId: String, productName: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val infiniteTransition = rememberInfiniteTransition(label = "flashPulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "flashDotAlpha"
+    )
+
+    val flashDeals = remember {
+        listOf(
+            Triple("prod_iphone15_128", "Apple iPhone 15 (128GB)", Triple(64999.0, 69999.0, "Amazon")),
+            Triple("prod_macbook_air_m2", "Apple MacBook Air M2", Triple(79990.0, 91990.0, "Flipkart")),
+            Triple("prod_sony_wh1000xm5", "Sony WH-1000XM5 ANC", Triple(26990.0, 29990.0, "Croma")),
+            Triple("prod_galaxy_s24_256", "Samsung Galaxy S24 (256GB)", Triple(69999.0, 79999.0, "Reliance Digital")),
+            Triple("prod_oneplus_12_256", "OnePlus 12 (256GB)", Triple(59999.0, 64999.0, "Amazon"))
+        )
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(MintSuccess.copy(alpha = pulseAlpha))
+                )
+                Text(
+                    text = "Today's Flash Drops",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PriceLensTheme.glassColors.textPrimary
+                )
+            }
+
+            Surface(
+                shape = RoundedCornerShape(9999.dp),
+                color = MintSuccess.copy(alpha = 0.12f),
+                border = BorderStroke(1.dp, MintSuccess.copy(alpha = 0.35f))
+            ) {
+                Text(
+                    text = "⚡ HOT DEALS",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MintSuccess,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(flashDeals, key = { it.first }) { (id, name, pricing) ->
+                val (currentPrice, originalPrice, store) = pricing
+                val dropAmount = originalPrice - currentPrice
+                val dropPercent = ((dropAmount / originalPrice) * 100).toInt()
+                val storeColor = when (store) {
+                    "Amazon" -> Color(0xFFFF9900)
+                    "Flipkart" -> Color(0xFF2874F0)
+                    "Croma" -> Color(0xFF00BFA5)
+                    else -> Color(0xFFE53935)
+                }
+
+                GlassCard(
+                    modifier = Modifier
+                        .width(220.dp)
+                        .clickable {
+                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                            onProductClick(id, name)
+                        },
+                    shape = RoundedCornerShape(16.dp),
+                    borderColor = PriceLensTheme.glassColors.specularBorder
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = storeColor.copy(alpha = 0.15f),
+                                border = BorderStroke(0.5.dp, storeColor.copy(alpha = 0.4f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(5.dp)
+                                            .clip(CircleShape)
+                                            .background(storeColor)
+                                    )
+                                    Text(
+                                        text = store,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = storeColor,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = "-$dropPercent%",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MintSuccess
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.Bottom,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "₹${"%,.0f".format(currentPrice)}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = PriceLensTheme.glassColors.ambientGlow
+                            )
+                            Text(
+                                text = "₹${"%,.0f".format(originalPrice)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = PriceLensTheme.glassColors.textTertiary,
+                                textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Text(
+                            text = "Save ₹${"%,.0f".format(dropAmount)} today",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MintSuccess
+                        )
+                    }
+                }
+            }
+        }
     }
 }

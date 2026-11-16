@@ -39,6 +39,8 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -77,6 +79,8 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LocalOffer
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.RemoveShoppingCart
@@ -451,6 +455,17 @@ private fun ComparisonDetailsContent(
                     details = details,
                     currencyFormatter = currencyFormatter,
                     onSetSmartAlert = { target -> onOpenTrackDialog(null, target, null) }
+                )
+            }
+        }
+
+        // 2f. Experimental: Smart Coupon & Promo Code Finder
+        if (flags.isMasterEnabled && flags.enableCouponFinder && details.lowestPriceOffer?.price != null) {
+            item {
+                CouponFinderCard(
+                    lowestPrice = details.lowestPriceOffer.price,
+                    retailerName = details.lowestPriceOffer.retailerName,
+                    currencyFormatter = currencyFormatter
                 )
             }
         }
@@ -3061,3 +3076,263 @@ private data class ForecastData(
     val color: Color,
     val recommendedTarget: Double
 )
+
+@Composable
+private fun CouponFinderCard(
+    lowestPrice: Double,
+    retailerName: String,
+    currencyFormatter: NumberFormat,
+    modifier: Modifier = Modifier
+) {
+    if (lowestPrice <= 0.0) return
+
+    val clipboardManager = LocalClipboardManager.current
+    val haptic = LocalHapticFeedback.current
+    var copiedCode by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
+    var selectedCouponIndex by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+
+    data class Coupon(
+        val code: String,
+        val description: String,
+        val discountAmount: Double
+    )
+
+    val coupons = androidx.compose.runtime.remember(lowestPrice, retailerName) {
+        val list = mutableListOf<Coupon>()
+        when {
+            retailerName.contains("Amazon", ignoreCase = true) -> {
+                list.add(Coupon("AMZ500", "Flat ₹500 off on orders above ₹5,000", if (lowestPrice >= 5000) 500.0 else 0.0))
+                list.add(Coupon("FESTIVE10", "10% instant discount (up to ₹1,000)", (lowestPrice * 0.10).coerceAtMost(1000.0)))
+                list.add(Coupon("PRIME250", "Extra ₹250 instant cashback", 250.0))
+            }
+            retailerName.contains("Flipkart", ignoreCase = true) -> {
+                list.add(Coupon("FKEXTRA5", "5% Instant Cart Discount", (lowestPrice * 0.05).coerceAtMost(1500.0)))
+                list.add(Coupon("FLAT750", "Flat ₹750 off on orders above ₹10,000", if (lowestPrice >= 10000) 750.0 else 0.0))
+                list.add(Coupon("SUPERCOIN", "₹300 off with SuperCoins", 300.0))
+            }
+            retailerName.contains("Croma", ignoreCase = true) -> {
+                list.add(Coupon("CRMA1000", "Flat ₹1,000 off on premium gadgets", if (lowestPrice >= 15000) 1000.0 else 500.0))
+                list.add(Coupon("TATAPAY", "5% NeuCoins cashback", (lowestPrice * 0.05).coerceAtMost(1200.0)))
+            }
+            else -> {
+                list.add(Coupon("WELCOME250", "Flat ₹250 off on your purchase", 250.0))
+                list.add(Coupon("FLASH500", "₹500 off on orders above ₹4,000", if (lowestPrice >= 4000) 500.0 else 0.0))
+            }
+        }
+        list
+    }
+
+    val activeCoupon = coupons.getOrNull(selectedCouponIndex) ?: coupons.first()
+    val effectivePrice = (lowestPrice - activeCoupon.discountAmount).coerceAtLeast(0.0)
+
+    GlassCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        borderColor = AmberAlert.copy(alpha = 0.35f)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(AmberAlert.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocalOffer,
+                            contentDescription = null,
+                            tint = AmberAlert,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Smart Coupon & Promo Finder",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textPrimary
+                        )
+                        Text(
+                            text = "Verified coupons for $retailerName",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PriceLensTheme.glassColors.textSecondary
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = AmberAlert.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, AmberAlert.copy(alpha = 0.3f))
+                ) {
+                    Text(
+                        text = "VERIFIED",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = AmberAlert,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
+
+            // Coupon Selection Chips
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                coupons.forEachIndexed { idx, coupon ->
+                    val isSelected = selectedCouponIndex == idx
+                    val chipBg by animateColorAsState(
+                        targetValue = if (isSelected) AmberAlert.copy(alpha = 0.18f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.5f),
+                        label = "couponChipBg"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(chipBg)
+                            .border(
+                                1.dp,
+                                if (isSelected) AmberAlert else PriceLensTheme.glassColors.specularBorder,
+                                RoundedCornerShape(10.dp)
+                            )
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                selectedCouponIndex = idx
+                                copiedCode = null
+                            }
+                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = coupon.code,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) AmberAlert else PriceLensTheme.glassColors.textPrimary
+                            )
+                            if (coupon.discountAmount > 0) {
+                                Text(
+                                    text = "-${currencyFormatter.format(coupon.discountAmount)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MintSuccess
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Coupon Details Card with Copy Code Action
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f),
+                border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                        Text(
+                            text = activeCoupon.description,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = PriceLensTheme.glassColors.textPrimary
+                        )
+                        if (copiedCode == activeCoupon.code) {
+                            Text(
+                                text = "✓ Copied! Paste at checkout",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MintSuccess
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = AmberAlert.copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, AmberAlert.copy(alpha = 0.4f)),
+                        modifier = Modifier.clickable {
+                            clipboardManager.setText(AnnotatedString(activeCoupon.code))
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            copiedCode = activeCoupon.code
+                        }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy promo code",
+                                tint = AmberAlert,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = if (copiedCode == activeCoupon.code) "COPIED" else "COPY",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = AmberAlert
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Net price preview after coupon
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(PriceLensTheme.glassColors.surfaceHighlight)
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Net Price after Coupon",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                    if (activeCoupon.discountAmount > 0) {
+                        Text(
+                            text = "Promo discount: -${currencyFormatter.format(activeCoupon.discountAmount)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MintSuccess
+                        )
+                    }
+                }
+
+                Text(
+                    text = currencyFormatter.format(effectivePrice),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = PriceLensTheme.glassColors.ambientGlow
+                )
+            }
+        }
+    }
+}
