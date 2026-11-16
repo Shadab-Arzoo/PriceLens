@@ -106,6 +106,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material.icons.filled.Tune
 import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -480,20 +484,12 @@ private fun ComparisonDetailsContent(
             )
         }
 
-        // 4. Observed Timestamp & Confidence
-        item {
-            ObservedTimestampCard(
-                timestamp = details.lastRefreshedTimestamp,
-                confidenceScore = details.confidenceScore
-            )
-        }
-
-        // 5. Price History Card
+        // 4. Price History Card
         item {
             PriceHistoryCard(history = details.priceHistory)
         }
 
-        // 6. Retailer Offers Section
+        // 5. Retailer Offers Section
         if (details.offers.isNotEmpty()) {
             item {
                 Row(
@@ -547,64 +543,35 @@ private fun ComparisonDetailsContent(
             }
         }
 
-        // 7. Explicit Unavailable Retailers Section
+        // 6. Explicit Unavailable Retailers Section
         if (details.unavailableRetailers.isNotEmpty()) {
             item {
-                Text(
-                    text = "${stringResource(R.string.unavailable_retailers_title)} (${details.unavailableRetailers.size})",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = PriceLensTheme.glassColors.textPrimary,
-                    modifier = Modifier.padding(top = 12.dp)
-                )
-            }
-
-            items(
-                items = details.unavailableRetailers,
-                key = { it.retailerId }
-            ) { unavailable ->
-                UnavailableRetailerCard(
-                    unavailable = unavailable,
-                    onTrackRetailer = {
-                        onOpenTrackDialog(unavailable.retailerName, null, null)
+                CompactUnavailableRetailersCard(
+                    unavailableRetailers = details.unavailableRetailers,
+                    onTrackRetailer = { retailer ->
+                        onOpenTrackDialog(retailer, null, null)
                     }
                 )
             }
         }
 
-        // 8. Specifications Section
+        // 7. Specifications Section
         if (details.specifications.isNotEmpty()) {
-            item {
-                Text(
-                    text = stringResource(R.string.specifications_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = PriceLensTheme.glassColors.textPrimary,
-                    modifier = Modifier.padding(top = 12.dp)
-                )
-            }
-
             item {
                 SpecificationsCard(specifications = details.specifications)
             }
         }
 
-        // 9. Similar & Cheaper Alternatives Section
+        // 8. Similar & Cheaper Alternatives Section
         if (details.alternatives.isNotEmpty()) {
             item {
-                Column(modifier = Modifier.padding(top = 16.dp)) {
-                    Text(
-                        text = "Similar & Cheaper Alternatives (${details.alternatives.size})",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = PriceLensTheme.glassColors.textPrimary
-                    )
-                    Text(
-                        text = "Based on normalized catalog specifications and lower available prices",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = PriceLensTheme.glassColors.textSecondary
-                    )
-                }
+                Text(
+                    text = "Similar Alternatives (${details.alternatives.size})",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = PriceLensTheme.glassColors.textPrimary,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
 
             items(
@@ -616,6 +583,30 @@ private fun ComparisonDetailsContent(
                     currencyFormatter = currencyFormatter,
                     onSelectAlternative = onSelectAlternative,
                     modifier = Modifier.animateItem()
+                )
+            }
+        }
+
+        // Subtle Live Verification Footer
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Verified,
+                    contentDescription = null,
+                    tint = MintSuccess,
+                    modifier = Modifier.size(13.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Live verified across stores • ${(details.confidenceScore * 100).toInt()}% confidence score",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = PriceLensTheme.glassColors.textTertiary
                 )
             }
         }
@@ -676,12 +667,6 @@ private fun TrackedAlertsSection(
                     )
                 }
             }
-
-            Text(
-                text = "Get notified instantly when this item drops below your target price on supported or custom outside websites.",
-                style = MaterialTheme.typography.bodySmall,
-                color = PriceLensTheme.glassColors.textSecondary
-            )
 
             if (activeAlerts.isNotEmpty()) {
                 activeAlerts.forEach { alert ->
@@ -1600,15 +1585,6 @@ private fun ProductHeaderCard(
                 fontWeight = FontWeight.Bold,
                 color = PriceLensTheme.glassColors.textPrimary
             )
-
-            if (!details.description.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = details.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PriceLensTheme.glassColors.textSecondary
-                )
-            }
         }
     }
 }
@@ -1885,20 +1861,20 @@ private fun RetailerOfferCard(
 }
 
 @Composable
-private fun UnavailableRetailerCard(
-    unavailable: UnavailableRetailer,
-    onTrackRetailer: () -> Unit,
+private fun CompactUnavailableRetailersCard(
+    unavailableRetailers: List<UnavailableRetailer>,
+    onTrackRetailer: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        borderColor = AmberAlert.copy(alpha = 0.3f),
+        borderColor = AmberAlert.copy(alpha = 0.25f),
         backgroundColor = PriceLensTheme.glassColors.surfaceGlass.copy(alpha = 0.6f)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -1906,55 +1882,45 @@ private fun UnavailableRetailerCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                Surface(
-                    modifier = Modifier.size(36.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    color = AmberAlert.copy(alpha = 0.12f)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.RemoveShoppingCart,
-                            contentDescription = null,
-                            tint = AmberAlert,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Text(
-                        text = unavailable.retailerName,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium,
-                        color = PriceLensTheme.glassColors.textPrimary
-                    )
-                    Text(
-                        text = unavailable.reason,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = PriceLensTheme.glassColors.textSecondary
-                    )
-                }
-            }
-
-            OutlinedButton(
-                onClick = onTrackRetailer,
-                shape = RoundedCornerShape(8.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-            ) {
                 Icon(
-                    imageVector = Icons.Default.AddAlert,
+                    imageVector = Icons.Default.RemoveShoppingCart,
                     contentDescription = null,
-                    tint = CyanAccent,
-                    modifier = Modifier.size(12.dp)
+                    tint = AmberAlert,
+                    modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Track",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = CyanAccent
+                    text = "Out of stock on: ${unavailableRetailers.joinToString(", ") { it.retailerName }}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = PriceLensTheme.glassColors.textSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = CyanAccent.copy(alpha = 0.12f),
+                modifier = Modifier.clickable { onTrackRetailer(unavailableRetailers.firstOrNull()?.retailerName.orEmpty()) }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddAlert,
+                        contentDescription = null,
+                        tint = CyanAccent,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Text(
+                        text = "Notify",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = CyanAccent
+                    )
+                }
             }
         }
     }
@@ -1965,40 +1931,85 @@ private fun SpecificationsCard(
     specifications: Map<String, String>,
     modifier: Modifier = Modifier
 ) {
-    GlassCard(modifier = modifier.fillMaxWidth()) {
+    var isExpanded by rememberSaveable { mutableStateOf(false) }
+
+    GlassCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize(),
+        onClick = { isExpanded = !isExpanded }
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            specifications.entries.forEachIndexed { index, (key, value) ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = key,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = PriceLensTheme.glassColors.textSecondary,
-                        modifier = Modifier.weight(0.45f)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = null,
+                        tint = PriceLensTheme.glassColors.textSecondary,
+                        modifier = Modifier.size(18.dp)
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = value,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = PriceLensTheme.glassColors.textPrimary,
-                        modifier = Modifier.weight(0.55f),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.End
+                        text = "Technical Specifications",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textPrimary
                     )
                 }
 
-                if (index < specifications.size - 1) {
-                    HorizontalDivider(
-                        color = PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.5f),
-                        thickness = 0.5.dp
+                Surface(
+                    shape = RoundedCornerShape(9999.dp),
+                    color = PriceLensTheme.glassColors.surfaceHighlight
+                ) {
+                    Text(
+                        text = if (isExpanded) "Hide ▲" else "${specifications.size} Specs ▼",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ElectricBlue,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
+                }
+            }
+
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(4.dp))
+                specifications.entries.forEachIndexed { index, (key, value) ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = key,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = PriceLensTheme.glassColors.textSecondary,
+                            modifier = Modifier.weight(0.45f)
+                        )
+                        Text(
+                            text = value,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PriceLensTheme.glassColors.textPrimary,
+                            modifier = Modifier.weight(0.55f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.End
+                        )
+                    }
+
+                    if (index < specifications.size - 1) {
+                        HorizontalDivider(
+                            color = PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.5f),
+                            thickness = 0.5.dp
+                        )
+                    }
                 }
             }
         }
@@ -2256,12 +2267,6 @@ private fun BuyNowVerdictCard(
                 color = PriceLensTheme.glassColors.textPrimary
             )
 
-            Text(
-                text = verdict.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = PriceLensTheme.glassColors.textSecondary
-            )
-
             // Animated Visual Price Position Gauge
             Column(
                 modifier = Modifier
@@ -2469,11 +2474,12 @@ private fun DealAuthenticityCard(
 
             Text(
                 text = if (isGenuineDeal) {
-                    "Truthful saving: You save ${currencyFormatter.format(trueSavings)} ($trueDiscountPercent%) compared to the 30-day regular market median."
+                    "Real saving: ${currencyFormatter.format(trueSavings)} ($trueDiscountPercent%) vs 30-day median"
                 } else {
-                    "Watch out: Advertised as $advertisedDiscountPercent% off, but today's price is close to the standard regular market price. Don't rush into FOMO."
+                    "Listed at $advertisedDiscountPercent% off, but today is near regular median"
                 },
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
                 color = PriceLensTheme.glassColors.textPrimary
             )
 
@@ -3042,14 +3048,6 @@ private fun PriceDropForecastCard(
                     }
                 }
             }
-
-            // Advice Text
-            Text(
-                text = forecast.advice,
-                style = MaterialTheme.typography.bodySmall,
-                color = PriceLensTheme.glassColors.textSecondary,
-                lineHeight = 18.sp
-            )
 
             // One-tap Smart Target Alert Button
             Surface(

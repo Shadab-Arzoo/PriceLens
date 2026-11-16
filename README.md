@@ -13,19 +13,24 @@
 
 You can download the pre-built, installable Android APK directly from our GitHub Releases:
 
-👉 **[Download PriceLens APK (v1.4.9)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
+👉 **[Download PriceLens APK (v1.5.0)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
 
 ### Installation Instructions
-1. Download `pricelens-v1.4.9.apk` onto your Android device (or transfer via USB / adb).
+1. Download `pricelens-v1.5.0.apk` onto your Android device (or transfer via USB / adb).
 2. Tap the downloaded APK to install. If prompted by Android, allow "Install unknown apps" for your browser or file manager.
 3. Open **PriceLens** and enjoy comparing prices!
 
-*(Alternatively install via adb: `adb install -r pricelens-v1.4.9.apk`)*
+*(Alternatively install via adb: `adb install -r pricelens-v1.5.0.apk`)*
 
 ---
 
 ## ✨ Features
 
+- **✨ Visual-First, Modern Minimalist Interface**: Streamlined UI eliminating text clutter, redundant paragraphs, and cognitive overload:
+  - **Clean Product Showcase**: Immediate focus on large product imagery, brand badges, and bold comparison pricing without marketing text walls.
+  - **Collapsible Technical Specifications**: Expanded on demand with a smooth animated toggle (`X Specs ▼ / Hide ▲`), keeping screens compact.
+  - **Compact Out-of-Stock Banner**: Consolidates unavailable retailers into a single sleek row with one-tap notification triggers.
+  - **Streamlined Dashboard**: Fast, clutter-free store link pasting, punchy trending product cards, and clean visual typography.
 - **🖼️ Universal Product Images (Powered by Coil)**: Rich, high-definition visual product imagery integrated seamlessly across the entire app:
   - **Product Comparison Showcase (`ProductHeroImage`)**: Large 210dp hero product image at the top of the comparison screen with smooth crossfade and progressive loading.
   - **Search Results (`ProductThumbnailImage`)**: Visual thumbnails for every catalog and dynamic search result.

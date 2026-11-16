@@ -192,7 +192,7 @@ private fun SearchResultsList(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "Found $totalCount products across 5 retailers",
+                    text = "$totalCount products found",
                     style = MaterialTheme.typography.bodySmall,
                     color = PriceLensTheme.glassColors.textSecondary,
                     fontWeight = FontWeight.Medium

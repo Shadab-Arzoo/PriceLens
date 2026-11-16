@@ -231,66 +231,6 @@ fun WatchlistScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            val isAllSelected = uiState.activeFilter == WatchlistFilter.ALL
-                            val isDropSelected = uiState.activeFilter == WatchlistFilter.PRICE_DROPS
-
-                            // All Filter
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isAllSelected) ElectricBlue.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
-                                    .border(1.dp, if (isAllSelected) ElectricBlue.copy(alpha = 0.6f) else PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
-                                    .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.ALL))
-                                    }
-                                    .padding(horizontal = 13.dp, vertical = 7.dp)
-                            ) {
-                                Text(
-                                    text = "All (${uiState.totalTrackedCount})",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = if (isAllSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isAllSelected) ElectricBlue else PriceLensTheme.glassColors.textSecondary
-                                )
-                            }
-
-                            // Price Drops Filter
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isDropSelected) MintSuccess.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
-                                    .border(1.dp, if (isDropSelected) MintSuccess.copy(alpha = 0.6f) else PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
-                                    .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        onEvent(WatchlistUiEvent.FilterChanged(WatchlistFilter.PRICE_DROPS))
-                                    }
-                                    .padding(horizontal = 13.dp, vertical = 7.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.TrendingDown,
-                                        contentDescription = null,
-                                        tint = if (isDropSelected) MintSuccess else PriceLensTheme.glassColors.textSecondary,
-                                        modifier = Modifier.size(15.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "Price Drops (${uiState.priceDropCount})",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = if (isDropSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isDropSelected) MintSuccess else PriceLensTheme.glassColors.textSecondary
-                                    )
-                                }
-                            }
-
-                            // Divider
-                            Box(
-                                modifier = Modifier
-                                    .height(20.dp)
-                                    .width(1.dp)
-                                    .background(PriceLensTheme.glassColors.specularBorder)
-                            )
-
                             // Sort: Price Ascending
                             val isPriceAsc = uiState.sortOrder == WatchlistSortOrder.PRICE_ASC
                             Box(
@@ -521,7 +461,7 @@ private fun WatchlistTopBar(
                     color = PriceLensTheme.glassColors.textPrimary
                 )
                 Text(
-                    text = if (itemCount == 1) "1 active price tracker" else "$itemCount active price trackers",
+                    text = if (itemCount == 1) "1 item tracked" else "$itemCount items tracked",
                     style = MaterialTheme.typography.bodySmall,
                     color = PriceLensTheme.glassColors.textSecondary
                 )

@@ -157,7 +157,7 @@ fun DashboardScreen(
         ) {
             PriceLensTopBar(
                 title = stringResource(R.string.dashboard_title),
-                subtitle = stringResource(R.string.dashboard_subtitle),
+                subtitle = "",
                 watchlistCount = uiState.watchlistItems.size,
                 onWatchlistClick = onNavigateToWatchlist,
                 onLabsClick = { onEvent(DashboardUiEvent.OpenLabsSheet) },
@@ -449,7 +449,7 @@ private fun PriceLensLabsBanner(
                         }
                     }
                     Text(
-                        text = "Fake discount detector, buy-now verdict & bank offers",
+                        text = "Smart Shopping & AI Tools",
                         style = MaterialTheme.typography.bodySmall,
                         color = PriceLensTheme.glassColors.textSecondary,
                         maxLines = 1,
@@ -471,7 +471,6 @@ private fun PriceLensLabsBanner(
 /**
  * Premier Hero Card for Pasting Links and Instant Comparison
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PasteLinkHeroCard(
     onOpenPasteSheet: () -> Unit,
@@ -481,176 +480,83 @@ private fun PasteLinkHeroCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(20.dp),
         onClick = onOpenPasteSheet,
-        elevation = 3.dp
+        elevation = 2.dp
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp)
-                .animateContentSize()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.weight(1f)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 12.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(46.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(
-                                if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.15f)
-                                else Color(0xFFE6F4EA)
-                            )
-                            .border(
-                                1.dp,
-                                if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.35f)
-                                else Color(0xFFCEEAD6),
-                                RoundedCornerShape(14.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ContentPaste,
-                            contentDescription = "Compare by Product Link",
-                            tint = PriceLensTheme.glassColors.ambientGlow,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column {
-                        Text(
-                            text = "Compare by Product Link",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = PriceLensTheme.glassColors.textPrimary
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Paste any URL from 5 verified Indian retailers",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = PriceLensTheme.glassColors.textSecondary
-                        )
-                    }
-                }
-
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
                         .background(
-                            if (PriceLensTheme.isDark) PriceLensTheme.glassColors.surfaceHighlight
+                            if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.15f)
                             else Color(0xFFE6F4EA)
                         )
                         .border(
                             1.dp,
-                            if (PriceLensTheme.isDark) PriceLensTheme.glassColors.specularBorder
+                            if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.35f)
                             else Color(0xFFCEEAD6),
-                            CircleShape
+                            RoundedCornerShape(12.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "Open Link Input",
+                        imageVector = Icons.Default.Link,
+                        contentDescription = "Paste Product Link",
                         tint = PriceLensTheme.glassColors.ambientGlow,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(
+                        text = "Paste Store Link to Compare",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textPrimary
+                    )
+                    Text(
+                        text = "Amazon, Flipkart, Croma & more",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PriceLensTheme.glassColors.textSecondary
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Simulated interactive paste bar
-            Row(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .clip(RoundedCornerShape(9999.dp))
-                    .background(PriceLensTheme.glassColors.surfaceHighlight)
-                    .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(9999.dp))
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .background(
+                        if (PriceLensTheme.isDark) PriceLensTheme.glassColors.actionFill
+                        else Color(0xFF059669)
+                    )
+                    .border(
+                        1.dp,
+                        if (PriceLensTheme.isDark) PriceLensTheme.glassColors.specularBorder
+                        else Color(0xFF047857),
+                        RoundedCornerShape(9999.dp)
+                    )
+                    .padding(horizontal = 14.dp, vertical = 7.dp)
             ) {
                 Text(
-                    text = "amazon.in, flipkart.com, croma.com…",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PriceLensTheme.glassColors.textTertiary
+                    text = "Paste",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(9999.dp))
-                        .background(
-                            if (PriceLensTheme.isDark) PriceLensTheme.glassColors.actionFill
-                            else Color(0xFF059669)
-                        )
-                        .border(
-                            1.dp,
-                            if (PriceLensTheme.isDark) PriceLensTheme.glassColors.specularBorder
-                            else Color(0xFF047857),
-                            RoundedCornerShape(9999.dp)
-                        )
-                        .padding(horizontal = 12.dp, vertical = 5.dp)
-                ) {
-                    Text(
-                        text = "Paste & Track",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Supported store pills
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                listOf(
-                    "Amazon" to Color(0xFFFF9900),
-                    "Flipkart" to Color(0xFF2874F0),
-                    "Croma" to Color(0xFF00BFA5),
-                    "Reliance Digital" to Color(0xFFE53935),
-                    "Vijay Sales" to Color(0xFFD32F2F)
-                ).forEach { (store, accentColor) ->
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(9999.dp))
-                            .background(PriceLensTheme.glassColors.surfaceHighlight)
-                            .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(9999.dp))
-                            .padding(horizontal = 10.dp, vertical = 5.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(accentColor)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = store,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = PriceLensTheme.glassColors.textSecondary,
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
-                }
             }
         }
     }
@@ -926,32 +832,9 @@ private fun TrendingSection(
                 fontWeight = FontWeight.Bold,
                 color = PriceLensTheme.glassColors.textPrimary
             )
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(
-                        if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.12f)
-                        else Color(0xFFE6F4EA)
-                    )
-                    .border(
-                        1.dp,
-                        if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.3f)
-                        else Color(0xFFCEEAD6),
-                        RoundedCornerShape(6.dp)
-                    )
-                    .padding(horizontal = 8.dp, vertical = 3.dp)
-            ) {
-                Text(
-                    text = "Live Market Verified",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PriceLensTheme.glassColors.ambientGlow
-                )
-            }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         if (trendingProducts.isEmpty()) {
             EmptyStateCard(
@@ -969,107 +852,78 @@ private fun TrendingSection(
                 trendingProducts.forEach { product ->
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
                         onClick = { onProductClick(product.id, product.name) }
                     ) {
-                        Column(
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp)
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                com.pricelens.core.designsystem.components.ProductThumbnailImage(
-                                    imageUrl = product.imageUrl,
-                                    productName = product.name,
-                                    modifier = Modifier.size(54.dp)
+                            com.pricelens.core.designsystem.components.ProductThumbnailImage(
+                                imageUrl = product.imageUrl,
+                                productName = product.name,
+                                modifier = Modifier.size(52.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f).padding(end = 10.dp)) {
+                                Text(
+                                    text = product.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PriceLensTheme.glassColors.textPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                                    Text(
-                                        text = product.name,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = PriceLensTheme.glassColors.textPrimary,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Spacer(modifier = Modifier.height(3.dp))
-                                    Text(
-                                        text = "${product.brand.orEmpty()} • ${product.retailerCount} stores compared",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = PriceLensTheme.glassColors.textSecondary
-                                    )
-                                }
-
-                                if (product.lowestPrice != null) {
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(
-                                            text = currencyFormatter.format(product.lowestPrice),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = PriceLensTheme.glassColors.ambientGlow
-                                        )
-                                        Text(
-                                            text = "Lowest price",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = PriceLensTheme.glassColors.textTertiary
-                                        )
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            // Comparison & Store savings strip
-                            Row(
-                                modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(PriceLensTheme.glassColors.surfaceHighlight)
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(6.dp)
-                                            .background(PriceLensTheme.glassColors.ambientGlow, CircleShape)
-                                    )
-                                    val bestStore = product.lowestPriceRetailer?.let { "Best deal on $it" }
-                                        ?: "Verified lowest price"
-                                    Text(
-                                        text = bestStore,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = PriceLensTheme.glassColors.textPrimary
-                                    )
+                                    if (!product.brand.isNullOrBlank()) {
+                                        Text(
+                                            text = product.brand,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = PriceLensTheme.glassColors.textSecondary
+                                        )
+                                    }
+                                    product.lowestPriceRetailer?.let { retailer ->
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = PriceLensTheme.glassColors.surfaceHighlight
+                                        ) {
+                                            Text(
+                                                text = retailer,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = PriceLensTheme.glassColors.textTertiary,
+                                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                            )
+                                        }
+                                    }
                                 }
+                            }
 
-                                val savings = if (product.highestPrice != null && product.lowestPrice != null && product.highestPrice > product.lowestPrice) {
-                                    product.highestPrice - product.lowestPrice
-                                } else null
-
-                                if (savings != null && savings > 0) {
+                            if (product.lowestPrice != null) {
+                                Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "Save up to ${currencyFormatter.format(savings)}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
+                                        text = currencyFormatter.format(product.lowestPrice),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.ExtraBold,
                                         color = PriceLensTheme.glassColors.ambientGlow
                                     )
-                                } else {
-                                    Text(
-                                        text = "Compare ➜",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = PriceLensTheme.glassColors.textSecondary
-                                    )
+                                    val savings = if (product.highestPrice != null && product.highestPrice > product.lowestPrice) {
+                                        product.highestPrice - product.lowestPrice
+                                    } else null
+                                    if (savings != null && savings > 0) {
+                                        Text(
+                                            text = "Save ${currencyFormatter.format(savings)}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MintSuccess
+                                        )
+                                    }
                                 }
                             }
                         }
