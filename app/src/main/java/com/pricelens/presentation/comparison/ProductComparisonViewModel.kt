@@ -193,7 +193,8 @@ class ProductComparisonViewModel @Inject constructor(
                     targetPrice = lowestPrice,
                     currentLowestPrice = lowestPrice,
                     currency = details?.lowestPriceOffer?.currency ?: "INR",
-                    addedAtTimestamp = System.currentTimeMillis()
+                    addedAtTimestamp = System.currentTimeMillis(),
+                    imageUrl = details?.imageUrl
                 )
                 dashboardRepository.addToWatchlist(item)
                 _uiState.update {
@@ -236,7 +237,8 @@ class ProductComparisonViewModel @Inject constructor(
                     targetPrice = targetPriceDouble,
                     currentLowestPrice = currentLowest,
                     currency = state.comparisonDetails?.lowestPriceOffer?.currency ?: "INR",
-                    addedAtTimestamp = System.currentTimeMillis()
+                    addedAtTimestamp = System.currentTimeMillis(),
+                    imageUrl = state.comparisonDetails?.imageUrl
                 )
             )
 

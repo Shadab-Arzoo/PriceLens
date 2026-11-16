@@ -280,28 +280,13 @@ private fun ProductSummaryCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Product Icon Container with Liquid Glass treatment
-            Surface(
+            // Product Image Thumbnail
+            com.pricelens.core.designsystem.components.ProductThumbnailImage(
+                imageUrl = product.imageUrl,
+                productName = product.name,
                 modifier = Modifier.size(56.dp),
-                shape = RoundedCornerShape(14.dp),
-                color = ElectricBlue.copy(alpha = 0.12f),
-                border = androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    PriceLensTheme.glassColors.specularBorder
-                )
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ShoppingBag,
-                        contentDescription = null,
-                        tint = ElectricBlue,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            }
+                shape = RoundedCornerShape(14.dp)
+            )
 
             Spacer(modifier = Modifier.width(14.dp))
 

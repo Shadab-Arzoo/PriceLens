@@ -13,19 +13,24 @@
 
 You can download the pre-built, installable Android APK directly from our GitHub Releases:
 
-👉 **[Download PriceLens APK (v1.4.8)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
+👉 **[Download PriceLens APK (v1.4.9)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
 
 ### Installation Instructions
-1. Download `pricelens-v1.4.8.apk` onto your Android device (or transfer via USB / adb).
+1. Download `pricelens-v1.4.9.apk` onto your Android device (or transfer via USB / adb).
 2. Tap the downloaded APK to install. If prompted by Android, allow "Install unknown apps" for your browser or file manager.
 3. Open **PriceLens** and enjoy comparing prices!
 
-*(Alternatively install via adb: `adb install -r pricelens-v1.4.8.apk`)*
+*(Alternatively install via adb: `adb install -r pricelens-v1.4.9.apk`)*
 
 ---
 
 ## ✨ Features
 
+- **🖼️ Universal Product Images (Powered by Coil)**: Rich, high-definition visual product imagery integrated seamlessly across the entire app:
+  - **Product Comparison Showcase (`ProductHeroImage`)**: Large 210dp hero product image at the top of the comparison screen with smooth crossfade and progressive loading.
+  - **Search Results (`ProductThumbnailImage`)**: Visual thumbnails for every catalog and dynamic search result.
+  - **Watchlist & Dashboard Items**: Clean, rounded image thumbnails for tracked watchlist items, trending market products, and flash deals.
+  - **Smart Semantic Fallback**: Intelligent category-matching fallback ensures that whichever product you view or search (phones, laptops, audio, shoes, watches, etc.), an authentic, relevant product photo is always displayed.
 - **🧪 PriceLens Labs 2.0 (Experimental Features Suite)**: Pinned top-bar button (`AutoAwesome` / 🧪) with breathing glow pulse and dashboard banner opening the Labs bottom sheet with a master switch and individual toggles:
   - **🏷️ Smart Coupon & Promo Code Finder**: Automatically identifies and applies active retailer coupon codes (Amazon, Flipkart, Croma), offering one-tap clipboard copying and real-time net checkout price calculation.
   - **🔮 AI Price Drop Forecast & Timing Advisor**: Analyzes 30-day volatility patterns to forecast 14-day price drop probability percentage, project optimal purchase windows (e.g. "Within 24-48 Hours" vs "Wait 3-5 Days"), and offer one-tap smart target alert presets.

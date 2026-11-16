@@ -1426,22 +1426,34 @@ private fun AlternativeProductCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Title
-            Text(
-                text = alternative.title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = PriceLensTheme.glassColors.textPrimary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            if (!alternative.modelNumber.isNullOrBlank()) {
-                Text(
-                    text = "Model: ${alternative.modelNumber}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PriceLensTheme.glassColors.textTertiary
+            // Title & Thumbnail
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                com.pricelens.core.designsystem.components.ProductThumbnailImage(
+                    imageUrl = alternative.imageUrl,
+                    productName = alternative.title,
+                    modifier = Modifier.size(50.dp)
                 )
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = alternative.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textPrimary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (!alternative.modelNumber.isNullOrBlank()) {
+                        Text(
+                            text = "Model: ${alternative.modelNumber}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PriceLensTheme.glassColors.textTertiary
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -1535,6 +1547,15 @@ private fun ProductHeaderCard(
                 .fillMaxWidth()
                 .padding(18.dp)
         ) {
+            // Hero Product Showcase Image
+            com.pricelens.core.designsystem.components.ProductHeroImage(
+                imageUrl = details.imageUrl,
+                productName = details.name,
+                height = 210.dp
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
             // Badges row
             Row(
                 modifier = Modifier.fillMaxWidth(),

@@ -266,13 +266,25 @@ fun PasteUrlBottomSheet(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                Text(
-                                    text = extractedMetadata.title,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = PriceLensTheme.glassColors.textPrimary,
-                                    maxLines = 2
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    com.pricelens.core.designsystem.components.ProductThumbnailImage(
+                                        imageUrl = extractedMetadata.imageUrl,
+                                        productName = extractedMetadata.title,
+                                        modifier = Modifier.size(52.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = extractedMetadata.title,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.textPrimary,
+                                        maxLines = 2,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
 
                                 Spacer(modifier = Modifier.height(10.dp))
 

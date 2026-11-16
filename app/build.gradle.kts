@@ -14,8 +14,8 @@ android {
         applicationId = "com.pricelens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 18
-        versionName = "1.4.8"
+        versionCode = 19
+        versionName = "1.4.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -87,6 +87,9 @@ dependencies {
 
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
+
+    // Image Loading (Coil)
+    implementation(libs.coil.compose)
 
     // Testing
     testImplementation(libs.junit)

@@ -730,7 +730,16 @@ private fun WatchlistItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                // Product Thumbnail
+                com.pricelens.core.designsystem.components.ProductThumbnailImage(
+                    imageUrl = item.imageUrl,
+                    productName = item.productName,
+                    modifier = Modifier.size(62.dp)
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f).padding(end = 6.dp)) {
                     Text(
                         text = item.productName,
                         style = MaterialTheme.typography.titleMedium,

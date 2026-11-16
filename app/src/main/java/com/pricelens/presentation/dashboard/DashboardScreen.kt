@@ -861,10 +861,16 @@ private fun WatchlistSection(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp),
+                                .padding(12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            com.pricelens.core.designsystem.components.ProductThumbnailImage(
+                                imageUrl = item.imageUrl,
+                                productName = item.productName,
+                                modifier = Modifier.size(46.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                                 Text(
                                     text = item.productName,
@@ -975,6 +981,12 @@ private fun TrendingSection(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.Top
                             ) {
+                                com.pricelens.core.designsystem.components.ProductThumbnailImage(
+                                    imageUrl = product.imageUrl,
+                                    productName = product.name,
+                                    modifier = Modifier.size(54.dp)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                                     Text(
                                         text = product.name,
@@ -1231,14 +1243,26 @@ private fun FlashDealsTicker(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        Text(
-                            text = name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = PriceLensTheme.glassColors.textPrimary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            com.pricelens.core.designsystem.components.ProductThumbnailImage(
+                                imageUrl = null,
+                                productName = name,
+                                modifier = Modifier.size(40.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = PriceLensTheme.glassColors.textPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(6.dp))
 
