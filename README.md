@@ -13,18 +13,26 @@
 
 You can download the pre-built, installable Android APK directly from our GitHub Releases:
 
-👉 **[Download PriceLens APK (v1.5.0)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
+👉 **[Download PriceLens APK (v1.5.1)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
 
 ### Installation Instructions
-1. Download `pricelens-v1.5.0.apk` onto your Android device (or transfer via USB / adb).
+1. Download `pricelens-v1.5.1.apk` onto your Android device (or transfer via USB / adb).
 2. Tap the downloaded APK to install. If prompted by Android, allow "Install unknown apps" for your browser or file manager.
 3. Open **PriceLens** and enjoy comparing prices!
 
-*(Alternatively install via adb: `adb install -r pricelens-v1.5.0.apk`)*
+*(Alternatively install via adb: `adb install -r pricelens-v1.5.1.apk`)*
 
 ---
 
 ## ✨ Features
+
+- **✨ Fluid Physics & Expressive Motion System**: Delightful, cohesive micro-interactions and animations throughout the experience:
+  - **Fluid Navigation Transitions**: Deep, cinematic screen routing (`CubicBezierEasing(0.16f, 1f, 0.3f, 1f)`) combining scale, horizontal slide, and alpha fade.
+  - **Dynamic Price Graph Tracing**: Timeframe filtering (`7D`, `30D`, `90D`, `ALL`) dynamically retraces graph curves in real time with glowing leading tip dots.
+  - **Silky Shimmer Image Loading**: Replaced generic loading spinners with continuous shimmering skeleton sweeps and spring entrance fades.
+  - **Tactile Spring Card Press**: Physical 0.96f squish and bounce on touch interactions with snappy spring physics.
+  - **Rolling Counter Numbers**: Dynamic upward/downward slot animations on stats counters and best deal pricing.
+  - **Breathing Ambient Glows**: Pulsing spotlight perimeters highlighting the lowest verified market deal.
 
 - **✨ Visual-First, Modern Minimalist Interface**: Streamlined UI eliminating text clutter, redundant paragraphs, and cognitive overload:
   - **Clean Product Showcase**: Immediate focus on large product imagery, brand badges, and bold comparison pricing without marketing text walls.

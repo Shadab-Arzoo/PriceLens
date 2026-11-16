@@ -1185,19 +1185,17 @@ private fun PriceSparkline(
     val fillColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.18f)
     val haptic = LocalHapticFeedback.current
 
-    var animationTriggered by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val animatedProgress = androidx.compose.runtime.remember { androidx.compose.animation.core.Animatable(0f) }
     androidx.compose.runtime.LaunchedEffect(points) {
-        animationTriggered = true
+        animatedProgress.snapTo(0f)
+        animatedProgress.animateTo(
+            targetValue = 1f,
+            animationSpec = androidx.compose.animation.core.tween(
+                durationMillis = 650,
+                easing = androidx.compose.animation.core.FastOutSlowInEasing
+            )
+        )
     }
-
-    val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
-        targetValue = if (animationTriggered) 1f else 0f,
-        animationSpec = androidx.compose.animation.core.tween(
-            durationMillis = 850,
-            easing = androidx.compose.animation.core.FastOutSlowInEasing
-        ),
-        label = "sparklineProgress"
-    )
 
     val scrubModifier = if (points.size >= 2) {
         Modifier.pointerInput(points) {
@@ -1231,7 +1229,8 @@ private fun PriceSparkline(
     }
 
     androidx.compose.foundation.Canvas(modifier = modifier.then(scrubModifier)) {
-        if (points.size < 2 || animatedProgress <= 0.01f) return@Canvas
+        val progress = animatedProgress.value
+        if (points.size < 2 || progress <= 0.01f) return@Canvas
         val width = size.width
         val height = size.height
         val minPrice = points.minOf { it.price }
@@ -1257,7 +1256,7 @@ private fun PriceSparkline(
         pathMeasure.setPath(fullStrokePath, forceClosed = false)
         val pathLength = pathMeasure.length
         val animatedPath = androidx.compose.ui.graphics.Path()
-        val currentLength = pathLength * animatedProgress
+        val currentLength = pathLength * progress
         pathMeasure.getSegment(0f, currentLength, animatedPath, startWithMoveTo = true)
 
         val currentPosition = pathMeasure.getPosition(currentLength)
@@ -1272,7 +1271,7 @@ private fun PriceSparkline(
         drawPath(
             path = fillPath,
             brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                listOf(fillColor.copy(alpha = animatedProgress * 0.18f), Color.Transparent)
+                listOf(fillColor.copy(alpha = progress * 0.18f), Color.Transparent)
             )
         )
 
@@ -1291,7 +1290,7 @@ private fun PriceSparkline(
             // Draw dot at current leading tip
             drawCircle(
                 color = MintSuccess,
-                radius = (3.5f * animatedProgress).dp.toPx(),
+                radius = (3.5f * progress).dp.toPx(),
                 center = currentPosition
             )
         } else {
@@ -1596,9 +1595,20 @@ private fun BestOfferSpotlightCard(
     onOpenOfferUrl: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "spotlightPulse")
+    val glowPulse by infiniteTransition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.85f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowPulse"
+    )
+
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        borderColor = MintSuccess.copy(alpha = 0.5f),
+        borderColor = MintSuccess.copy(alpha = glowPulse),
         borderWidth = 1.5.dp
     ) {
         Column(
@@ -1656,12 +1666,21 @@ private fun BestOfferSpotlightCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = PriceLensTheme.glassColors.textSecondary
                     )
-                    Text(
-                        text = if (offer.price != null) currencyFormatter.format(offer.price) else "N/A",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = PriceLensTheme.glassColors.textPrimary
-                    )
+                    AnimatedContent(
+                        targetState = offer.price,
+                        transitionSpec = {
+                            (slideInVertically { height -> height / 2 } + fadeIn(tween(200)))
+                                .togetherWith(slideOutVertically { height -> -height / 2 } + fadeOut(tween(180)))
+                        },
+                        label = "spotlightPrice"
+                    ) { price ->
+                        Text(
+                            text = if (price != null) currencyFormatter.format(price) else "N/A",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = PriceLensTheme.glassColors.textPrimary
+                        )
+                    }
                 }
 
                 Button(
@@ -2197,7 +2216,10 @@ private fun BuyNowVerdictCard(
 
     val animatedFraction by animateFloatAsState(
         targetValue = positionFraction,
-        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "priceGaugePosition"
     )
 

@@ -68,27 +68,43 @@ fun PriceLensNavGraph(
             .background(brush = PriceLensTheme.glassColors.backgroundBrush),
         enterTransition = {
             slideInHorizontally(
-                initialOffsetX = { fullWidth -> fullWidth / 4 },
-                animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
-            ) + fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing))
+                initialOffsetX = { fullWidth -> (fullWidth * 0.16f).toInt() },
+                animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+            ) + fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
+            scaleIn(
+                initialScale = 0.95f,
+                animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+            )
         },
         exitTransition = {
             slideOutHorizontally(
-                targetOffsetX = { fullWidth -> -fullWidth / 4 },
-                animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
-            ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+                targetOffsetX = { fullWidth -> -(fullWidth * 0.12f).toInt() },
+                animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+            ) + fadeOut(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
+            scaleOut(
+                targetScale = 0.96f,
+                animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+            )
         },
         popEnterTransition = {
             slideInHorizontally(
-                initialOffsetX = { fullWidth -> -fullWidth / 4 },
-                animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
-            ) + fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing))
+                initialOffsetX = { fullWidth -> -(fullWidth * 0.12f).toInt() },
+                animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+            ) + fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
+            scaleIn(
+                initialScale = 0.96f,
+                animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+            )
         },
         popExitTransition = {
             slideOutHorizontally(
-                targetOffsetX = { fullWidth -> fullWidth / 4 },
-                animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
-            ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+                targetOffsetX = { fullWidth -> (fullWidth * 0.16f).toInt() },
+                animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+            ) + fadeOut(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
+            scaleOut(
+                targetScale = 0.95f,
+                animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+            )
         }
     ) {
         // 1. Onboarding / Intro Screen

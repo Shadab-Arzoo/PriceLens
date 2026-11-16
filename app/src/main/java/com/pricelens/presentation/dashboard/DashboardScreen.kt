@@ -1044,6 +1044,7 @@ private fun FlashDealsTicker(
                 GlassCard(
                     modifier = Modifier
                         .width(220.dp)
+                        .animateItem()
                         .clickable {
                             haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                             onProductClick(id, name)

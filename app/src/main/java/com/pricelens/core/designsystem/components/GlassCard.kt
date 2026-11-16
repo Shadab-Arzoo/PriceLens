@@ -52,10 +52,10 @@ fun GlassCard(
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && onClick != null) 0.975f else 1f,
+        targetValue = if (isPressed && onClick != null) 0.96f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = 500f
+            dampingRatio = 0.72f,
+            stiffness = 450f
         ),
         label = "surfaceCardSpring"
     )
@@ -63,8 +63,8 @@ fun GlassCard(
     val currentElevation by animateDpAsState(
         targetValue = if (isPressed && onClick != null) 0.dp else elevation,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = 500f
+            dampingRatio = 0.72f,
+            stiffness = 450f
         ),
         label = "surfaceCardElevation"
     )

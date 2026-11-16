@@ -2,8 +2,14 @@ package com.pricelens.presentation.watchlist
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -552,12 +558,21 @@ private fun WatchlistStatsCard(
                     .clickable(onClick = onAllClick)
                     .padding(horizontal = 6.dp, vertical = 8.dp)
             ) {
-                Text(
-                    text = totalCount.toString(),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = if (allSelected) ElectricBlue else PriceLensTheme.glassColors.textPrimary
-                )
+                AnimatedContent(
+                    targetState = totalCount,
+                    transitionSpec = {
+                        (slideInVertically { height -> height } + fadeIn())
+                            .togetherWith(slideOutVertically { height -> -height } + fadeOut())
+                    },
+                    label = "totalCountAnim"
+                ) { count ->
+                    Text(
+                        text = count.toString(),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (allSelected) ElectricBlue else PriceLensTheme.glassColors.textPrimary
+                    )
+                }
                 Text(
                     text = "Tracked",
                     style = MaterialTheme.typography.labelSmall,
@@ -592,12 +607,21 @@ private fun WatchlistStatsCard(
                         )
                         Spacer(modifier = Modifier.width(2.dp))
                     }
-                    Text(
-                        text = priceDropCount.toString(),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (priceDropCount > 0) MintSuccess else PriceLensTheme.glassColors.textPrimary
-                    )
+                    AnimatedContent(
+                        targetState = priceDropCount,
+                        transitionSpec = {
+                            (slideInVertically { height -> height } + fadeIn())
+                                .togetherWith(slideOutVertically { height -> -height } + fadeOut())
+                        },
+                        label = "dropCountAnim"
+                    ) { count ->
+                        Text(
+                            text = count.toString(),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (count > 0) MintSuccess else PriceLensTheme.glassColors.textPrimary
+                        )
+                    }
                 }
                 Text(
                     text = "Drops Active",
@@ -622,14 +646,23 @@ private fun WatchlistStatsCard(
                     .clickable(onClick = onSavingsClick)
                     .padding(horizontal = 6.dp, vertical = 8.dp)
             ) {
-                Text(
-                    text = if (totalSavings > 0) currencyFormatter.format(totalSavings) else "₹0",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = if (totalSavings > 0) MintSuccess else PriceLensTheme.glassColors.textPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                AnimatedContent(
+                    targetState = totalSavings,
+                    transitionSpec = {
+                        (slideInVertically { height -> height } + fadeIn())
+                            .togetherWith(slideOutVertically { height -> -height } + fadeOut())
+                    },
+                    label = "savingsAnim"
+                ) { savings ->
+                    Text(
+                        text = if (savings > 0) currencyFormatter.format(savings) else "₹0",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (savings > 0) MintSuccess else PriceLensTheme.glassColors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 Text(
                     text = "Savings Caught",
                     style = MaterialTheme.typography.labelSmall,

@@ -1,8 +1,10 @@
 package com.pricelens.core.designsystem.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingBag
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -75,10 +77,25 @@ fun ProductThumbnailImage(
     var isLoading by remember { mutableStateOf(true) }
     var hasError by remember { mutableStateOf(false) }
 
+    val isVisible = !isLoading && !hasError
+    val imageAlpha by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0f,
+        animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
+        label = "thumbAlpha"
+    )
+    val imageScale by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0.93f,
+        animationSpec = spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow),
+        label = "thumbScale"
+    )
+
     Box(
         modifier = modifier
             .clip(shape)
-            .background(PriceLensTheme.glassColors.surfaceHighlight)
+            .then(
+                if (isLoading) Modifier.background(shimmerBrush(), shape)
+                else Modifier.background(PriceLensTheme.glassColors.surfaceHighlight, shape)
+            )
             .border(0.5.dp, PriceLensTheme.glassColors.specularBorder, shape),
         contentAlignment = Alignment.Center
     ) {
@@ -93,21 +110,14 @@ fun ProductThumbnailImage(
                 onLoading = { isLoading = true; hasError = false },
                 onSuccess = { isLoading = false; hasError = false },
                 onError = { isLoading = false; hasError = true },
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        alpha = imageAlpha
+                        scaleX = imageScale
+                        scaleY = imageScale
+                    }
             )
-        }
-
-        if (isLoading && !hasError) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    strokeWidth = 2.dp,
-                    color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.6f)
-                )
-            }
         }
 
         if (hasError) {
@@ -135,12 +145,27 @@ fun ProductHeroImage(
     var isLoading by remember { mutableStateOf(true) }
     var hasError by remember { mutableStateOf(false) }
 
+    val isVisible = !isLoading && !hasError
+    val heroAlpha by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0f,
+        animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing),
+        label = "heroAlpha"
+    )
+    val heroScale by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0.94f,
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow),
+        label = "heroScale"
+    )
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
             .clip(RoundedCornerShape(16.dp))
-            .background(PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.7f))
+            .then(
+                if (isLoading) Modifier.background(shimmerBrush(), RoundedCornerShape(16.dp))
+                else Modifier.background(PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.7f), RoundedCornerShape(16.dp))
+            )
             .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center
     ) {
@@ -158,20 +183,12 @@ fun ProductHeroImage(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(8.dp)
+                    .graphicsLayer {
+                        alpha = heroAlpha
+                        scaleX = heroScale
+                        scaleY = heroScale
+                    }
             )
-        }
-
-        if (isLoading && !hasError) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(28.dp),
-                    strokeWidth = 2.5.dp,
-                    color = PriceLensTheme.glassColors.ambientGlow
-                )
-            }
         }
 
         if (hasError) {
