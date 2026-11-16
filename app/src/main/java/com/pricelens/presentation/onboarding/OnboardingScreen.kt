@@ -132,7 +132,7 @@ fun OnboardingScreen(
                     Box(
                         modifier = Modifier
                             .size(10.dp)
-                            .background(BrandMint, CircleShape)
+                            .background(PriceLensTheme.glassColors.ambientGlow, CircleShape)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -207,7 +207,7 @@ fun OnboardingScreen(
                             animationSpec = spring(dampingRatio = 0.75f, stiffness = 400f),
                             label = "indicatorWidth"
                         )
-                        val color = if (isSelected) BrandMint else PriceLensTheme.glassColors.specularBorder
+                        val color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder
 
                         Box(
                             modifier = Modifier
@@ -616,7 +616,7 @@ private fun OnboardingSlide4(
             Icon(
                 imageVector = Icons.Default.Security,
                 contentDescription = null,
-                tint = BrandMint,
+                tint = PriceLensTheme.glassColors.ambientGlow,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(10.dp))
@@ -636,6 +636,10 @@ private fun IntroFeatureRow(
     title: String,
     subtitle: String
 ) {
+    val isDark = PriceLensTheme.isDark
+    val glow = PriceLensTheme.glassColors.ambientGlow
+    val iconBg = if (isDark) BrandMint.copy(alpha = 0.15f) else Color(0xFFE6F4EA)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -649,13 +653,13 @@ private fun IntroFeatureRow(
             modifier = Modifier
                 .size(36.dp)
                 .clip(CircleShape)
-                .background(BrandMint.copy(alpha = 0.15f)),
+                .background(iconBg),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = BrandMint,
+                tint = glow,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -689,9 +693,17 @@ private fun PermissionCardItem(
     actionLabel: String,
     onAction: () -> Unit
 ) {
+    val isDark = PriceLensTheme.isDark
+    val glow = PriceLensTheme.glassColors.ambientGlow
+    val iconBg = if (isGranted) (if (isDark) BrandMint.copy(alpha = 0.15f) else Color(0xFFE6F4EA))
+                 else PriceLensTheme.glassColors.surfaceHighlight
+    val iconTint = if (isGranted) glow else PriceLensTheme.glassColors.textPrimary
+
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
+        borderColor = if (isGranted) (if (isDark) BrandMint.copy(alpha = 0.4f) else Color(0xFFCEEAD6))
+                      else PriceLensTheme.glassColors.specularBorder,
         onClick = if (!isGranted) onAction else null
     ) {
         Row(
@@ -702,16 +714,13 @@ private fun PermissionCardItem(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(
-                        if (isGranted) BrandMint.copy(alpha = 0.15f)
-                        else PriceLensTheme.glassColors.surfaceHighlight
-                    ),
+                    .background(iconBg),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = if (isGranted) Icons.Default.Check else icon,
                     contentDescription = null,
-                    tint = if (isGranted) BrandMint else PriceLensTheme.glassColors.textPrimary,
+                    tint = iconTint,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -740,28 +749,28 @@ private fun PermissionCardItem(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(BrandMint.copy(alpha = 0.15f))
+                        .background(if (isDark) BrandMint.copy(alpha = 0.15f) else Color(0xFFE6F4EA))
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = "Active",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = BrandMint
+                        color = glow
                     )
                 }
             } else {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(BrandMint)
+                        .background(if (isDark) BrandMint else Color(0xFF059669))
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = actionLabel,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF040404)
+                        color = if (isDark) Color(0xFF040404) else Color.White
                     )
                 }
             }

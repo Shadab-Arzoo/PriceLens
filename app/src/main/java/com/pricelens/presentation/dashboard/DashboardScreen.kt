@@ -333,8 +333,16 @@ private fun PasteLinkHeroCard(
                         modifier = Modifier
                             .size(46.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(PriceLensTheme.glassColors.actionFill)
-                            .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(14.dp)),
+                            .background(
+                                if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.15f)
+                                else Color(0xFFE6F4EA)
+                            )
+                            .border(
+                                1.dp,
+                                if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.35f)
+                                else Color(0xFFCEEAD6),
+                                RoundedCornerShape(14.dp)
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -367,8 +375,16 @@ private fun PasteLinkHeroCard(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(PriceLensTheme.glassColors.surfaceHighlight)
-                        .border(1.dp, PriceLensTheme.glassColors.specularBorder, CircleShape),
+                        .background(
+                            if (PriceLensTheme.isDark) PriceLensTheme.glassColors.surfaceHighlight
+                            else Color(0xFFE6F4EA)
+                        )
+                        .border(
+                            1.dp,
+                            if (PriceLensTheme.isDark) PriceLensTheme.glassColors.specularBorder
+                            else Color(0xFFCEEAD6),
+                            CircleShape
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -402,15 +418,23 @@ private fun PasteLinkHeroCard(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(9999.dp))
-                        .background(PriceLensTheme.glassColors.actionFill)
-                        .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(9999.dp))
+                        .background(
+                            if (PriceLensTheme.isDark) PriceLensTheme.glassColors.actionFill
+                            else Color(0xFF059669)
+                        )
+                        .border(
+                            1.dp,
+                            if (PriceLensTheme.isDark) PriceLensTheme.glassColors.specularBorder
+                            else Color(0xFF047857),
+                            RoundedCornerShape(9999.dp)
+                        )
                         .padding(horizontal = 12.dp, vertical = 5.dp)
                 ) {
                     Text(
                         text = "Paste & Track",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = PriceLensTheme.glassColors.actionLabel
+                        color = Color.White
                     )
                 }
             }
@@ -534,12 +558,18 @@ private fun ClipboardDetectedBanner(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = PriceLensTheme.isDark
+    val glow = PriceLensTheme.glassColors.ambientGlow
+    val iconBg = if (isDark) BrandMint.copy(alpha = 0.15f) else Color(0xFFE6F4EA)
+    val iconBorder = if (isDark) BrandMint.copy(alpha = 0.35f) else Color(0xFFCEEAD6)
+    val bannerBorder = if (isDark) BrandMint.copy(alpha = 0.4f) else Color(0xFFCEEAD6)
+
     GlassCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
         backgroundColor = PriceLensTheme.glassColors.surfaceGlass,
-        borderColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.5f),
+        borderColor = bannerBorder,
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
@@ -552,14 +582,14 @@ private fun ClipboardDetectedBanner(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f))
-                    .border(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f), CircleShape),
+                    .background(iconBg)
+                    .border(1.dp, iconBorder, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.ContentPaste,
                     contentDescription = "Clipboard link",
-                    tint = PriceLensTheme.glassColors.ambientGlow,
+                    tint = glow,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -721,15 +751,23 @@ private fun TrendingSection(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
-                    .background(BrandMint.copy(alpha = 0.12f))
-                    .border(1.dp, BrandMint.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
+                    .background(
+                        if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.12f)
+                        else Color(0xFFE6F4EA)
+                    )
+                    .border(
+                        1.dp,
+                        if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.3f)
+                        else Color(0xFFCEEAD6),
+                        RoundedCornerShape(6.dp)
+                    )
                     .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
                 Text(
                     text = "Live Market Verified",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = BrandMint
+                    color = PriceLensTheme.glassColors.ambientGlow
                 )
             }
         }
@@ -787,7 +825,7 @@ private fun TrendingSection(
                                             text = currencyFormatter.format(product.lowestPrice),
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.ExtraBold,
-                                            color = BrandMint
+                                            color = PriceLensTheme.glassColors.ambientGlow
                                         )
                                         Text(
                                             text = "Lowest price",
@@ -803,10 +841,10 @@ private fun TrendingSection(
                             // Comparison & Store savings strip
                             Row(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(PriceLensTheme.glassColors.surfaceHighlight)
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(PriceLensTheme.glassColors.surfaceHighlight)
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -817,7 +855,7 @@ private fun TrendingSection(
                                     Box(
                                         modifier = Modifier
                                             .size(6.dp)
-                                            .background(BrandMint, CircleShape)
+                                            .background(PriceLensTheme.glassColors.ambientGlow, CircleShape)
                                     )
                                     val bestStore = product.lowestPriceRetailer?.let { "Best deal on $it" }
                                         ?: "Verified lowest price"
@@ -838,7 +876,7 @@ private fun TrendingSection(
                                         text = "Save up to ${currencyFormatter.format(savings)}",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = BrandMint
+                                        color = PriceLensTheme.glassColors.ambientGlow
                                     )
                                 } else {
                                     Text(

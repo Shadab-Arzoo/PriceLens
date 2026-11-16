@@ -98,6 +98,11 @@ fun PasteUrlBottomSheet(
         )
     }
 
+    val isDark = PriceLensTheme.isDark
+    val glow = PriceLensTheme.glassColors.ambientGlow
+    val iconBg = if (isDark) BrandMint.copy(alpha = 0.14f) else Color(0xFFE6F4EA)
+    val iconBorder = if (isDark) BrandMint.copy(alpha = 0.35f) else Color(0xFFCEEAD6)
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -116,14 +121,14 @@ fun PasteUrlBottomSheet(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
-                        .background(BrandMint.copy(alpha = 0.14f))
-                        .border(1.dp, BrandMint.copy(alpha = 0.35f), CircleShape),
+                        .background(iconBg)
+                        .border(1.dp, iconBorder, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Link,
                         contentDescription = "Universal Price Tracker",
-                        tint = BrandMint,
+                        tint = glow,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -169,7 +174,7 @@ fun PasteUrlBottomSheet(
                         Icon(
                             imageVector = Icons.Default.ContentPaste,
                             contentDescription = "Paste from Clipboard",
-                            tint = BrandMint,
+                            tint = glow,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -178,7 +183,7 @@ fun PasteUrlBottomSheet(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedBorderColor = BrandMint,
+                    focusedBorderColor = glow,
                     unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
                     focusedTextColor = PriceLensTheme.glassColors.textPrimary,
                     unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
@@ -197,7 +202,7 @@ fun PasteUrlBottomSheet(
                 Column {
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
-                        borderColor = BrandMint.copy(alpha = 0.4f)
+                        borderColor = if (isDark) BrandMint.copy(alpha = 0.4f) else Color(0xFFCEEAD6)
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -205,7 +210,7 @@ fun PasteUrlBottomSheet(
                         ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
-                                color = BrandMint,
+                                color = glow,
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(12.dp))
@@ -230,7 +235,7 @@ fun PasteUrlBottomSheet(
                     Column {
                         GlassCard(
                             modifier = Modifier.fillMaxWidth(),
-                            borderColor = BrandMint.copy(alpha = 0.6f)
+                            borderColor = if (isDark) BrandMint.copy(alpha = 0.6f) else Color(0xFFCEEAD6)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Row(
@@ -241,14 +246,14 @@ fun PasteUrlBottomSheet(
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(6.dp))
-                                            .background(BrandMint.copy(alpha = 0.2f))
+                                            .background(iconBg)
                                             .padding(horizontal = 8.dp, vertical = 3.dp)
                                     ) {
                                         Text(
                                             text = extractedMetadata.retailerName,
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
-                                            color = BrandMint
+                                            color = glow
                                         )
                                     }
 
@@ -287,7 +292,7 @@ fun PasteUrlBottomSheet(
                                                 text = "₹${"%,.0f".format(extractedMetadata.price)}",
                                                 style = MaterialTheme.typography.headlineSmall,
                                                 fontWeight = FontWeight.ExtraBold,
-                                                color = BrandMint
+                                                color = glow
                                             )
                                         }
                                     }
@@ -405,15 +410,15 @@ fun PasteUrlBottomSheet(
                     if (extractedMetadata == null && !isExtracting) {
                         GlassCard(
                             modifier = Modifier.fillMaxWidth(),
-                            backgroundColor = BrandMint.copy(alpha = 0.08f),
-                            borderColor = BrandMint.copy(alpha = 0.35f)
+                            backgroundColor = if (isDark) BrandMint.copy(alpha = 0.08f) else Color(0xFFE6F4EA).copy(alpha = 0.5f),
+                            borderColor = if (isDark) BrandMint.copy(alpha = 0.35f) else Color(0xFFCEEAD6)
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Default.Language,
                                         contentDescription = null,
-                                        tint = BrandMint,
+                                        tint = glow,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))

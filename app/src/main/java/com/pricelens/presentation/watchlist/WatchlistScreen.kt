@@ -297,10 +297,10 @@ fun WatchlistScreen(
                                 singleLine = true,
                                 shape = RoundedCornerShape(16.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = PriceLensTheme.glassColors.surfaceGlass.copy(alpha = 0.5f),
-                                    unfocusedContainerColor = PriceLensTheme.glassColors.surfaceGlass.copy(alpha = 0.3f),
-                                    focusedBorderColor = ElectricBlue.copy(alpha = 0.6f),
-                                    unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.5f),
+                                    focusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
+                                    unfocusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
+                                    focusedBorderColor = ElectricBlue,
+                                    unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
                                     focusedTextColor = PriceLensTheme.glassColors.textPrimary,
                                     unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
                                 )
@@ -499,7 +499,7 @@ private fun WatchlistStatsCard(
     GlassCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        backgroundColor = PriceLensTheme.glassColors.surfaceGlass.copy(alpha = 0.65f)
+        backgroundColor = PriceLensTheme.glassColors.surfaceGlass
     ) {
         Row(
             modifier = Modifier

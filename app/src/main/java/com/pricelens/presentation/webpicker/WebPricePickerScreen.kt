@@ -214,6 +214,9 @@ fun WebPricePickerScreen(
         webViewInstance?.evaluateJavascript("if (window.priceLensInspector) { window.priceLensInspector.setMode('$modeStr'); }", null)
     }
 
+    val isDark = PriceLensTheme.isDark
+    val glow = PriceLensTheme.glassColors.ambientGlow
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -277,7 +280,10 @@ fun WebPricePickerScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(9999.dp))
-                                    .background(if (!uiState.isInspectMode) BrandMint.copy(alpha = 0.2f) else Color.Transparent)
+                                    .background(
+                                        if (!uiState.isInspectMode) (if (isDark) BrandMint.copy(alpha = 0.2f) else Color(0xFFE6F4EA))
+                                        else Color.Transparent
+                                    )
                                     .clickable { viewModel.toggleInspectMode(false) }
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
                                 contentAlignment = Alignment.Center
@@ -286,7 +292,7 @@ fun WebPricePickerScreen(
                                     Icon(
                                         imageVector = Icons.Default.PanTool,
                                         contentDescription = null,
-                                        tint = if (!uiState.isInspectMode) BrandMint else PriceLensTheme.glassColors.textSecondary,
+                                        tint = if (!uiState.isInspectMode) glow else PriceLensTheme.glassColors.textSecondary,
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
@@ -294,7 +300,7 @@ fun WebPricePickerScreen(
                                         text = "Browse",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = if (!uiState.isInspectMode) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (!uiState.isInspectMode) BrandMint else PriceLensTheme.glassColors.textSecondary
+                                        color = if (!uiState.isInspectMode) glow else PriceLensTheme.glassColors.textSecondary
                                     )
                                 }
                             }
@@ -302,7 +308,7 @@ fun WebPricePickerScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(9999.dp))
-                                    .background(if (uiState.isInspectMode) BrandMint else Color.Transparent)
+                                    .background(if (uiState.isInspectMode) glow else Color.Transparent)
                                     .clickable { viewModel.toggleInspectMode(true) }
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
                                 contentAlignment = Alignment.Center
@@ -311,7 +317,7 @@ fun WebPricePickerScreen(
                                     Icon(
                                         imageVector = Icons.Default.GpsFixed,
                                         contentDescription = null,
-                                        tint = if (uiState.isInspectMode) Color(0xFF000000) else PriceLensTheme.glassColors.textSecondary,
+                                        tint = if (uiState.isInspectMode) (if (isDark) Color(0xFF000000) else Color.White) else PriceLensTheme.glassColors.textSecondary,
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
@@ -319,7 +325,7 @@ fun WebPricePickerScreen(
                                         text = "Select Price",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = if (uiState.isInspectMode) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (uiState.isInspectMode) Color(0xFF000000) else PriceLensTheme.glassColors.textSecondary
+                                        color = if (uiState.isInspectMode) (if (isDark) Color(0xFF000000) else Color.White) else PriceLensTheme.glassColors.textSecondary
                                     )
                                 }
                             }
@@ -331,7 +337,7 @@ fun WebPricePickerScreen(
                         LinearProgressIndicator(
                             progress = { uiState.pageLoadProgress / 100f },
                             modifier = Modifier.fillMaxWidth().height(2.dp),
-                            color = BrandMint,
+                            color = glow,
                             trackColor = Color.Transparent,
                         )
                     }
@@ -341,7 +347,7 @@ fun WebPricePickerScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
-                                if (uiState.isInspectMode) BrandMint.copy(alpha = 0.12f) else ElectricBlue.copy(alpha = 0.08f)
+                                if (uiState.isInspectMode) (if (isDark) BrandMint.copy(alpha = 0.12f) else Color(0xFFE6F4EA)) else ElectricBlue.copy(alpha = 0.08f)
                             )
                             .padding(horizontal = 16.dp, vertical = 6.dp)
                     ) {
@@ -349,7 +355,7 @@ fun WebPricePickerScreen(
                             Icon(
                                 imageVector = if (uiState.isInspectMode) Icons.Default.TouchApp else Icons.Default.PanTool,
                                 contentDescription = null,
-                                tint = if (uiState.isInspectMode) BrandMint else ElectricBlue,
+                                tint = if (uiState.isInspectMode) glow else ElectricBlue,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -454,7 +460,7 @@ fun WebPricePickerScreen(
                     .padding(16.dp),
                 shape = RoundedCornerShape(20.dp),
                 color = PriceLensTheme.glassColors.surfaceGlass,
-                border = BorderStroke(1.5.dp, BrandMint),
+                border = BorderStroke(1.5.dp, glow),
                 shadowElevation = 16.dp
             ) {
                 Column(
@@ -472,13 +478,13 @@ fun WebPricePickerScreen(
                                 modifier = Modifier
                                     .size(28.dp)
                                     .clip(CircleShape)
-                                    .background(BrandMint),
+                                    .background(glow),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = null,
-                                    tint = Color.Black,
+                                    tint = if (isDark) Color.Black else Color.White,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -541,7 +547,7 @@ fun WebPricePickerScreen(
                                 text = "₹${"%,.0f".format(uiState.selectedPrice)}",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = BrandMint
+                                color = glow
                             )
                         }
                     }
