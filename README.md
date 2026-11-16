@@ -13,33 +13,37 @@
 
 You can download the pre-built, installable Android APK directly from our GitHub Releases:
 
-👉 **[Download PriceLens APK (v1.3.5)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
+👉 **[Download PriceLens APK (v1.4.0)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
 
 ### Installation Instructions
-1. Download `pricelens-v1.3.5.apk` onto your Android device (or transfer via USB / adb).
+1. Download `pricelens-v1.4.0.apk` onto your Android device (or transfer via USB / adb).
 2. Tap the downloaded APK to install. If prompted by Android, allow "Install unknown apps" for your browser or file manager.
 3. Open **PriceLens** and enjoy comparing prices!
 
-*(Alternatively install via adb: `adb install -r pricelens-v1.3.5.apk`)*
+*(Alternatively install via adb: `adb install -r pricelens-v1.4.0.apk`)*
 
 ---
 
 ## ✨ Features
 
+- **🌓 Pitch Black Dark Mode & Clean Light Mode**: Premium OLED pitch black ground (`#000000`), deep surface cards (`#0B0B0B`), hairline borders (`#1D1D1D`), high-contrast typography, and Brand Mint (`#6EE3AD`) accents with an instant persistent theme toggle switch.
+- **🌐 Universal Store Price Tracking**: Paste product URLs from ANY web store on the internet (Nike, Zara, Apple, Myntra, etc.) with automatic OpenGraph/schema metadata extraction.
+- **🎯 In-App Interactive Web Price Picker (`WebPricePickerScreen`)**: Clean in-app browser view allowing users to tap on the exact price element on any webpage, highlighting it with a glowing Mint box and capturing the CSS selector for background tracking.
+- **🔔 Actionable Price Drop Notifications**: Enriched notifications featuring calculated price savings badges, high priority heads-up alerts, and direct "View Deal" and "Open PriceLens" action buttons.
+- **🚀 Animated Onboarding & Hero Illustrations**: 4 engaging first-launch slides with custom resolution-independent vector illustrations, gentle floating spring physics, and feature cards.
 - **🔍 Truthful Multi-Retailer Comparison**: Real-time normalized offers across Amazon, Flipkart, Croma, Reliance Digital, and Vijay Sales with lowest-price badges and explicit out-of-stock / unavailable retailer indicators.
 - **👆 Interactive Price History Touch Scrubbing**: Real-time touch and drag gestures on the Canvas price sparkline with tactile haptic feedback (`HapticFeedbackType.TextHandleMove`), dashed vertical guide, and instant observation callouts showing retailer, timestamp, and historical price.
 - **🔗 Smart Native Shortlinks & Share Text Parsing**: Seamlessly parses short links (`amzn.to`, `amzn.in`, `fkrt.it`) and extracts URLs from full app share messages when sharing directly from Amazon or Flipkart apps.
 - **📲 Android System "Share via PriceLens" (`ACTION_SEND`)**: Tap "Share" directly within Amazon, Flipkart, Myntra, or Chrome and select **PriceLens** from Android's native share sheet for instantaneous comparison without manual copying.
-- **📋 Smart Clipboard Auto-Detection**: Instant floating glass banner when a supported retailer link is detected in your clipboard for one-tap comparison.
+- **📋 Smart Clipboard Auto-Detection**: Instant floating banner when a supported retailer link is detected in your clipboard for one-tap comparison.
 - **📌 Dedicated Tracked Watchlist Screen**: Comprehensive alert dashboard with live price tracker stats, real-time savings badges ("Target met! Price dropped by ₹..."), and instant product navigation.
 - **🔔 Background Price Monitoring Worker (`WorkManager`)**: Periodic background checks for tracked products with native high-priority Android notifications when prices drop at or below target thresholds.
 - **🔗 Link-First Comparison Engine**: Paste any retailer product link or tap "Paste from Clipboard" to instantly compare competitor offers and identify authorized models.
 - **📈 Interactive Animated Price History**: Progressive Canvas sparkline charting price fluctuations with deal confidence scoring and price drop alerts.
-- **✨ Apple-Grade Liquid Glass UI**: Refined Royal Azure (`#2563EB`) and Obsidian Slate theme with specular perimeter highlights, tactile spring compression, and dynamic elevation.
-- **💫 Fluid Motion & Micro-Interactions**: Real-time pulsing radar beacon, predictive 3D screen transition curves, and skeleton shimmer loaders.
+- **💫 Fluid Motion & Micro-Interactions**: Shared-axis screen elevation transitions, spring physics on buttons and cards, and `Modifier.animateItem()` list reordering.
 - **🎨 Modern Adaptive Icon**: Optical prism lens design featuring a geometric Rupee emblem, specular bezel glint, and an emerald savings focal gem.
 - **💾 Local Caching & Sync**: Room-backed persistence keeping price tracking alerts, watchlist items, and search history automatically synchronized.
-- **🔒 Privacy & Security First**: Zero camera or invasive permissions required; 100% private on-device processing.
+- **🔒 Privacy & Security First**: Zero account or invasive permissions required; 100% private on-device processing.
 
 ---
 
