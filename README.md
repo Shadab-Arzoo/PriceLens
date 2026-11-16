@@ -13,25 +13,25 @@
 
 You can download the pre-built, installable Android APK directly from our GitHub Releases:
 
-👉 **[Download PriceLens APK (v1.4.5)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
+👉 **[Download PriceLens APK (v1.4.6)](https://github.com/Shadab-Arzoo/PriceLens/releases/latest)**
 
 ### Installation Instructions
-1. Download `pricelens-v1.4.5.apk` onto your Android device (or transfer via USB / adb).
+1. Download `pricelens-v1.4.6.apk` onto your Android device (or transfer via USB / adb).
 2. Tap the downloaded APK to install. If prompted by Android, allow "Install unknown apps" for your browser or file manager.
 3. Open **PriceLens** and enjoy comparing prices!
 
-*(Alternatively install via adb: `adb install -r pricelens-v1.4.5.apk`)*
+*(Alternatively install via adb: `adb install -r pricelens-v1.4.6.apk`)*
 
 ---
 
 ## ✨ Features
 
-- **🧪 PriceLens Labs (Experimental Features Suite)**: Pinned top-bar button (`AutoAwesome` / 🧪) and dashboard banner opening the Labs bottom sheet with a master switch and individual toggles:
-  - **🛡️ Deal Authenticity & Fake Discount Detector**: Calculates advertised discounts vs 30-day historical median prices to detect artificially inflated MRPs and identify genuine deals.
-  - **🟢 "Should I Buy Now?" Recommendation Verdict**: Instant decision badge (🟢 *Great Price — At 30-Day Low!* / 🟡 *Fair Price* / 🔴 *Wait — Above Average*) based on historical volatility.
-  - **🎯 Smart Target Alert Presets**: Instant `-5%`, `-10%`, and `All-Time Low` quick chips in the price tracking dialog for one-tap target setting.
-  - **💳 Bank Card & Cashback Simulator**: Interactive payment discount calculator modeling HDFC/ICICI 10% instant discounts, 5% cashback cards, and ₹500 UPI discounts to reveal net effective checkout price.
-  - **⚡ Live Dynamic Search Expansion**: Seamless search fallback generating real-time comparisons across Amazon, Flipkart, and Croma for queries (AirPods, PS5, Puma, boAt, iPad, etc.).
+- **🧪 PriceLens Labs 2.0 (Experimental Features Suite)**: Pinned top-bar button (`AutoAwesome` / 🧪) with breathing glow pulse and dashboard banner opening the Labs bottom sheet with a master switch and individual toggles:
+  - **🛡️ Deal Authenticity & Fake Discount Detector**: Calculates advertised discounts vs 30-day historical median prices to detect artificially inflated MRPs and identify genuine deals, complete with an expandable "Inspect Price Breakdown" infographic.
+  - **🟢 "Should I Buy Now?" Recommendation Verdict & Physical Needle Gauge**: Dynamic decision badge with an animated physical indicator needle gliding across a 30-day price gradient track, along with a "Price Momentum" strip (favorable buying zone vs awaiting drop).
+  - **🎯 Smart Target Alert Presets & Live Savings Calculator**: Instant `-5%`, `-10%`, `-15%`, and `All-Time Low` quick chips in the price tracking dialog with real-time rupee savings pill (`₹X saved`) as you type.
+  - **💳 Bank Card, Cashback & No-Cost EMI Simulator**: Interactive payment discount calculator modeling HDFC/ICICI 10% instant discounts, 5% cashback cards, ₹500 UPI discounts, and 3/6-month No-Cost EMI monthly breakdowns with rolling price animations and tactile haptic feedback.
+  - **⚡ Live Dynamic Search Expansion**: Seamless search fallback generating real-time comparisons across Amazon, Flipkart, and Croma for queries (AirPods, PS5, Puma, boAt, iPad, etc.) with automatic storage tier variations.
   - **🔄 Diagnostic Tools**: One-tap background price sync via WorkManager and test price-drop notification dispatching.
   - **📦 Watchlist Backup & Restore**: Export and import tracked items as formatted JSON.
 - **🌓 Pitch Black Dark Mode & Clean Light Mode**: Premium OLED pitch black ground (`#000000`), deep surface cards (`#0B0B0B`), hairline borders (`#1D1D1D`), high-contrast typography, and Brand Mint (`#6EE3AD`) accents with an instant persistent theme toggle switch.

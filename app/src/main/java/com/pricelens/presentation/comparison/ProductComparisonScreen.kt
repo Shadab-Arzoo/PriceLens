@@ -26,10 +26,12 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -841,11 +843,12 @@ private fun TrackOutsidePriceDialog(
                 if (showPresets && currentPrice != null && currentPrice > 0.0) {
                     val p5 = "%.0f".format(currentPrice * 0.95)
                     val p10 = "%.0f".format(currentPrice * 0.90)
+                    val p15 = "%.0f".format(currentPrice * 0.85)
                     val pAtl = if (lowestRecordedPrice != null && lowestRecordedPrice < currentPrice) {
                         "%.0f".format(lowestRecordedPrice)
                     } else "%.0f".format(currentPrice * 0.92)
 
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
                             text = "Smart Alert Presets",
                             style = MaterialTheme.typography.labelSmall,
@@ -854,11 +857,44 @@ private fun TrackOutsidePriceDialog(
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
                             PresetChip(label = "-5% (₹$p5)", onClick = { onPriceChange(p5) })
                             PresetChip(label = "-10% (₹$p10)", onClick = { onPriceChange(p10) })
+                            PresetChip(label = "-15% (₹$p15)", onClick = { onPriceChange(p15) })
                             PresetChip(label = "ATL (₹$pAtl)", onClick = { onPriceChange(pAtl) })
+                        }
+
+                        // Live Savings Calculation Pill
+                        val enteredTarget = targetPrice.toDoubleOrNull()
+                        if (enteredTarget != null && enteredTarget > 0.0 && enteredTarget < currentPrice) {
+                            val savedRupees = currentPrice - enteredTarget
+                            val savedPercent = ((savedRupees / currentPrice) * 100).toInt()
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MintSuccess.copy(alpha = 0.12f),
+                                border = BorderStroke(1.dp, MintSuccess.copy(alpha = 0.35f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = MintSuccess,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Estimated drop savings: ₹${"%,.0f".format(savedRupees)} ($savedPercent% off today's deal)",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MintSuccess
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -2131,23 +2167,43 @@ private fun BuyNowVerdictCard(
                     )
                 }
 
-                // Gradient Track
-                Box(
+                // Gradient Track with animated needle pin
+                androidx.compose.foundation.layout.BoxWithConstraints(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(
-                            brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
-                                colors = listOf(
-                                    MintSuccess,
-                                    ElectricBlue,
-                                    AmberAlert,
-                                    Color(0xFFE53935)
+                        .height(20.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    val trackWidth = maxWidth
+                    // Base gradient track
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(
+                                brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                    colors = listOf(
+                                        MintSuccess,
+                                        ElectricBlue,
+                                        AmberAlert,
+                                        Color(0xFFE53935)
+                                    )
                                 )
                             )
-                        )
-                )
+                    )
+
+                    // Physical animated needle pin
+                    val pinOffset = (trackWidth - 14.dp) * animatedFraction
+                    Box(
+                        modifier = Modifier
+                            .offset(x = pinOffset)
+                            .size(14.dp)
+                            .clip(CircleShape)
+                            .background(Color.White)
+                            .border(2.dp, verdict.badgeColor, CircleShape)
+                    )
+                }
 
                 // Labels below track
                 Row(
@@ -2168,6 +2224,39 @@ private fun BuyNowVerdictCard(
                         text = "Peak: ${currencyFormatter.format(maxPrice)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = PriceLensTheme.glassColors.textSecondary
+                    )
+                }
+
+                // Price Momentum Strip
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(PriceLensTheme.glassColors.surfaceHighlight)
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (lowestPrice <= avgPrice) Icons.AutoMirrored.Filled.TrendingDown else Icons.AutoMirrored.Filled.TrendingUp,
+                            contentDescription = null,
+                            tint = if (lowestPrice <= avgPrice) MintSuccess else AmberAlert,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (lowestPrice <= avgPrice) "Momentum: Favorable Buying Zone" else "Momentum: Awaiting Next Drop",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = PriceLensTheme.glassColors.textPrimary
+                        )
+                    }
+                    Text(
+                        text = if (lowestPrice <= minPrice * 1.02) "All-Time Low" else if (lowestPrice <= avgPrice) "Below Average" else "Wait for Drop",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = verdict.badgeColor
                     )
                 }
             }
@@ -2332,6 +2421,69 @@ private fun DealAuthenticityCard(
                     Text(if (trueSavings > 0) currencyFormatter.format(trueSavings) else "₹0", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = PriceLensTheme.glassColors.ambientGlow)
                 }
             }
+
+            var isDetailsExpanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+
+            // Expandable breakdown toggle
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isDetailsExpanded = !isDetailsExpanded }
+                    .padding(vertical = 2.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (isDetailsExpanded) "Hide Detailed Breakdown ▲" else "Inspect Price Breakdown ▼",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = PriceLensTheme.glassColors.ambientGlow
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isDetailsExpanded,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(PriceLensTheme.glassColors.surfaceHighlight)
+                        .padding(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Advertised List Price:", style = MaterialTheme.typography.bodySmall, color = PriceLensTheme.glassColors.textSecondary)
+                        Text(currencyFormatter.format(advertisedListPrice), style = MaterialTheme.typography.bodySmall, textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough, color = PriceLensTheme.glassColors.textSecondary)
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("30-Day True Median:", style = MaterialTheme.typography.bodySmall, color = PriceLensTheme.glassColors.textSecondary)
+                        Text(currencyFormatter.format(median), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = PriceLensTheme.glassColors.textPrimary)
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Today's Verified Price:", style = MaterialTheme.typography.bodySmall, color = PriceLensTheme.glassColors.textSecondary)
+                        Text(currencyFormatter.format(lowestPrice), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MintSuccess)
+                    }
+                    HorizontalDivider(color = PriceLensTheme.glassColors.specularBorder)
+                    Text(
+                        text = if (isGenuineDeal) "🛡️ PriceLens Truthful Guarantee: Today's deal is genuine and beats regular market pricing."
+                               else "⚠️ Price Warning: The advertised discount is inflated against a markup. Actual savings are modest.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isGenuineDeal) MintSuccess else AmberAlert
+                    )
+                }
+            }
         }
     }
 }
@@ -2347,9 +2499,10 @@ private fun BankOfferSimulatorCard(
 
     val offers = listOf(
         Triple("Standard Price", 0.0, "No card applied"),
-        Triple("HDFC / ICICI Credit Card", (basePrice * 0.10).coerceAtMost(1500.0), "10% Instant Discount (up to ₹1,500)"),
-        Triple("Amazon Pay / Axis Card", basePrice * 0.05, "5% Unlimited Cashback"),
-        Triple("UPI Instant Discount", if (basePrice >= 5000) 500.0 else 0.0, "Flat ₹500 off on UPI")
+        Triple("10% Card", (basePrice * 0.10).coerceAtMost(1500.0), "10% Instant Discount (up to ₹1,500)"),
+        Triple("5% Cashback", basePrice * 0.05, "5% Unlimited Cashback"),
+        Triple("₹500 UPI", if (basePrice >= 5000) 500.0 else 0.0, "Flat ₹500 off on UPI"),
+        Triple("No-Cost EMI", 0.0, "Zero Interest Monthly EMI Available")
     )
 
     val currentOffer = offers[selectedOfferIndex]
@@ -2412,9 +2565,9 @@ private fun BankOfferSimulatorCard(
             // Chips with scale and spring transitions
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                listOf("None", "10% Card", "5% Cashback", "₹500 UPI").forEachIndexed { idx, label ->
+                listOf("None", "10% Card", "5% Cash", "₹500 UPI", "0% EMI").forEachIndexed { idx, label ->
                     val isSelected = selectedOfferIndex == idx
                     val chipScale by animateFloatAsState(
                         targetValue = if (isSelected) 1.03f else 1.0f,
@@ -2448,10 +2601,36 @@ private fun BankOfferSimulatorCard(
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             color = if (isSelected) Color.Black else PriceLensTheme.glassColors.textPrimary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 1.dp),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
+                    }
+                }
+            }
+
+            // No-Cost EMI Breakdown Panel
+            AnimatedVisibility(
+                visible = selectedOfferIndex == 4,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(PriceLensTheme.glassColors.surfaceGlass)
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("3 Months No-Cost EMI", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = PriceLensTheme.glassColors.textPrimary)
+                        Text("₹${"%,.0f".format(effectivePrice / 3)} / month", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = PriceLensTheme.glassColors.ambientGlow)
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("6 Months No-Cost EMI", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = PriceLensTheme.glassColors.textPrimary)
+                        Text("₹${"%,.0f".format(effectivePrice / 6)} / month", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = PriceLensTheme.glassColors.ambientGlow)
                     }
                 }
             }
