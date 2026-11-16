@@ -357,15 +357,14 @@ fun WatchlistScreen(
                             item = item,
                             currencyFormatter = currencyFormatter,
                             onClick = {
-                                if (!item.websiteUrl.isNullOrBlank()) {
-                                    runCatching {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.websiteUrl)).apply {
-                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                        }
-                                        context.startActivity(intent)
+                                onNavigateToComparison(item.productId, item.productName)
+                            },
+                            onOpenWebsite = { url ->
+                                runCatching {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                     }
-                                } else {
-                                    onNavigateToComparison(item.productId, item.productName)
+                                    context.startActivity(intent)
                                 }
                             },
                             onDelete = { onEvent(WatchlistUiEvent.RemoveItem(item.productId)) },
@@ -581,6 +580,7 @@ private fun WatchlistItemCard(
     currencyFormatter: NumberFormat,
     onClick: () -> Unit,
     onDelete: () -> Unit,
+    onOpenWebsite: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val target = item.targetPrice
@@ -630,10 +630,11 @@ private fun WatchlistItemCard(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Web Tracked ↗",
+                                    text = "Visit Store ↗",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MintSuccess,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.clickable { onOpenWebsite?.invoke(item.websiteUrl) }
                                 )
                             }
                         }
@@ -641,10 +642,11 @@ private fun WatchlistItemCard(
                     if (item.brand == null && !item.websiteUrl.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Web Tracked ↗",
+                            text = "Visit Store ↗",
                             style = MaterialTheme.typography.labelSmall,
                             color = MintSuccess,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { onOpenWebsite?.invoke(item.websiteUrl) }
                         )
                     }
                 }

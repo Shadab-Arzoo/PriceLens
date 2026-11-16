@@ -15,6 +15,13 @@ class PriceHistoryRepositoryImpl @Inject constructor(
         dao.insertObservation(PriceObservationEntity.fromDomain(observation))
     }
 
+    override suspend fun recordAll(observations: List<PriceObservation>) {
+        dao.insertObservations(observations.map { PriceObservationEntity.fromDomain(it) })
+    }
+
     override fun observe(productId: String): Flow<List<PriceObservation>> =
         dao.observeHistory(productId).map { observations -> observations.map { it.toDomain() } }
+
+    override suspend fun getHistory(productId: String): List<PriceObservation> =
+        dao.getHistory(productId).map { it.toDomain() }
 }

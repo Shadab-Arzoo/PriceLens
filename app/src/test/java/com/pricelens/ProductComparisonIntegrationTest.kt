@@ -30,10 +30,21 @@ class ProductComparisonIntegrationTest {
         override suspend fun clearRecentSearches() { recordedSearches.clear() }
     }
 
+    private class FakeWatchlistDao : com.pricelens.data.local.dao.WatchlistDao {
+        val items = mutableMapOf<String, com.pricelens.data.local.entity.WatchlistEntity>()
+        override fun getWatchlistItems(): Flow<List<com.pricelens.data.local.entity.WatchlistEntity>> = emptyFlow()
+        override suspend fun getWatchlistItemById(productId: String): com.pricelens.data.local.entity.WatchlistEntity? = items[productId]
+        override suspend fun insertItem(item: com.pricelens.data.local.entity.WatchlistEntity) { items[item.productId] = item }
+        override suspend fun deleteItem(item: com.pricelens.data.local.entity.WatchlistEntity) { items.remove(item.productId) }
+        override suspend fun deleteById(productId: String) { items.remove(productId) }
+        override suspend fun updateLowestPrice(productId: String, lowestPrice: Double) {}
+    }
+
     private lateinit var sandboxAdapter: SandboxRetailerAdapter
     private lateinit var remoteDataSource: ProductCatalogRemoteDataSourceImpl
     private lateinit var catalogRepository: ProductCatalogRepositoryImpl
     private lateinit var dashboardRepository: InMemoryDashboardRepository
+    private lateinit var fakeWatchlistDao: FakeWatchlistDao
     private lateinit var searchUseCase: SearchProductsUseCase
     private lateinit var comparisonUseCase: GetProductComparisonUseCase
 
@@ -41,7 +52,8 @@ class ProductComparisonIntegrationTest {
     fun setUp() {
         sandboxAdapter = SandboxRetailerAdapter()
         remoteDataSource = ProductCatalogRemoteDataSourceImpl(sandboxAdapter, com.pricelens.domain.service.AlternativesService())
-        catalogRepository = ProductCatalogRepositoryImpl(remoteDataSource)
+        fakeWatchlistDao = FakeWatchlistDao()
+        catalogRepository = ProductCatalogRepositoryImpl(remoteDataSource, fakeWatchlistDao)
         dashboardRepository = InMemoryDashboardRepository()
         val saveRecentSearchUseCase = SaveRecentSearchUseCase(dashboardRepository)
         searchUseCase = SearchProductsUseCase(catalogRepository, saveRecentSearchUseCase)
@@ -135,5 +147,34 @@ class ProductComparisonIntegrationTest {
         assertEquals(1, details.unavailableRetailers.size) // Vijay Sales
         assertEquals("vijay_sales", details.unavailableRetailers[0].retailerId)
         assertTrue(details.unavailableRetailers[0].reason.contains("unavailable"))
+        assertTrue("Catalog products must return price history points", details.priceHistory.size >= 2)
+    }
+
+    @Test
+    fun `custom tracked watchlist product loads comparison details and price history without error`() = runTest {
+        val customItem = com.pricelens.data.local.entity.WatchlistEntity(
+            productId = "web_track_1234",
+            productName = "Nike Air Zoom Pegasus 40",
+            brand = "Nike",
+            targetPrice = 8999.0,
+            currentLowestPrice = 9499.0,
+            currency = "INR",
+            addedAt = System.currentTimeMillis() - 86400000L * 3,
+            websiteUrl = "https://www.nike.com/in/t/air-zoom-pegasus-40",
+            imageUrl = null
+        )
+        fakeWatchlistDao.insertItem(customItem)
+
+        val result = comparisonUseCase("web_track_1234")
+        assertTrue("Tracked watchlist item should resolve comparison details successfully", result.isSuccess)
+
+        val details = result.getOrNull()!!
+        assertEquals("web_track_1234", details.id)
+        assertEquals("Nike Air Zoom Pegasus 40", details.name)
+        assertEquals("Nike", details.brand)
+        assertEquals(1, details.offers.size)
+        assertEquals(9499.0, details.lowestPriceOffer!!.price!!, 0.01)
+        assertTrue("Price history points must be populated for graph display", details.priceHistory.size >= 2)
+        assertEquals(9499.0, details.priceHistory.last().price, 0.01)
     }
 }
