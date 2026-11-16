@@ -21,7 +21,11 @@ data class WatchlistEntity(
     @ColumnInfo(name = "currency")
     val currency: String,
     @ColumnInfo(name = "added_at")
-    val addedAt: Long
+    val addedAt: Long,
+    @ColumnInfo(name = "website_url")
+    val websiteUrl: String? = null,
+    @ColumnInfo(name = "image_url")
+    val imageUrl: String? = null
 ) {
     fun toDomain(): WatchlistItem = WatchlistItem(
         productId = productId,
@@ -30,7 +34,9 @@ data class WatchlistEntity(
         targetPrice = targetPrice,
         currentLowestPrice = currentLowestPrice,
         currency = currency,
-        addedAtTimestamp = addedAt
+        addedAtTimestamp = addedAt,
+        websiteUrl = websiteUrl,
+        imageUrl = imageUrl
     )
 
     companion object {
@@ -41,7 +47,9 @@ data class WatchlistEntity(
             targetPrice = item.targetPrice,
             currentLowestPrice = item.currentLowestPrice,
             currency = item.currency,
-            addedAt = item.addedAtTimestamp
+            addedAt = item.addedAtTimestamp,
+            websiteUrl = item.websiteUrl,
+            imageUrl = item.imageUrl
         )
     }
 }

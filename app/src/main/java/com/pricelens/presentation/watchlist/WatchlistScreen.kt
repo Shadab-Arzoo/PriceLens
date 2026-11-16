@@ -1,5 +1,10 @@
 package com.pricelens.presentation.watchlist
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,6 +42,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -53,11 +60,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pricelens.core.designsystem.AmberAlert
 import com.pricelens.core.designsystem.ElectricBlue
+import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
 import com.pricelens.core.designsystem.components.SkeletonBox
+import com.pricelens.core.designsystem.components.ThemeToggleSwitch
 import com.pricelens.domain.model.WatchlistItem
 import java.text.NumberFormat
 import java.util.Locale
@@ -102,6 +111,7 @@ fun WatchlistScreen(
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val currencyFormatter = remember {
         NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
             maximumFractionDigits = 0
@@ -113,7 +123,35 @@ fun WatchlistScreen(
             .fillMaxSize()
             .background(PriceLensTheme.glassColors.backgroundBrush),
         containerColor = Color.Transparent,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = PriceLensTheme.glassColors.surfaceGlass,
+                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
+                    shadowElevation = 8.dp,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = MintSuccess,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = data.visuals.message,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = PriceLensTheme.glassColors.textPrimary
+                        )
+                    }
+                }
+            }
+        },
         topBar = {
             WatchlistTopBar(
                 itemCount = uiState.totalTrackedCount,
@@ -317,8 +355,20 @@ fun WatchlistScreen(
                         WatchlistItemCard(
                             item = item,
                             currencyFormatter = currencyFormatter,
-                            onClick = { onNavigateToComparison(item.productId, item.productName) },
-                            onDelete = { onEvent(WatchlistUiEvent.RemoveItem(item.productId)) }
+                            onClick = {
+                                if (!item.websiteUrl.isNullOrBlank()) {
+                                    runCatching {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.websiteUrl)).apply {
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        }
+                                        context.startActivity(intent)
+                                    }
+                                } else {
+                                    onNavigateToComparison(item.productId, item.productName)
+                                }
+                            },
+                            onDelete = { onEvent(WatchlistUiEvent.RemoveItem(item.productId)) },
+                            modifier = Modifier.animateItem()
                         )
                     }
 
@@ -379,10 +429,18 @@ private fun WatchlistTopBar(
                 )
             }
 
+            ThemeToggleSwitch(
+                isDark = PriceLensTheme.isDark,
+                onToggle = LocalThemeToggle.current
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(ElectricBlue.copy(alpha = 0.15f))
+                    .clip(RoundedCornerShape(9999.dp))
+                    .background(MintSuccess.copy(alpha = 0.12f))
+                    .border(1.dp, MintSuccess.copy(alpha = 0.3f), RoundedCornerShape(9999.dp))
                     .padding(horizontal = 10.dp, vertical = 5.dp)
             ) {
                 Row(
@@ -417,6 +475,20 @@ private fun WatchlistStatsCard(
     onPriceDropsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val allSelected = activeFilter == WatchlistFilter.ALL
+    val dropsSelected = activeFilter == WatchlistFilter.PRICE_DROPS
+
+    val allBgColor by animateColorAsState(
+        targetValue = if (allSelected) ElectricBlue.copy(alpha = 0.14f) else Color.Transparent,
+        animationSpec = tween(durationMillis = 240),
+        label = "allTabBg"
+    )
+    val dropsBgColor by animateColorAsState(
+        targetValue = if (dropsSelected) MintSuccess.copy(alpha = 0.14f) else Color.Transparent,
+        animationSpec = tween(durationMillis = 240),
+        label = "dropsTabBg"
+    )
+
     GlassCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -425,28 +497,30 @@ private fun WatchlistStatsCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
+                    .weight(1f)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(allBgColor)
                     .clickable(onClick = onAllClick)
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 Text(
                     text = totalCount.toString(),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = if (activeFilter == WatchlistFilter.ALL) ElectricBlue else PriceLensTheme.glassColors.textPrimary
+                    color = if (allSelected) ElectricBlue else PriceLensTheme.glassColors.textPrimary
                 )
                 Text(
                     text = "Total Tracked",
                     style = MaterialTheme.typography.labelSmall,
-                    fontWeight = if (activeFilter == WatchlistFilter.ALL) FontWeight.Bold else FontWeight.Normal,
-                    color = if (activeFilter == WatchlistFilter.ALL) ElectricBlue else PriceLensTheme.glassColors.textSecondary
+                    fontWeight = if (allSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (allSelected) ElectricBlue else PriceLensTheme.glassColors.textSecondary
                 )
             }
 
@@ -460,9 +534,11 @@ private fun WatchlistStatsCard(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
+                    .weight(1f)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(dropsBgColor)
                     .clickable(onClick = onPriceDropsClick)
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (priceDropCount > 0) {
@@ -484,7 +560,7 @@ private fun WatchlistStatsCard(
                 Text(
                     text = "Price Drops Active",
                     style = MaterialTheme.typography.labelSmall,
-                    fontWeight = if (activeFilter == WatchlistFilter.PRICE_DROPS) FontWeight.Bold else FontWeight.Normal,
+                    fontWeight = if (dropsSelected) FontWeight.Bold else FontWeight.Normal,
                     color = if (priceDropCount > 0) MintSuccess else PriceLensTheme.glassColors.textSecondary
                 )
             }
@@ -531,11 +607,37 @@ private fun WatchlistItemCard(
                     )
                     item.brand?.let { brand ->
                         Spacer(modifier = Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = brand,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = PriceLensTheme.glassColors.textSecondary,
+                                fontWeight = FontWeight.Medium
+                            )
+                            if (!item.websiteUrl.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "•",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = PriceLensTheme.glassColors.textTertiary
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Web Tracked ↗",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MintSuccess,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+                    if (item.brand == null && !item.websiteUrl.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = brand,
+                            text = "Web Tracked ↗",
                             style = MaterialTheme.typography.labelSmall,
-                            color = PriceLensTheme.glassColors.textSecondary,
-                            fontWeight = FontWeight.Medium
+                            color = MintSuccess,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }

@@ -48,7 +48,7 @@ fun EmptyStateCard(
                 modifier = Modifier
                     .size(52.dp)
                     .background(
-                        color = ElectricBlue.copy(alpha = 0.10f),
+                        color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.12f),
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -56,7 +56,7 @@ fun EmptyStateCard(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = ElectricBlue,
+                    tint = PriceLensTheme.glassColors.ambientGlow,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -85,14 +85,16 @@ fun EmptyStateCard(
                 Button(
                     onClick = onActionClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ElectricBlue,
-                        contentColor = Color.White
+                        containerColor = PriceLensTheme.glassColors.actionFill,
+                        contentColor = PriceLensTheme.glassColors.actionLabel
                     ),
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp)
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(9999.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder)
                 ) {
                     Text(
                         text = actionLabel,
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }

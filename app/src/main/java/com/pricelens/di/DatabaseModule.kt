@@ -68,6 +68,14 @@ object DatabaseModule {
         }
     }
 
+    private val universalTrackingMigration = object : Migration(3, 4) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE target_price_alerts ADD COLUMN price_selector TEXT")
+            database.execSQL("ALTER TABLE watchlist_items ADD COLUMN website_url TEXT")
+            database.execSQL("ALTER TABLE watchlist_items ADD COLUMN image_url TEXT")
+        }
+    }
+
     @Provides
     @Singleton
     fun providePriceLensDatabase(
@@ -77,7 +85,11 @@ object DatabaseModule {
             context,
             PriceLensDatabase::class.java,
             "pricelens.db"
-        ).addMigrations(priceHistoryMigration, alertWebsiteTrackingMigration).build()
+        ).addMigrations(
+            priceHistoryMigration,
+            alertWebsiteTrackingMigration,
+            universalTrackingMigration
+        ).build()
     }
 
     @Provides

@@ -1,5 +1,6 @@
 package com.pricelens
 
+import com.pricelens.data.notification.PriceDropNotificationFormatter
 import com.pricelens.domain.model.PriceObservation
 import com.pricelens.domain.service.AlertEvaluator
 import com.pricelens.domain.service.PriceHistoryService
@@ -88,6 +89,34 @@ class PriceHistoryAndAlertTest {
         val vijayEvaluation = evaluator.evaluate(outsideWebsiteAlert, vijayObs)
         assertTrue("Should trigger alert when designated outside website drops below target", vijayEvaluation.reached)
         assertEquals(1, vijayEvaluation.notifications.size)
+    }
+
+    @Test
+    fun `notification formatter generates rich title and body with savings callouts`() {
+        val title = PriceDropNotificationFormatter.formatTitle("Sony WH-1000XM5")
+        assertEquals("📉 Price Drop: Sony WH-1000XM5", title)
+
+        val fallbackTitle = PriceDropNotificationFormatter.formatTitle(null)
+        assertEquals("📉 Price Drop: Tracked Product", fallbackTitle)
+
+        val shortBody = PriceDropNotificationFormatter.formatShortBody(
+            retailerLabel = "Amazon",
+            currentPrice = 24999.0,
+            targetPrice = 28000.0
+        )
+        assertTrue(shortBody.contains("Amazon"))
+        assertTrue(shortBody.contains("Save ₹3,001 below target"))
+
+        val expandedBody = PriceDropNotificationFormatter.formatExpandedBody(
+            productName = "Sony WH-1000XM5",
+            retailerLabel = "Amazon",
+            currentPrice = 24999.0,
+            targetPrice = 28000.0
+        )
+        assertTrue(expandedBody.contains("Sony WH-1000XM5 is now ₹24,999 on Amazon!"))
+        assertTrue(expandedBody.contains("🎉 You save ₹3,001 compared to your target of ₹28,000."))
+        assertTrue(expandedBody.contains("View Deal"))
+        assertTrue(expandedBody.contains("Open PriceLens"))
     }
 
     private fun observation(price: Double, timestamp: Long) = PriceObservation(

@@ -1,6 +1,8 @@
 package com.pricelens.presentation.search
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -49,12 +51,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pricelens.R
 import com.pricelens.core.designsystem.ElectricBlue
+import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.EmptyStateCard
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.PriceLensSearchBar
 import com.pricelens.core.designsystem.components.SkeletonBox
+import com.pricelens.core.designsystem.components.ThemeToggleSwitch
 import com.pricelens.domain.model.ProductSummary
 import java.text.NumberFormat
 import java.util.Locale
@@ -109,7 +113,13 @@ fun SearchScreen(
                     text = stringResource(R.string.search_screen_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = PriceLensTheme.glassColors.textPrimary
+                    color = PriceLensTheme.glassColors.textPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                ThemeToggleSwitch(
+                    isDark = PriceLensTheme.isDark,
+                    onToggle = LocalThemeToggle.current
                 )
             }
 
@@ -195,13 +205,21 @@ private fun SearchResultsList(
                     )
                     items(sortOptions, key = { it.first }) { (order, label) ->
                         val isSelected = currentSortOrder == order
+                        val chipBg by animateColorAsState(
+                            targetValue = if (isSelected) ElectricBlue.copy(alpha = 0.18f)
+                            else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f),
+                            animationSpec = tween(durationMillis = 200),
+                            label = "sortChipBg"
+                        )
+                        val chipText by animateColorAsState(
+                            targetValue = if (isSelected) ElectricBlue else PriceLensTheme.glassColors.textSecondary,
+                            animationSpec = tween(durationMillis = 200),
+                            label = "sortChipText"
+                        )
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    if (isSelected) ElectricBlue.copy(alpha = 0.15f)
-                                    else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f)
-                                )
+                                .background(chipBg)
                                 .border(
                                     1.dp,
                                     if (isSelected) ElectricBlue.copy(alpha = 0.6f)
@@ -215,7 +233,7 @@ private fun SearchResultsList(
                                 text = label,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) ElectricBlue else PriceLensTheme.glassColors.textSecondary
+                                color = chipText
                             )
                         }
                     }
@@ -229,7 +247,8 @@ private fun SearchResultsList(
         ) { product ->
             ProductSummaryCard(
                 product = product,
-                onClick = { onProductClick(product.id, product.name) }
+                onClick = { onProductClick(product.id, product.name) },
+                modifier = Modifier.animateItem()
             )
         }
         item {

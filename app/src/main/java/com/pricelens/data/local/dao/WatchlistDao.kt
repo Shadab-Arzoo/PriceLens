@@ -13,6 +13,9 @@ interface WatchlistDao {
     @Query("SELECT * FROM watchlist_items ORDER BY added_at DESC")
     fun getWatchlistItems(): Flow<List<WatchlistEntity>>
 
+    @Query("SELECT * FROM watchlist_items WHERE product_id = :productId LIMIT 1")
+    suspend fun getWatchlistItemById(productId: String): WatchlistEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertItem(item: WatchlistEntity)
 

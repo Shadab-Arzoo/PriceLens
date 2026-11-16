@@ -11,6 +11,7 @@ import androidx.work.WorkerParameters
 import com.pricelens.data.local.dao.WatchlistDao
 import com.pricelens.domain.model.PriceObservation
 import com.pricelens.domain.repository.TargetPriceAlertRepository
+import com.pricelens.domain.service.UniversalPriceFetcher
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -28,6 +29,7 @@ class PriceCheckWorker(
     interface PriceCheckWorkerEntryPoint {
         fun targetPriceAlertRepository(): TargetPriceAlertRepository
         fun watchlistDao(): WatchlistDao
+        fun universalPriceFetcher(): UniversalPriceFetcher
     }
 
     override suspend fun doWork(): Result {
@@ -38,19 +40,31 @@ class PriceCheckWorker(
             )
             val alertRepo = entryPoint.targetPriceAlertRepository()
             val watchlistDao = entryPoint.watchlistDao()
+            val universalPriceFetcher = entryPoint.universalPriceFetcher()
 
             val watchlist = watchlistDao.getWatchlistItems().first()
             for (item in watchlist) {
                 val alerts = alertRepo.getActiveAlerts(item.productId)
                 for (alert in alerts) {
-                    val currentPrice = item.currentLowestPrice
-                    if (currentPrice != null && currentPrice <= alert.targetPrice) {
+                    val evaluatedPrice = if (!alert.websiteUrl.isNullOrBlank()) {
+                        val fetched = universalPriceFetcher.fetchPrice(alert.websiteUrl, alert.priceSelector)
+                        if (fetched != null) {
+                            watchlistDao.updateLowestPrice(item.productId, fetched)
+                            fetched
+                        } else {
+                            item.currentLowestPrice
+                        }
+                    } else {
+                        item.currentLowestPrice
+                    }
+
+                    if (evaluatedPrice != null && evaluatedPrice <= alert.targetPrice) {
                         val obs = PriceObservation(
                             id = "bg_obs_${item.productId}_${System.currentTimeMillis()}",
                             productId = item.productId,
                             retailerId = alert.retailerName?.lowercase() ?: "store",
                             retailerName = alert.retailerName ?: "Online Store",
-                            price = currentPrice,
+                            price = evaluatedPrice,
                             currency = alert.currency,
                             observedAt = System.currentTimeMillis()
                         )

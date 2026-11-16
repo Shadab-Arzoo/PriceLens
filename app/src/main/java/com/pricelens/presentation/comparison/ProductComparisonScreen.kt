@@ -71,8 +71,10 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -87,12 +89,14 @@ import com.pricelens.R
 import com.pricelens.core.designsystem.AmberAlert
 import com.pricelens.core.designsystem.CyanAccent
 import com.pricelens.core.designsystem.ElectricBlue
+import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
 import com.pricelens.core.designsystem.components.LiquidGlassSecondaryButton
 import com.pricelens.core.designsystem.components.SkeletonBox
+import com.pricelens.core.designsystem.components.ThemeToggleSwitch
 import com.pricelens.domain.model.ProductAlternative
 import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.RetailerOffer
@@ -134,6 +138,13 @@ fun ProductComparisonScreen(
     onOpenOfferUrl: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    LaunchedEffect(uiState.userNotificationBanner) {
+        if (uiState.userNotificationBanner != null) {
+            delay(3500)
+            onEvent(ProductComparisonUiEvent.DismissBanner)
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -165,12 +176,18 @@ fun ProductComparisonScreen(
                     modifier = Modifier.weight(1f)
                 )
 
+                // Light / Dark Mode Toggle
+                ThemeToggleSwitch(
+                    isDark = PriceLensTheme.isDark,
+                    onToggle = LocalThemeToggle.current
+                )
+
                 // Watchlist Bookmark Toggle
                 IconButton(onClick = { onEvent(ProductComparisonUiEvent.ToggleWatchlist) }) {
                     Icon(
                         imageVector = if (uiState.isSavedInWatchlist) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                         contentDescription = if (uiState.isSavedInWatchlist) "Remove from Watchlist" else "Save to Watchlist",
-                        tint = if (uiState.isSavedInWatchlist) ElectricBlue else PriceLensTheme.glassColors.textSecondary
+                        tint = if (uiState.isSavedInWatchlist) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary
                     )
                 }
 
@@ -426,7 +443,8 @@ private fun ComparisonDetailsContent(
                     onOpenOfferUrl = onOpenOfferUrl,
                     onTrackPrice = {
                         onOpenTrackDialog(offer.retailerName, offer.price, offer.productUrl)
-                    }
+                    },
+                    modifier = Modifier.animateItem()
                 )
             }
         }
@@ -498,7 +516,8 @@ private fun ComparisonDetailsContent(
                 AlternativeProductCard(
                     alternative = alternative,
                     currencyFormatter = currencyFormatter,
-                    onSelectAlternative = onSelectAlternative
+                    onSelectAlternative = onSelectAlternative,
+                    modifier = Modifier.animateItem()
                 )
             }
         }
@@ -901,8 +920,8 @@ private fun PriceSparkline(
     onPointSelected: (com.pricelens.domain.model.PriceHistoryPoint?) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val strokeColor = ElectricBlue
-    val fillColor = ElectricBlue.copy(alpha = 0.15f)
+    val strokeColor = PriceLensTheme.glassColors.ambientGlow
+    val fillColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.18f)
     val haptic = LocalHapticFeedback.current
 
     var animationTriggered by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }

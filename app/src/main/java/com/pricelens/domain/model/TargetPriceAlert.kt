@@ -9,7 +9,8 @@ data class TargetPriceAlert(
     val lastEvaluatedObservationId: String? = null,
     val reachedAt: Long? = null,
     val retailerName: String? = null,
-    val websiteUrl: String? = null
+    val websiteUrl: String? = null,
+    val priceSelector: String? = null
 ) {
     init {
         require(id.isNotBlank())

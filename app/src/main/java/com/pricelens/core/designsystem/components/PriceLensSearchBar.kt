@@ -1,8 +1,12 @@
 package com.pricelens.core.designsystem.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,13 +58,13 @@ fun PriceLensSearchBar(
             Box(
                 modifier = Modifier
                     .size(32.dp)
-                    .background(ElectricBlue.copy(alpha = 0.12f), CircleShape),
+                    .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.14f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
-                    tint = ElectricBlue,
+                    tint = PriceLensTheme.glassColors.ambientGlow,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -68,8 +72,8 @@ fun PriceLensSearchBar(
         trailingIcon = {
             AnimatedVisibility(
                 visible = query.isNotEmpty(),
-                enter = fadeIn(),
-                exit = fadeOut()
+                enter = fadeIn() + scaleIn(spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
+                exit = fadeOut() + scaleOut()
             ) {
                 IconButton(onClick = { onQueryChange("") }) {
                     Icon(
@@ -84,15 +88,15 @@ fun PriceLensSearchBar(
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = { onSearch(query) }),
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(9999.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
             unfocusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
-            focusedBorderColor = ElectricBlue,
+            focusedBorderColor = PriceLensTheme.glassColors.ambientGlow,
             unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
             focusedTextColor = PriceLensTheme.glassColors.textPrimary,
             unfocusedTextColor = PriceLensTheme.glassColors.textPrimary,
-            cursorColor = ElectricBlue
+            cursorColor = PriceLensTheme.glassColors.ambientGlow
         )
     )
 }

@@ -1,11 +1,16 @@
 package com.pricelens.core.navigation
 
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,6 +40,8 @@ import com.pricelens.presentation.search.SearchRoute
 import com.pricelens.presentation.search.SearchViewModel
 import com.pricelens.presentation.watchlist.WatchlistRoute
 import com.pricelens.presentation.watchlist.WatchlistViewModel
+import com.pricelens.presentation.webpicker.WebPricePickerScreen
+import com.pricelens.presentation.webpicker.WebPricePickerViewModel
 
 @Composable
 fun PriceLensNavGraph(
@@ -56,7 +63,9 @@ fun PriceLensNavGraph(
     NavHost(
         navController = navController,
         startDestination = resolvedStartDestination,
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxSize()
+            .background(brush = PriceLensTheme.glassColors.backgroundBrush),
         enterTransition = {
             slideInHorizontally(
                 initialOffsetX = { fullWidth -> fullWidth / 4 },
@@ -96,8 +105,70 @@ fun PriceLensNavGraph(
             )
         }
 
-        // 2. Main Dashboard Screen (Link-First Experience)
-        composable(PriceLensDestination.Dashboard.route) {
+        // 2. Main Dashboard Screen (Link-First Experience / Browse Products)
+        composable(
+            route = PriceLensDestination.Dashboard.route,
+            enterTransition = {
+                if (initialState.destination.route == PriceLensDestination.Watchlist.route) {
+                    scaleIn(
+                        initialScale = 0.93f,
+                        animationSpec = tween(durationMillis = 340, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                    ) + fadeIn(
+                        animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing)
+                    ) + slideInVertically(
+                        initialOffsetY = { -it / 20 },
+                        animationSpec = tween(durationMillis = 340, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                    )
+                } else {
+                    slideInHorizontally(
+                        initialOffsetX = { fullWidth -> fullWidth / 4 },
+                        animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                    ) + fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing))
+                }
+            },
+            exitTransition = {
+                if (targetState.destination.route == PriceLensDestination.Watchlist.route) {
+                    scaleOut(
+                        targetScale = 0.93f,
+                        animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
+                    ) + fadeOut(
+                        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
+                    ) + slideOutVertically(
+                        targetOffsetY = { -it / 20 },
+                        animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
+                    )
+                } else {
+                    slideOutHorizontally(
+                        targetOffsetX = { fullWidth -> -fullWidth / 4 },
+                        animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                    ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+                }
+            },
+            popEnterTransition = {
+                if (initialState.destination.route == PriceLensDestination.Watchlist.route) {
+                    scaleIn(
+                        initialScale = 0.93f,
+                        animationSpec = tween(durationMillis = 340, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                    ) + fadeIn(
+                        animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing)
+                    ) + slideInVertically(
+                        initialOffsetY = { -it / 20 },
+                        animationSpec = tween(durationMillis = 340, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                    )
+                } else {
+                    slideInHorizontally(
+                        initialOffsetX = { fullWidth -> -fullWidth / 4 },
+                        animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                    ) + fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing))
+                }
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> fullWidth / 4 },
+                    animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+            }
+        ) {
             val viewModel: DashboardViewModel = hiltViewModel()
 
             androidx.compose.runtime.LaunchedEffect(sharedUrl) {
@@ -127,6 +198,11 @@ fun PriceLensNavGraph(
                     navController.navigate(
                         PriceLensDestination.ProductComparison.createRoute(productId, productName)
                     )
+                },
+                onNavigateToWebPicker = { url, name ->
+                    navController.navigate(
+                        PriceLensDestination.WebPricePicker.createRoute(url, name)
+                    )
                 }
             )
         }
@@ -139,7 +215,32 @@ fun PriceLensNavGraph(
                     type = NavType.StringType
                     defaultValue = ""
                 }
-            )
+            ),
+            enterTransition = {
+                fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
+                    slideInVertically(
+                        initialOffsetY = { -it / 8 },
+                        animationSpec = tween(durationMillis = 260, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                    ) +
+                    scaleIn(
+                        initialScale = 0.96f,
+                        animationSpec = tween(durationMillis = 260, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                    )
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)) +
+                    scaleOut(targetScale = 0.96f, animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing))
+            },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(durationMillis = 200)) + scaleIn(initialScale = 0.96f)
+            },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
+                    slideOutVertically(
+                        targetOffsetY = { -it / 8 },
+                        animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)
+                    )
+            }
         ) {
             val viewModel: SearchViewModel = hiltViewModel()
             SearchRoute(
@@ -164,7 +265,41 @@ fun PriceLensNavGraph(
                     type = NavType.StringType
                     defaultValue = ""
                 }
-            )
+            ),
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> (fullWidth * 0.35f).toInt() },
+                    animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                ) +
+                fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
+                scaleIn(
+                    initialScale = 0.94f,
+                    animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                )
+            },
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> -fullWidth / 4 },
+                    animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+            },
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> -fullWidth / 4 },
+                    animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing))
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> (fullWidth * 0.35f).toInt() },
+                    animationSpec = tween(durationMillis = 280, easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f))
+                ) +
+                fadeOut(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
+                scaleOut(
+                    targetScale = 0.94f,
+                    animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                )
+            }
         ) {
             val viewModel: ProductComparisonViewModel = hiltViewModel()
             ProductComparisonRoute(
@@ -173,8 +308,74 @@ fun PriceLensNavGraph(
             )
         }
 
-        // 5. Watchlist Screen
-        composable(PriceLensDestination.Watchlist.route) {
+        // 5. Watchlist Screen (Bookmarks)
+        composable(
+            route = PriceLensDestination.Watchlist.route,
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> (fullHeight * 0.95f).toInt() },
+                    animationSpec = tween(
+                        durationMillis = 360,
+                        easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+                    )
+                ) + fadeIn(
+                    animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)
+                ) + scaleIn(
+                    initialScale = 0.93f,
+                    animationSpec = tween(
+                        durationMillis = 360,
+                        easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+                    )
+                )
+            },
+            exitTransition = {
+                if (targetState.destination.route == PriceLensDestination.Dashboard.route) {
+                    slideOutVertically(
+                        targetOffsetY = { fullHeight -> (fullHeight * 0.95f).toInt() },
+                        animationSpec = tween(
+                            durationMillis = 320,
+                            easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
+                        )
+                    ) + fadeOut(
+                        animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)
+                    ) + scaleOut(
+                        targetScale = 0.93f,
+                        animationSpec = tween(
+                            durationMillis = 320,
+                            easing = FastOutSlowInEasing
+                        )
+                    )
+                } else {
+                    slideOutHorizontally(
+                        targetOffsetX = { fullWidth -> -fullWidth / 4 },
+                        animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                    ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+                }
+            },
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> -fullWidth / 4 },
+                    animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing))
+            },
+            popExitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> (fullHeight * 0.95f).toInt() },
+                    animationSpec = tween(
+                        durationMillis = 320,
+                        easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
+                    )
+                ) + fadeOut(
+                    animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)
+                ) + scaleOut(
+                    targetScale = 0.93f,
+                    animationSpec = tween(
+                        durationMillis = 320,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            }
+        ) {
             val viewModel: WatchlistViewModel = hiltViewModel()
             WatchlistRoute(
                 viewModel = viewModel,
@@ -185,8 +386,52 @@ fun PriceLensNavGraph(
                     )
                 },
                 onNavigateToBrowse = {
-                    navController.popBackStack(PriceLensDestination.Dashboard.route, false)
+                    val popped = navController.popBackStack(PriceLensDestination.Dashboard.route, false)
+                    if (!popped) {
+                        navController.navigate(PriceLensDestination.Dashboard.route) {
+                            popUpTo(PriceLensDestination.Dashboard.route) { inclusive = true }
+                        }
+                    }
                 }
+            )
+        }
+
+        // 6. Universal Web Price Picker (Interactive In-App WebView Inspector)
+        composable(
+            route = PriceLensDestination.WebPricePicker.route,
+            arguments = listOf(
+                navArgument("url") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument("name") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            ),
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 340, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                ) + fadeIn(animationSpec = tween(durationMillis = 200))
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 280, easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f))
+                ) + fadeOut(animationSpec = tween(durationMillis = 180))
+            },
+            popExitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 280, easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f))
+                ) + fadeOut(animationSpec = tween(durationMillis = 180))
+            }
+        ) {
+            val viewModel: WebPricePickerViewModel = hiltViewModel()
+            WebPricePickerScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

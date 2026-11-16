@@ -70,12 +70,12 @@
     <string name="onboarding_get_started">Get Started</string>
     <string name="onboarding_tour_tooltip">App Tour</string>
     <string name="intro_slide1_title">Smart Price Comparison</string>
-    <string name="intro_slide1_desc">Compare real-time prices across Amazon, Flipkart, Croma, Reliance Digital, and Vijay Sales in one tap.</string>
-    <string name="intro_slide2_title">Price History &amp; Deals</string>
-    <string name="intro_slide2_desc">Track price fluctuations with high-resolution historical trends, deal confidence scoring, and instant savings indicators.</string>
-    <string name="intro_slide3_title">Instant Link Comparison</string>
-    <string name="intro_slide3_desc">Paste any product URL from Amazon, Flipkart, Croma, Reliance Digital, or Vijay Sales to check competitor offers instantly.</string>
-    <string name="intro_slide4_title">Price Drop Notifications</string>
-    <string name="intro_slide4_desc">Enable alerts to get notified the second your tracked items drop below your target price.</string>
-    <string name="intro_privacy_guarantee">Your privacy is guaranteed: PriceLens operates securely without tracking personal web browsing or storing private data.</string>
+    <string name="intro_slide1_desc">Instantly compare real-time prices across Amazon, Flipkart, Croma, Reliance Digital, and Vijay Sales with verified savings.</string>
+    <string name="intro_slide2_title">Track Any Website</string>
+    <string name="intro_slide2_desc">Paste a product link from any online store. Simply tap on the price in our interactive preview to track any product universally.</string>
+    <string name="intro_slide3_title">Price Drop Alerts</string>
+    <string name="intro_slide3_desc">Set your target price and let PriceLens monitor drops in the background. Get notified the second a deal goes live.</string>
+    <string name="intro_slide4_title">100% Private &amp; On-Device</string>
+    <string name="intro_slide4_desc">No account or login required. Your bookmarks, targets, and price history stay securely on your device.</string>
+    <string name="intro_privacy_guarantee">100% On-Device &amp; Private: PriceLens never tracks your personal browsing or requires an account.</string>
 </resources>

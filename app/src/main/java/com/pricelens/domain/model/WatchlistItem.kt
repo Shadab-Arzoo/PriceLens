@@ -7,5 +7,7 @@ data class WatchlistItem(
     val targetPrice: Double? = null,
     val currentLowestPrice: Double? = null,
     val currency: String = "INR",
-    val addedAtTimestamp: Long
+    val addedAtTimestamp: Long,
+    val websiteUrl: String? = null,
+    val imageUrl: String? = null
 )

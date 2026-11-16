@@ -1,0 +1,121 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="280dp"
+    android:height="200dp"
+    android:viewportWidth="280"
+    android:viewportHeight="200">
+
+    <!-- Ambient Glow Behind Alert Card -->
+    <path
+        android:pathData="M140,110 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0"
+        android:fillColor="#156EE3AD" />
+
+    <!-- Main Price Chart Card -->
+    <path
+        android:pathData="M24,45 h232 a16,16 0 0 1 16,16 v115 a16,16 0 0 1 -16,16 h-232 a16,16 0 0 1 -16,-16 v-115 a16,16 0 0 1 16,-16 z"
+        android:fillColor="#141414"
+        android:strokeColor="#262626"
+        android:strokeWidth="1.5" />
+
+    <!-- Chart Grid Lines -->
+    <path
+        android:pathData="M44,80 h192 M44,115 h192 M44,150 h192"
+        android:strokeColor="#1F1F1F"
+        android:strokeWidth="1" />
+
+    <!-- Chart Area Gradient Fill (underneath line) -->
+    <path
+        android:pathData="M44,85 L85,92 L130,82 L175,135 L225,142 L225,160 L44,160 Z"
+        android:fillColor="#126EE3AD" />
+
+    <!-- Steep Price Drop Trend Line -->
+    <path
+        android:pathData="M44,85 L85,92 L130,82 L175,135 L225,142"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Price Data Points -->
+    <path
+        android:pathData="M44,85 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
+        android:fillColor="#6EE3AD" />
+    <path
+        android:pathData="M85,92 m-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0"
+        android:fillColor="#6EE3AD" />
+    <path
+        android:pathData="M130,82 m-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0"
+        android:fillColor="#6EE3AD" />
+    <path
+        android:pathData="M175,135 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
+        android:fillColor="#6EE3AD" />
+
+    <!-- Final Lowest Price Point with Glow Ring -->
+    <path
+        android:pathData="M225,142 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="1.5"
+        android:fillColor="#256EE3AD" />
+    <path
+        android:pathData="M225,142 m-4.5,0 a4.5,4.5 0 1,0 9,0 a4.5,4.5 0 1,0 -9,0"
+        android:fillColor="#6EE3AD" />
+
+    <!-- Drop Delta Pill: "▼ SAVE ₹3,000" -->
+    <path
+        android:pathData="M165,152 h68 a6,6 0 0 1 6,6 v10 a6,6 0 0 1 -6,6 h-68 a6,6 0 0 1 -6,-6 v-10 a6,6 0 0 1 6,-6 z"
+        android:fillColor="#0B0B0B"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="1" />
+    <path
+        android:pathData="M174,164 l3,4 l3,-4 z"
+        android:fillColor="#6EE3AD" />
+    <path
+        android:pathData="M185,163 h42"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+
+    <!-- Floating System Push Notification Banner (at the top) -->
+    <path
+        android:pathData="M34,14 h212 a14,14 0 0 1 14,14 v26 a14,14 0 0 1 -14,14 h-212 a14,14 0 0 1 -14,-14 v-26 a14,14 0 0 1 14,-14 z"
+        android:fillColor="#1B1B1B"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="1.5" />
+
+    <!-- Bell Icon Circle in Notification -->
+    <path
+        android:pathData="M48,41 m-14,0 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0"
+        android:fillColor="#2A2A2A" />
+
+    <!-- Bell Shape -->
+    <path
+        android:pathData="M48,34 c-3,0 -5,2.5 -5,5.5 v3 l-2,2 v1.5 h14 v-1.5 l-2,-2 v-3 c0,-3 -2,-5.5 -5,-5.5 z M46.5,47 a1.5,1.5 0 0 0 3,0"
+        android:fillColor="#6EE3AD" />
+
+    <!-- Notification Header line -->
+    <path
+        android:pathData="M70,33 h90"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round" />
+
+    <!-- Notification Body line -->
+    <path
+        android:pathData="M70,45 h120"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+
+    <!-- Time Chip in Notification -->
+    <path
+        android:pathData="M214,33 h24"
+        android:strokeColor="#666666"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- Floating Sparkle / Alert Ray -->
+    <path
+        android:pathData="M255,16 l3,3 M262,23 l4,0 M255,30 l3,-3"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+</vector>

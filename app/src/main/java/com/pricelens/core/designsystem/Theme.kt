@@ -12,6 +12,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -24,59 +25,55 @@ data class GlassColors(
     val textPrimary: Color,
     val textSecondary: Color,
     val textTertiary: Color,
-    val specularBorderBrush: Brush = Brush.verticalGradient(
-        listOf(LightGlassSpecularTop, LightGlassSpecularBottom)
-    ),
-    val primaryGradientBrush: Brush = Brush.horizontalGradient(
-        listOf(ElectricBlue, Color(0xFF4F46E5))
-    ),
-    val ambientGlow: Color = CyanAccent
+    val actionFill: Color,
+    val actionLabel: Color,
+    val specularBorderBrush: Brush = SolidColor(specularBorder),
+    val primaryGradientBrush: Brush = SolidColor(actionFill),
+    val ambientGlow: Color = BrandMint
 )
 
 private val LightGlassColors = GlassColors(
-    backgroundBrush = Brush.verticalGradient(listOf(LightBackgroundStart, LightBackgroundEnd)),
-    surfaceGlass = LightGlassSurface,
-    surfaceHighlight = LightGlassHighlight,
-    specularBorder = LightGlassBorder,
+    backgroundBrush = SolidColor(LightBackgroundStart),
+    surfaceGlass = LightSurface,
+    surfaceHighlight = LightSurfaceVariant,
+    specularBorder = LightHairline,
     textPrimary = LightTextPrimary,
     textSecondary = LightTextSecondary,
     textTertiary = LightTextTertiary,
-    specularBorderBrush = Brush.verticalGradient(
-        listOf(LightGlassSpecularTop, LightGlassSpecularBottom)
-    ),
-    primaryGradientBrush = Brush.horizontalGradient(
-        listOf(ElectricBlue, Color(0xFF4F46E5))
-    ),
-    ambientGlow = ElectricBlueGlow
+    actionFill = LightActionFill,
+    actionLabel = LightActionLabel,
+    specularBorderBrush = SolidColor(LightHairline),
+    primaryGradientBrush = SolidColor(LightActionFill),
+    ambientGlow = Color(0xFF059669)
 )
 
 private val DarkGlassColors = GlassColors(
-    backgroundBrush = Brush.verticalGradient(listOf(DarkBackgroundStart, DarkBackgroundEnd)),
-    surfaceGlass = DarkGlassSurface,
-    surfaceHighlight = DarkGlassHighlight,
-    specularBorder = DarkGlassBorder,
+    backgroundBrush = SolidColor(DarkBackgroundStart),
+    surfaceGlass = DarkSurface,
+    surfaceHighlight = DarkSurfaceVariant,
+    specularBorder = DarkHairline,
     textPrimary = DarkTextPrimary,
     textSecondary = DarkTextSecondary,
     textTertiary = DarkTextTertiary,
-    specularBorderBrush = Brush.verticalGradient(
-        listOf(DarkGlassSpecularTop, DarkGlassSpecularBottom)
-    ),
-    primaryGradientBrush = Brush.horizontalGradient(
-        listOf(ElectricBlue, Color(0xFF6366F1))
-    ),
-    ambientGlow = CyanGlow
+    actionFill = DarkActionFill,
+    actionLabel = DarkActionLabel,
+    specularBorderBrush = SolidColor(DarkHairline),
+    primaryGradientBrush = SolidColor(DarkActionFill),
+    ambientGlow = BrandMint
 )
 
-val LocalGlassColors = staticCompositionLocalOf { LightGlassColors }
+val LocalGlassColors = staticCompositionLocalOf { DarkGlassColors }
+val LocalThemeIsDark = staticCompositionLocalOf { true }
+val LocalThemeToggle = staticCompositionLocalOf<() -> Unit> { {} }
 
 private val LightColorScheme = lightColorScheme(
-    primary = ElectricBlue,
+    primary = Color(0xFF0F172A),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFDBEAFE),
-    onPrimaryContainer = Color(0xFF1E3A8A),
+    primaryContainer = Color(0xFFF1F5F9),
+    onPrimaryContainer = Color(0xFF0F172A),
     secondary = Color(0xFF475569),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFF1F5F9),
+    secondaryContainer = Color(0xFFE2E8F0),
     onSecondaryContainer = Color(0xFF0F172A),
     background = LightBackgroundStart,
     onBackground = LightTextPrimary,
@@ -84,25 +81,29 @@ private val LightColorScheme = lightColorScheme(
     onSurface = LightTextPrimary,
     surfaceVariant = LightSurfaceVariant,
     onSurfaceVariant = LightTextSecondary,
+    outline = LightHairline,
+    outlineVariant = LightHairline,
     error = CoralError,
     onError = Color.White
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = ElectricBlueLight,
-    onPrimary = DeepIndigo,
-    primaryContainer = Color(0xFF1E3A8A),
-    onPrimaryContainer = Color(0xFFDBEAFE),
-    secondary = Color(0xFF94A3B8),
-    onSecondary = Color(0xFF0F172A),
-    secondaryContainer = Color(0xFF1E2638),
-    onSecondaryContainer = Color(0xFFF8FAFC),
+    primary = BrandMint,
+    onPrimary = Color(0xFF040404),
+    primaryContainer = DarkActionFill,
+    onPrimaryContainer = DarkActionLabel,
+    secondary = DarkTextSecondary,
+    onSecondary = Color(0xFF000000),
+    secondaryContainer = DarkSurface,
+    onSecondaryContainer = DarkTextPrimary,
     background = DarkBackgroundStart,
     onBackground = DarkTextPrimary,
     surface = DarkSurface,
     onSurface = DarkTextPrimary,
     surfaceVariant = DarkSurfaceVariant,
     onSurfaceVariant = DarkTextSecondary,
+    outline = DarkHairline,
+    outlineVariant = DarkHairline,
     error = CoralError,
     onError = Color.White
 )
@@ -110,6 +111,7 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun PriceLensTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    onToggleTheme: () -> Unit = {},
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
@@ -127,7 +129,11 @@ fun PriceLensTheme(
         }
     }
 
-    CompositionLocalProvider(LocalGlassColors provides glassColors) {
+    CompositionLocalProvider(
+        LocalGlassColors provides glassColors,
+        LocalThemeIsDark provides darkTheme,
+        LocalThemeToggle provides onToggleTheme
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = PriceLensTypography,
@@ -140,4 +146,8 @@ object PriceLensTheme {
     val glassColors: GlassColors
         @Composable
         get() = LocalGlassColors.current
+
+    val isDark: Boolean
+        @Composable
+        get() = LocalThemeIsDark.current
 }

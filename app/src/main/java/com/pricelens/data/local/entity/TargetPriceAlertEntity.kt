@@ -15,7 +15,8 @@ data class TargetPriceAlertEntity(
     @ColumnInfo(name = "last_observation_id") val lastObservationId: String?,
     @ColumnInfo(name = "reached_at") val reachedAt: Long?,
     @ColumnInfo(name = "retailer_name") val retailerName: String? = null,
-    @ColumnInfo(name = "website_url") val websiteUrl: String? = null
+    @ColumnInfo(name = "website_url") val websiteUrl: String? = null,
+    @ColumnInfo(name = "price_selector") val priceSelector: String? = null
 ) {
     fun toDomain() = TargetPriceAlert(
         id = id,
@@ -26,7 +27,8 @@ data class TargetPriceAlertEntity(
         lastEvaluatedObservationId = lastObservationId,
         reachedAt = reachedAt,
         retailerName = retailerName,
-        websiteUrl = websiteUrl
+        websiteUrl = websiteUrl,
+        priceSelector = priceSelector
     )
 
     companion object {
@@ -39,7 +41,8 @@ data class TargetPriceAlertEntity(
             lastObservationId = alert.lastEvaluatedObservationId,
             reachedAt = alert.reachedAt,
             retailerName = alert.retailerName,
-            websiteUrl = alert.websiteUrl
+            websiteUrl = alert.websiteUrl,
+            priceSelector = alert.priceSelector
         )
     }
 }

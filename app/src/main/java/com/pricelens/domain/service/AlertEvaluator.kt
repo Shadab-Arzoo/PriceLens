@@ -24,7 +24,8 @@ class AlertEvaluator(
         targetPrice: Double,
         currency: String,
         retailerName: String? = null,
-        websiteUrl: String? = null
+        websiteUrl: String? = null,
+        priceSelector: String? = null
     ): TargetPriceAlert =
         TargetPriceAlert(
             id = UUID.randomUUID().toString(),
@@ -32,7 +33,8 @@ class AlertEvaluator(
             targetPrice = targetPrice,
             currency = currency,
             retailerName = retailerName,
-            websiteUrl = websiteUrl
+            websiteUrl = websiteUrl,
+            priceSelector = priceSelector
         )
 
     fun evaluate(

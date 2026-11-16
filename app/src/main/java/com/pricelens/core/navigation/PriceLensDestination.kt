@@ -20,4 +20,11 @@ sealed class PriceLensDestination(val route: String) {
             return "product/$productId?productName=$encodedName"
         }
     }
+    data object WebPricePicker : PriceLensDestination("web_picker?url={url}&name={name}") {
+        fun createRoute(url: String, name: String = ""): String {
+            val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.name())
+            val encodedName = URLEncoder.encode(name, StandardCharsets.UTF_8.name())
+            return "web_picker?url=$encodedUrl&name=$encodedName"
+        }
+    }
 }

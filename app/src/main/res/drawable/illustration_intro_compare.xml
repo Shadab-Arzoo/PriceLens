@@ -1,0 +1,96 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="280dp"
+    android:height="200dp"
+    android:viewportWidth="280"
+    android:viewportHeight="200">
+
+    <!-- Background Ambient Glow -->
+    <path
+        android:pathData="M140,100 m-80,0 a80,80 0 1,0 160,0 a80,80 0 1,0 -160,0"
+        android:fillColor="#156EE3AD" />
+
+    <!-- Main Comparison Surface Card -->
+    <path
+        android:pathData="M30,30 h220 a16,16 0 0 1 16,16 v110 a16,16 0 0 1 -16,16 h-220 a16,16 0 0 1 -16,-16 v-110 a16,16 0 0 1 16,-16 z"
+        android:fillColor="#1A1A1A"
+        android:strokeColor="#333333"
+        android:strokeWidth="1.5" />
+
+    <!-- Card Header / Title Bar -->
+    <path
+        android:pathData="M30,30 h220 a16,16 0 0 1 16,16 v24 h-252 v-24 a16,16 0 0 1 16,-16 z"
+        android:fillColor="#242424" />
+
+    <!-- Window Dots -->
+    <path
+        android:pathData="M30,48 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
+        android:fillColor="#FF5F56" />
+    <path
+        android:pathData="M44,48 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
+        android:fillColor="#FFBD2E" />
+    <path
+        android:pathData="M58,48 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
+        android:fillColor="#27C93F" />
+
+    <!-- Search/Product Pill in Header -->
+    <path
+        android:pathData="M80,41 h150 a7,7 0 0 1 7,7 v0 a7,7 0 0 1 -7,7 h-150 a7,7 0 0 1 -7,-7 v0 a7,7 0 0 1 7,-7 z"
+        android:fillColor="#141414" />
+
+    <!-- Retailer 1: Amazon (Lowest Price - Highlighted in Brand Mint) -->
+    <path
+        android:pathData="M32,80 h216 a10,10 0 0 1 10,10 v22 a10,10 0 0 1 -10,10 h-216 a10,10 0 0 1 -10,-10 v-22 a10,10 0 0 1 10,-10 z"
+        android:fillColor="#156EE3AD"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="1.2" />
+
+    <!-- Amazon Store Icon Pill -->
+    <path
+        android:pathData="M38,87 h18 a6,6 0 0 1 6,6 v16 a6,6 0 0 1 -6,6 h-18 a6,6 0 0 1 -6,-6 v-16 a6,6 0 0 1 6,-6 z"
+        android:fillColor="#6EE3AD" />
+
+    <!-- Amazon Price Badge Tag (Lowest Price Match) -->
+    <path
+        android:pathData="M180,88 h68 a8,8 0 0 1 8,8 v12 a8,8 0 0 1 -8,8 h-68 a8,8 0 0 1 -8,-8 v-12 a8,8 0 0 1 8,-8 z"
+        android:fillColor="#6EE3AD" />
+
+    <!-- Retailer 2: Flipkart (Average Price) -->
+    <path
+        android:pathData="M32,130 h216 a10,10 0 0 1 10,10 v22 a10,10 0 0 1 -10,10 h-216 a10,10 0 0 1 -10,-10 v-22 a10,10 0 0 1 10,-10 z"
+        android:fillColor="#1E1E1E"
+        android:strokeColor="#2E2E2E"
+        android:strokeWidth="1" />
+
+    <!-- Flipkart Store Icon Pill -->
+    <path
+        android:pathData="M38,137 h18 a6,6 0 0 1 6,6 v16 a6,6 0 0 1 -6,6 h-18 a6,6 0 0 1 -6,-6 v-16 a6,6 0 0 1 6,-6 z"
+        android:fillColor="#3B82F6" />
+
+    <!-- Floating Best Deal Savings Badge in foreground -->
+    <path
+        android:pathData="M165,15 h90 a12,12 0 0 1 12,12 v14 a12,12 0 0 1 -12,12 h-90 a12,12 0 0 1 -12,-12 v-14 a12,12 0 0 1 12,-12 z"
+        android:fillColor="#0B0B0B"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="1.5" />
+
+    <!-- Checkmark Icon inside Badge -->
+    <path
+        android:pathData="M178,34 l5,5 l12,-12"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Lens Magnifier Glass Floating on Left -->
+    <path
+        android:pathData="M24,152 m-18,0 a18,18 0 1,0 36,0 a18,18 0 1,0 -36,0"
+        android:fillColor="#222222"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="3" />
+    <path
+        android:pathData="M37,165 l14,14"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+</vector>

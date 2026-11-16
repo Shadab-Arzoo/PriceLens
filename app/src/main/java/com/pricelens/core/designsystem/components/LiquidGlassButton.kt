@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import com.pricelens.core.designsystem.PriceLensTheme
 
 /**
- * Premium Liquid Glass primary button with soft gradient, specular top highlight,
+ * Modern pill action button with solid fill, clean hairline border,
  * dynamic elevation, and fluid spring physics.
  */
 @Composable
@@ -58,27 +58,27 @@ fun LiquidGlassPrimaryButton(
     enabled: Boolean = true,
     loading: Boolean = false,
     fillMaxWidth: Boolean = true,
-    shape: Shape = RoundedCornerShape(18.dp),
-    height: Dp = 52.dp,
+    shape: Shape = RoundedCornerShape(9999.dp),
+    height: Dp = 50.dp,
     gradientBrush: Brush = PriceLensTheme.glassColors.primaryGradientBrush
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled && !loading) 0.962f else 1f,
+        targetValue = if (isPressed && enabled && !loading) 0.96f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMediumLow
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = 500f
         ),
         label = "primaryButtonScale"
     )
 
     val currentElevation by animateDpAsState(
-        targetValue = if (isPressed && enabled) 2.dp else if (enabled) 6.dp else 1.dp,
+        targetValue = if (isPressed && enabled) 1.dp else if (enabled) 3.dp else 0.dp,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMediumLow
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = 500f
         ),
         label = "primaryButtonElevation"
     )
@@ -92,27 +92,19 @@ fun LiquidGlassPrimaryButton(
             .shadow(
                 elevation = currentElevation,
                 shape = shape,
-                ambientColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.25f),
-                spotColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f)
+                ambientColor = Color.Black.copy(alpha = 0.2f),
+                spotColor = Color.Black.copy(alpha = 0.3f)
             )
             .clip(shape)
             .clickable(
                 enabled = enabled && !loading,
                 interactionSource = interactionSource,
-                indication = ripple(color = Color.White),
+                indication = ripple(color = PriceLensTheme.glassColors.actionLabel),
                 onClick = onClick
             ),
         shape = shape,
-        color = Color.Transparent,
-        border = BorderStroke(
-            1.dp,
-            Brush.verticalGradient(
-                listOf(
-                    Color.White.copy(alpha = 0.45f),
-                    Color.White.copy(alpha = 0.1f)
-                )
-            )
-        )
+        color = PriceLensTheme.glassColors.actionFill,
+        border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder)
     ) {
         Box(
             modifier = (if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.wrapContentWidth())
@@ -125,33 +117,16 @@ fun LiquidGlassPrimaryButton(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            // Subtle specular glass highlight along top edge
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .align(Alignment.TopCenter)
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(
-                                Color.Transparent,
-                                Color.White.copy(alpha = 0.28f),
-                                Color.Transparent
-                            )
-                        )
-                    )
-            )
-
             Crossfade(targetState = loading, label = "buttonLoadingTransition") { isLoading ->
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(22.dp),
-                        color = Color.White,
-                        strokeWidth = 2.5.dp
+                        modifier = Modifier.size(20.dp),
+                        color = PriceLensTheme.glassColors.actionLabel,
+                        strokeWidth = 2.dp
                     )
                 } else {
                     Row(
-                        modifier = Modifier.padding(horizontal = if (fillMaxWidth) 20.dp else 14.dp),
+                        modifier = Modifier.padding(horizontal = if (fillMaxWidth) 22.dp else 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
@@ -159,8 +134,8 @@ fun LiquidGlassPrimaryButton(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(19.dp)
+                                tint = PriceLensTheme.glassColors.actionLabel,
+                                modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
@@ -168,15 +143,15 @@ fun LiquidGlassPrimaryButton(
                             text = text,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color.White
+                            color = PriceLensTheme.glassColors.actionLabel
                         )
                         if (trailingIcon != null) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
                                 imageVector = trailingIcon,
                                 contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(19.dp)
+                                tint = PriceLensTheme.glassColors.actionLabel,
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
@@ -187,7 +162,7 @@ fun LiquidGlassPrimaryButton(
 }
 
 /**
- * Secondary liquid glass button with frosted translucent fill, specular outline,
+ * Secondary pill action button with clean surface fill, hairline outline,
  * dynamic elevation, and tactile spring compression.
  */
 @Composable
@@ -198,26 +173,26 @@ fun LiquidGlassSecondaryButton(
     icon: ImageVector? = null,
     enabled: Boolean = true,
     fillMaxWidth: Boolean = true,
-    shape: Shape = RoundedCornerShape(18.dp),
+    shape: Shape = RoundedCornerShape(9999.dp),
     height: Dp = 48.dp
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.962f else 1f,
+        targetValue = if (isPressed && enabled) 0.96f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMediumLow
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = 500f
         ),
         label = "secondaryButtonScale"
     )
 
     val currentElevation by animateDpAsState(
-        targetValue = if (isPressed && enabled) 0.5.dp else 2.dp,
+        targetValue = if (isPressed && enabled) 0.dp else 1.dp,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMediumLow
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = 500f
         ),
         label = "secondaryButtonElevation"
     )
@@ -238,7 +213,7 @@ fun LiquidGlassSecondaryButton(
             ),
         shape = shape,
         color = PriceLensTheme.glassColors.surfaceGlass,
-        border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorderBrush)
+        border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder)
     ) {
         Box(
             modifier = (if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.wrapContentWidth())

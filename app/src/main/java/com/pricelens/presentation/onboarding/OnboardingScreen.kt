@@ -1,12 +1,10 @@
 package com.pricelens.presentation.onboarding
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
@@ -15,6 +13,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -40,12 +39,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -59,10 +61,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -70,12 +73,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.pricelens.R
-import com.pricelens.core.designsystem.CyanAccent
-import com.pricelens.core.designsystem.ElectricBlue
+import com.pricelens.core.designsystem.BrandMint
+import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
+import com.pricelens.core.designsystem.components.ThemeToggleSwitch
 import kotlinx.coroutines.launch
 
 @Composable
@@ -111,15 +115,12 @@ fun OnboardingScreen(
             .fillMaxSize()
             .background(brush = PriceLensTheme.glassColors.backgroundBrush)
     ) {
-        // Floating ambient glowing liquid orbs in the background
-        AmbientLiquidBackground()
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
         ) {
-            // Top Bar with Brand & Skip
+            // Top Bar with Brand, Dark/Light Switch & Skip
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -131,7 +132,7 @@ fun OnboardingScreen(
                     Box(
                         modifier = Modifier
                             .size(10.dp)
-                            .background(ElectricBlue, CircleShape)
+                            .background(BrandMint, CircleShape)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -142,20 +143,30 @@ fun OnboardingScreen(
                     )
                 }
 
-                TextButton(
-                    onClick = onFinishOnboarding,
-                    shape = RoundedCornerShape(12.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = stringResource(R.string.onboarding_skip),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = PriceLensTheme.glassColors.textSecondary,
-                        fontWeight = FontWeight.SemiBold
+                    ThemeToggleSwitch(
+                        isDark = PriceLensTheme.isDark,
+                        onToggle = LocalThemeToggle.current
                     )
+
+                    TextButton(
+                        onClick = onFinishOnboarding,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.onboarding_skip),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = PriceLensTheme.glassColors.textSecondary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
 
-            // Pager for the 4 Slides
+            // Pager for the 4 Feature Slides
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
@@ -177,7 +188,7 @@ fun OnboardingScreen(
                 }
             }
 
-            // Bottom Navigation Area (Indicators + Continue/Get Started Button)
+            // Bottom Navigation Area (Expanding Indicators + Continue/Get Started Button)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -196,7 +207,7 @@ fun OnboardingScreen(
                             animationSpec = spring(dampingRatio = 0.75f, stiffness = 400f),
                             label = "indicatorWidth"
                         )
-                        val color = if (isSelected) ElectricBlue else PriceLensTheme.glassColors.specularBorder
+                        val color = if (isSelected) BrandMint else PriceLensTheme.glassColors.specularBorder
 
                         Box(
                             modifier = Modifier
@@ -209,7 +220,7 @@ fun OnboardingScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
                 val isLastPage = pagerState.currentPage == 3
                 LiquidGlassPrimaryButton(
@@ -232,11 +243,22 @@ fun OnboardingScreen(
 }
 
 /**
- * Slide 1: Welcome & Retailer Coverage
+ * Slide 1: Welcome & Multi-Store Price Comparison
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun OnboardingSlide1() {
+    val infiniteTransition = rememberInfiniteTransition(label = "heroFloatingSlide1")
+    val offsetY by infiniteTransition.animateFloat(
+        initialValue = -4f,
+        targetValue = 4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "floatOffset1"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -245,26 +267,28 @@ private fun OnboardingSlide1() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Floating Hero Badge
-        GlassCard(
-            modifier = Modifier.size(110.dp),
-            shape = CircleShape,
-            elevation = 6.dp
+        // Hero Image Illustration Card
+        Box(
+            modifier = Modifier
+                .offset(y = offsetY.dp)
+                .fillMaxWidth()
+                .height(200.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(PriceLensTheme.glassColors.surfaceGlass)
+                .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(20.dp)),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Storefront,
-                    contentDescription = null,
-                    tint = ElectricBlue,
-                    modifier = Modifier.size(54.dp)
-                )
-            }
+            Image(
+                painter = painterResource(R.drawable.illustration_intro_compare),
+                contentDescription = "Price Comparison Illustration",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp),
+                contentScale = ContentScale.Fit
+            )
         }
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Text(
             text = stringResource(R.string.intro_slide1_title),
@@ -274,7 +298,7 @@ private fun OnboardingSlide1() {
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Text(
             text = stringResource(R.string.intro_slide1_desc),
@@ -284,26 +308,41 @@ private fun OnboardingSlide1() {
             lineHeight = 24.sp
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Retailer Chips
+        // Retailer Store Chips with Store Color Dots
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            val retailers = listOf("Amazon", "Flipkart", "Croma", "Reliance Digital", "Vijay Sales")
-            retailers.forEach { name ->
-                GlassCard(
-                    shape = RoundedCornerShape(12.dp),
-                    borderWidth = 1.dp
+            val retailers = listOf(
+                Pair("Amazon", Color(0xFFFF9900)),
+                Pair("Flipkart", Color(0xFF2874F0)),
+                Pair("Croma", Color(0xFF00B0B9)),
+                Pair("Reliance Digital", Color(0xFFE42529)),
+                Pair("Vijay Sales", Color(0xFFE31E24))
+            )
+            retailers.forEach { (name, dotColor) ->
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(PriceLensTheme.glassColors.surfaceHighlight)
+                        .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .background(dotColor, CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = name,
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = PriceLensTheme.glassColors.textPrimary,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        fontWeight = FontWeight.SemiBold,
+                        color = PriceLensTheme.glassColors.textPrimary
                     )
                 }
             }
@@ -312,10 +351,21 @@ private fun OnboardingSlide1() {
 }
 
 /**
- * Slide 2: Liquid Glass UI & Deal Confidence
+ * Slide 2: Universal Link Tracking & Interactive Tap Inspector
  */
 @Composable
 private fun OnboardingSlide2() {
+    val infiniteTransition = rememberInfiniteTransition(label = "heroFloatingSlide2")
+    val offsetY by infiniteTransition.animateFloat(
+        initialValue = -4f,
+        targetValue = 4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "floatOffset2"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -324,88 +374,28 @@ private fun OnboardingSlide2() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Simulated Preview Card
-        GlassCard(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            elevation = 6.dp
+        // Hero Image Illustration Card
+        Box(
+            modifier = Modifier
+                .offset(y = offsetY.dp)
+                .fillMaxWidth()
+                .height(200.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(PriceLensTheme.glassColors.surfaceGlass)
+                .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(20.dp)),
+            contentAlignment = Alignment.Center
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            tint = ElectricBlue,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Verified Price Match",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = PriceLensTheme.glassColors.textPrimary
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MintSuccess.copy(alpha = 0.15f))
-                            .border(1.dp, MintSuccess.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "Save ₹4,000",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MintSuccess
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            text = "Lowest Online Offer",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = PriceLensTheme.glassColors.textSecondary
-                        )
-                        Text(
-                            text = "₹64,999",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = ElectricBlue
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "Average Retail",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = PriceLensTheme.glassColors.textSecondary
-                        )
-                        Text(
-                            text = "₹68,999",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = PriceLensTheme.glassColors.textTertiary
-                        )
-                    }
-                }
-            }
+            Image(
+                painter = painterResource(R.drawable.illustration_intro_universal),
+                contentDescription = "Universal Price Tracking Illustration",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp),
+                contentScale = ContentScale.Fit
+            )
         }
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Text(
             text = stringResource(R.string.intro_slide2_title),
@@ -415,7 +405,7 @@ private fun OnboardingSlide2() {
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Text(
             text = stringResource(R.string.intro_slide2_desc),
@@ -424,14 +414,44 @@ private fun OnboardingSlide2() {
             textAlign = TextAlign.Center,
             lineHeight = 24.sp
         )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Feature Highlights
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            IntroFeatureRow(
+                icon = Icons.Default.TouchApp,
+                title = "Interactive Tap Inspector",
+                subtitle = "Tap directly on any price element in webview to track it"
+            )
+            IntroFeatureRow(
+                icon = Icons.Default.AutoAwesome,
+                title = "Universal Website Support",
+                subtitle = "Works with Nike, Zara, Myntra, Apple, or any custom storefront"
+            )
+        }
     }
 }
 
 /**
- * Slide 3: Instant Store Link Comparison (Replaced barcode scan!)
+ * Slide 3: Price Drop Alerts & Background Monitoring
  */
 @Composable
 private fun OnboardingSlide3() {
+    val infiniteTransition = rememberInfiniteTransition(label = "heroFloatingSlide3")
+    val offsetY by infiniteTransition.animateFloat(
+        initialValue = -4f,
+        targetValue = 4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "floatOffset3"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -440,79 +460,28 @@ private fun OnboardingSlide3() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Link paste simulation card
-        GlassCard(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(22.dp),
-            elevation = 6.dp
+        // Hero Image Illustration Card
+        Box(
+            modifier = Modifier
+                .offset(y = offsetY.dp)
+                .fillMaxWidth()
+                .height(200.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(PriceLensTheme.glassColors.surfaceGlass)
+                .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(20.dp)),
+            contentAlignment = Alignment.Center
         ) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                // Mock link input
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(PriceLensTheme.glassColors.surfaceHighlight)
-                        .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Link,
-                        contentDescription = null,
-                        tint = ElectricBlue,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "https://amazon.in/dp/B0CHX1W1XY…",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = PriceLensTheme.glassColors.textSecondary,
-                        maxLines = 1
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Comparison result preview
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Apple iPhone 15 (128GB)",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = PriceLensTheme.glassColors.textPrimary
-                        )
-                        Text(
-                            text = "Compared across 5 verified retailers",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = PriceLensTheme.glassColors.textSecondary
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MintSuccess.copy(alpha = 0.15f))
-                            .border(1.dp, MintSuccess.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "Flipkart ₹64,999",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MintSuccess
-                        )
-                    }
-                }
-            }
+            Image(
+                painter = painterResource(R.drawable.illustration_intro_alerts),
+                contentDescription = "Price Drop Alerts Illustration",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp),
+                contentScale = ContentScale.Fit
+            )
         }
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Text(
             text = stringResource(R.string.intro_slide3_title),
@@ -522,7 +491,7 @@ private fun OnboardingSlide3() {
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Text(
             text = stringResource(R.string.intro_slide3_desc),
@@ -531,17 +500,47 @@ private fun OnboardingSlide3() {
             textAlign = TextAlign.Center,
             lineHeight = 24.sp
         )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Feature Highlights
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            IntroFeatureRow(
+                icon = Icons.AutoMirrored.Filled.TrendingDown,
+                title = "Smart Target Price Alerts",
+                subtitle = "Set your desired price and get alerted the minute it drops"
+            )
+            IntroFeatureRow(
+                icon = Icons.Default.Notifications,
+                title = "Automated Background Tracking",
+                subtitle = "Android WorkManager checks prices reliably in the background"
+            )
+        }
     }
 }
 
 /**
- * Slide 4: Interactive Permissions & Privacy Primer (No camera required!)
+ * Slide 4: 100% Private, On-Device & Notification Permission
  */
 @Composable
 private fun OnboardingSlide4(
     hasNotificationPermission: Boolean,
     onRequestNotifications: () -> Unit
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "heroFloatingSlide4")
+    val offsetY by infiniteTransition.animateFloat(
+        initialValue = -4f,
+        targetValue = 4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2900, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "floatOffset4"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -550,6 +549,29 @@ private fun OnboardingSlide4(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Hero Image Illustration Card
+        Box(
+            modifier = Modifier
+                .offset(y = offsetY.dp)
+                .fillMaxWidth()
+                .height(190.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(PriceLensTheme.glassColors.surfaceGlass)
+                .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(20.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.illustration_intro_privacy),
+                contentDescription = "Privacy & Security Illustration",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
         Text(
             text = stringResource(R.string.intro_slide4_title),
             style = MaterialTheme.typography.headlineMedium,
@@ -567,19 +589,19 @@ private fun OnboardingSlide4(
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
-        // Notifications Permission Item
+        // Notifications Permission Action Card
         PermissionCardItem(
             icon = Icons.Default.Notifications,
             title = "Price Drop Alerts",
-            description = "Get notified instantly when tracked items drop to or below your target price.",
+            description = "Receive instant notifications when tracked products reach your target price.",
             isGranted = hasNotificationPermission,
-            actionLabel = "Allow Alerts",
+            actionLabel = "Enable Alerts",
             onAction = onRequestNotifications
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         // Privacy Guarantee Badge
         Row(
@@ -588,13 +610,13 @@ private fun OnboardingSlide4(
                 .clip(RoundedCornerShape(14.dp))
                 .background(PriceLensTheme.glassColors.surfaceHighlight)
                 .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(14.dp))
-                .padding(14.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.Security,
                 contentDescription = null,
-                tint = MintSuccess,
+                tint = BrandMint,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(10.dp))
@@ -603,6 +625,56 @@ private fun OnboardingSlide4(
                 style = MaterialTheme.typography.bodySmall,
                 color = PriceLensTheme.glassColors.textSecondary,
                 lineHeight = 18.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun IntroFeatureRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(PriceLensTheme.glassColors.surfaceHighlight)
+            .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(14.dp))
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(BrandMint.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = BrandMint,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = PriceLensTheme.glassColors.textPrimary
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = PriceLensTheme.glassColors.textSecondary,
+                lineHeight = 16.sp
             )
         }
     }
@@ -619,32 +691,32 @@ private fun PermissionCardItem(
 ) {
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
         onClick = if (!isGranted) onAction else null
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(
-                        if (isGranted) MintSuccess.copy(alpha = 0.15f)
-                        else ElectricBlue.copy(alpha = 0.12f)
+                        if (isGranted) BrandMint.copy(alpha = 0.15f)
+                        else PriceLensTheme.glassColors.surfaceHighlight
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = if (isGranted) Icons.Default.Check else icon,
                     contentDescription = null,
-                    tint = if (isGranted) MintSuccess else ElectricBlue,
-                    modifier = Modifier.size(22.dp)
+                    tint = if (isGranted) BrandMint else PriceLensTheme.glassColors.textPrimary,
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -668,66 +740,31 @@ private fun PermissionCardItem(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(MintSuccess.copy(alpha = 0.15f))
+                        .background(BrandMint.copy(alpha = 0.15f))
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = "Active",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MintSuccess
+                        color = BrandMint
                     )
                 }
             } else {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(PriceLensTheme.glassColors.primaryGradientBrush)
+                        .background(BrandMint)
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = actionLabel,
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF040404)
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun AmbientLiquidBackground() {
-    Box(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .size(240.dp)
-                .offset(x = (-40).dp, y = (-40).dp)
-                .background(
-                    Brush.radialGradient(
-                        listOf(
-                            CyanAccent.copy(alpha = 0.08f),
-                            Color.Transparent
-                        )
-                    ),
-                    shape = CircleShape
-                )
-        )
-        Box(
-            modifier = Modifier
-                .size(280.dp)
-                .align(Alignment.BottomEnd)
-                .offset(x = 60.dp, y = 60.dp)
-                .background(
-                    Brush.radialGradient(
-                        listOf(
-                            ElectricBlue.copy(alpha = 0.08f),
-                            Color.Transparent
-                        )
-                    ),
-                    shape = CircleShape
-                )
-        )
     }
 }

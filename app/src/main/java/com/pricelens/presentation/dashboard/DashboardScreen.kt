@@ -80,6 +80,7 @@ fun DashboardRoute(
     onNavigateToSearch: (String) -> Unit,
     onNavigateToWatchlist: () -> Unit,
     onNavigateToComparison: (productId: String, productName: String) -> Unit = { _, _ -> },
+    onNavigateToWebPicker: (url: String, name: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -90,6 +91,7 @@ fun DashboardRoute(
         onNavigateToSearch = onNavigateToSearch,
         onNavigateToWatchlist = onNavigateToWatchlist,
         onNavigateToComparison = onNavigateToComparison,
+        onNavigateToWebPicker = onNavigateToWebPicker,
         modifier = modifier
     )
 }
@@ -101,6 +103,7 @@ fun DashboardScreen(
     onNavigateToSearch: (String) -> Unit,
     onNavigateToWatchlist: () -> Unit,
     onNavigateToComparison: (productId: String, productName: String) -> Unit = { _, _ -> },
+    onNavigateToWebPicker: (url: String, name: String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val clipboardManager = LocalClipboardManager.current
@@ -236,6 +239,8 @@ fun DashboardScreen(
                 urlInput = uiState.pasteUrlInput,
                 validationResult = uiState.urlValidation,
                 confirmedIdentity = uiState.confirmedIdentity,
+                extractedMetadata = uiState.extractedMetadata,
+                isExtracting = uiState.isExtractingMetadata,
                 onUrlChange = { onEvent(DashboardUiEvent.PasteUrlInputChanged(it)) },
                 onIdentityChange = { name, brand, model ->
                     onEvent(DashboardUiEvent.ConfirmedIdentityChanged(name, brand, model))
@@ -261,6 +266,13 @@ fun DashboardScreen(
                             onNavigateToSearch(supported.normalizedUrl)
                         }
                     }
+                },
+                onTrackUniversal = { meta, targetPrice ->
+                    onEvent(DashboardUiEvent.TrackUniversalProduct(meta, targetPrice))
+                },
+                onOpenWebPicker = { url, name ->
+                    onEvent(DashboardUiEvent.ClosePasteUrlSheet)
+                    onNavigateToWebPicker(url, name)
                 },
                 onDismiss = { onEvent(DashboardUiEvent.ClosePasteUrlSheet) }
             )
@@ -306,25 +318,15 @@ private fun PasteLinkHeroCard(
                         modifier = Modifier
                             .size(46.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(
-                                Brush.linearGradient(
-                                    listOf(ElectricBlue, Color(0xFF4F46E5))
-                                )
-                            )
-                            .border(
-                                1.dp,
-                                Brush.linearGradient(
-                                    listOf(Color.White.copy(alpha = 0.45f), Color.White.copy(alpha = 0.12f))
-                                ),
-                                RoundedCornerShape(14.dp)
-                            ),
+                            .background(PriceLensTheme.glassColors.actionFill)
+                            .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(14.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.ContentPaste,
                             contentDescription = "Compare by Product Link",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
+                            tint = PriceLensTheme.glassColors.ambientGlow,
+                            modifier = Modifier.size(22.dp)
                         )
                     }
 
@@ -350,14 +352,14 @@ private fun PasteLinkHeroCard(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(ElectricBlue.copy(alpha = 0.12f))
-                        .border(1.dp, ElectricBlue.copy(alpha = 0.25f), CircleShape),
+                        .background(PriceLensTheme.glassColors.surfaceHighlight)
+                        .border(1.dp, PriceLensTheme.glassColors.specularBorder, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = "Open Link Input",
-                        tint = ElectricBlue,
+                        tint = PriceLensTheme.glassColors.ambientGlow,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -369,10 +371,10 @@ private fun PasteLinkHeroCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
+                    .clip(RoundedCornerShape(9999.dp))
                     .background(PriceLensTheme.glassColors.surfaceHighlight)
-                    .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(14.dp))
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                    .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(9999.dp))
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -384,15 +386,16 @@ private fun PasteLinkHeroCard(
 
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(PriceLensTheme.glassColors.primaryGradientBrush)
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(9999.dp))
+                        .background(PriceLensTheme.glassColors.actionFill)
+                        .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(9999.dp))
+                        .padding(horizontal = 12.dp, vertical = 5.dp)
                 ) {
                     Text(
                         text = "Paste & Track",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White
+                        color = PriceLensTheme.glassColors.actionLabel
                     )
                 }
             }
@@ -414,19 +417,19 @@ private fun PasteLinkHeroCard(
                 ).forEach { (store, accentColor) ->
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
-                            .border(0.5.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .clip(RoundedCornerShape(9999.dp))
+                            .background(PriceLensTheme.glassColors.surfaceHighlight)
+                            .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(9999.dp))
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(5.dp)
+                                    .size(6.dp)
                                     .clip(CircleShape)
                                     .background(accentColor)
                             )
-                            Spacer(modifier = Modifier.width(5.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = store,
                                 style = MaterialTheme.typography.labelSmall,
@@ -491,7 +494,7 @@ private fun RecentSearchesSection(
             ) {
                 items(recentSearches, key = { it.query }) { search ->
                     GlassCard(
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(9999.dp),
                         elevation = 1.dp,
                         onClick = { onSelectSearch(search.query) }
                     ) {
@@ -500,7 +503,7 @@ private fun RecentSearchesSection(
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = PriceLensTheme.glassColors.textPrimary,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
                         )
                     }
                 }
@@ -520,9 +523,9 @@ private fun ClipboardDetectedBanner(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp),
-        backgroundColor = ElectricBlue.copy(alpha = 0.12f),
-        borderColor = ElectricBlue.copy(alpha = 0.45f),
-        shape = RoundedCornerShape(18.dp)
+        backgroundColor = PriceLensTheme.glassColors.surfaceGlass,
+        borderColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.5f),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
@@ -533,15 +536,15 @@ private fun ClipboardDetectedBanner(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(ElectricBlue.copy(alpha = 0.20f))
-                    .border(1.dp, ElectricBlue.copy(alpha = 0.35f), RoundedCornerShape(12.dp)),
+                    .clip(CircleShape)
+                    .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f))
+                    .border(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.ContentPaste,
                     contentDescription = "Clipboard link",
-                    tint = ElectricBlue,
+                    tint = PriceLensTheme.glassColors.ambientGlow,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -570,7 +573,7 @@ private fun ClipboardDetectedBanner(
                 onClick = onCompare,
                 fillMaxWidth = false,
                 modifier = Modifier.height(36.dp),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(9999.dp)
             )
             Spacer(modifier = Modifier.width(4.dp))
             IconButton(

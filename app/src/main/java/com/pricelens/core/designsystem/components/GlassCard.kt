@@ -32,19 +32,19 @@ import androidx.compose.ui.unit.dp
 import com.pricelens.core.designsystem.PriceLensTheme
 
 /**
- * Modern frosted glass card with responsive spring physics, dynamic elevation,
- * and specular perimeter bevel.
+ * Clean modern surface card with 16dp rounded corners, crisp hairline perimeter,
+ * subtle elevation, and responsive spring physics.
  */
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(20.dp),
+    shape: Shape = RoundedCornerShape(16.dp),
     backgroundColor: Color = PriceLensTheme.glassColors.surfaceGlass,
     borderColor: Color? = null,
     borderBrush: Brush? = null,
     borderWidth: Dp = 1.dp,
-    elevation: Dp = 2.dp,
-    showSpecularSheen: Boolean = true,
+    elevation: Dp = 1.dp,
+    showSpecularSheen: Boolean = false,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -52,21 +52,21 @@ fun GlassCard(
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && onClick != null) 0.972f else 1f,
+        targetValue = if (isPressed && onClick != null) 0.975f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMediumLow
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = 500f
         ),
-        label = "glassCardSpring"
+        label = "surfaceCardSpring"
     )
 
     val currentElevation by animateDpAsState(
-        targetValue = if (isPressed && onClick != null) 0.5.dp else elevation,
+        targetValue = if (isPressed && onClick != null) 0.dp else elevation,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMediumLow
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = 500f
         ),
-        label = "glassCardElevation"
+        label = "surfaceCardElevation"
     )
 
     val effectiveBorderStroke = when {
@@ -94,8 +94,8 @@ fun GlassCard(
             .shadow(
                 elevation = currentElevation,
                 shape = shape,
-                ambientColor = Color.Black.copy(alpha = 0.18f),
-                spotColor = Color.Black.copy(alpha = 0.24f),
+                ambientColor = Color.Black.copy(alpha = 0.08f),
+                spotColor = Color.Black.copy(alpha = 0.12f),
                 clip = false
             )
             .clip(shape)
@@ -104,27 +104,6 @@ fun GlassCard(
         color = backgroundColor,
         border = effectiveBorderStroke
     ) {
-        Box(contentAlignment = Alignment.TopStart) {
-            Box(content = content)
-
-            if (showSpecularSheen) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    Color.Transparent,
-                                    Color.White.copy(alpha = 0.18f),
-                                    Color.White.copy(alpha = 0.32f),
-                                    Color.White.copy(alpha = 0.18f),
-                                    Color.Transparent
-                                )
-                            )
-                        )
-                )
-            }
-        }
+        Box(contentAlignment = Alignment.TopStart, content = content)
     }
 }

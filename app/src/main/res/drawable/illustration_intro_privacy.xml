@@ -1,0 +1,126 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="280dp"
+    android:height="200dp"
+    android:viewportWidth="280"
+    android:viewportHeight="200">
+
+    <!-- Ambient Glow Behind Shield -->
+    <path
+        android:pathData="M140,95 m-75,0 a75,75 0 1,0 150,0 a75,75 0 1,0 -150,0"
+        android:fillColor="#156EE3AD" />
+
+    <!-- External Subtle Concentric Ripple Rings -->
+    <path
+        android:pathData="M140,95 m-85,0 a85,85 0 1,0 170,0 a85,85 0 1,0 -170,0"
+        android:strokeColor="#226EE3AD"
+        android:strokeWidth="1.2"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M140,95 m-65,0 a65,65 0 1,0 130,0 a65,65 0 1,0 -130,0"
+        android:strokeColor="#306EE3AD"
+        android:strokeWidth="1"
+        android:fillColor="#00000000" />
+
+    <!-- Center Security Shield (Card/Emblem) -->
+    <path
+        android:pathData="M140,32 C178,32 195,48 195,85 C195,124 165,152 140,165 C115,152 85,124 85,85 C85,48 102,32 140,32 Z"
+        android:fillColor="#151515"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="2.5" />
+
+    <!-- Inner Shield Accent Layer -->
+    <path
+        android:pathData="M140,42 C168,42 182,54 182,85 C182,116 158,140 140,150 C122,140 98,116 98,85 C98,54 112,42 140,42 Z"
+        android:fillColor="#1C2B24" />
+
+    <!-- Big Center Lock Emblem -->
+    <!-- Lock Shackle -->
+    <path
+        android:pathData="M129,86 v-10 a11,11 0 0 1 22,0 v10"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <!-- Lock Body -->
+    <path
+        android:pathData="M122,86 h36 a6,6 0 0 1 6,6 v26 a6,6 0 0 1 -6,6 h-36 a6,6 0 0 1 -6,-6 v-26 a6,6 0 0 1 6,-6 z"
+        android:fillColor="#6EE3AD" />
+    <!-- Keyhole -->
+    <path
+        android:pathData="M140,96 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 M140,99 v5"
+        android:strokeColor="#0B0B0B"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="#0B0B0B" />
+
+    <!-- Left Floating Pill: "100% On-Device" -->
+    <path
+        android:pathData="M16,70 h92 a12,12 0 0 1 12,12 v12 a12,12 0 0 1 -12,12 h-92 a12,12 0 0 1 -12,-12 v-12 a12,12 0 0 1 12,-12 z"
+        android:fillColor="#0B0B0B"
+        android:strokeColor="#333333"
+        android:strokeWidth="1.5" />
+    <!-- Phone / Chip Icon -->
+    <path
+        android:pathData="M16,80 h10 a2,2 0 0 1 2,2 v14 a2,2 0 0 1 -2,2 h-10 a2,2 0 0 1 -2,-2 v-14 a2,2 0 0 1 2,-2 z M21,94 h0.1"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M34,84 h44"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M34,92 h30"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- Right Floating Pill: "No Account / Zero Tracking" -->
+    <path
+        android:pathData="M172,70 h92 a12,12 0 0 1 12,12 v12 a12,12 0 0 1 -12,12 h-92 a12,12 0 0 1 -12,-12 v-12 a12,12 0 0 1 12,-12 z"
+        android:fillColor="#0B0B0B"
+        android:strokeColor="#333333"
+        android:strokeWidth="1.5" />
+    <!-- Checkmark Icon -->
+    <path
+        android:pathData="M175,88 l4,4 l9,-9"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M194,84 h44"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M194,92 h30"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- Bottom Center Pill: "Private Database" -->
+    <path
+        android:pathData="M90,165 h100 a10,10 0 0 1 10,10 v6 a10,10 0 0 1 -10,10 h-100 a10,10 0 0 1 -10,-10 v-6 a10,10 0 0 1 10,-10 z"
+        android:fillColor="#0B0B0B"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="1.2" />
+    <path
+        android:pathData="M106,178 h68"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+
+    <!-- Sparkles -->
+    <path
+        android:pathData="M60,35 l2,2 M64,39 l3,0 M60,43 l2,-2"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M225,140 l2,2 M229,144 l3,0 M225,148 l2,-2"
+        android:strokeColor="#6EE3AD"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round" />
+</vector>

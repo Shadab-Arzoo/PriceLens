@@ -3,6 +3,7 @@ package com.pricelens
 import android.content.Context
 import android.content.SharedPreferences
 import com.pricelens.core.preferences.UserPreferencesRepository
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -81,6 +82,17 @@ class UserPreferencesRepositoryTest {
 
         assertTrue(preferencesRepository.hasRequestedCameraPermission)
         assertTrue(preferencesRepository.hasRequestedNotificationPermission)
+    }
+
+    @Test
+    fun themeMode_defaultIsDark_andCanToggle() {
+        assertEquals(UserPreferencesRepository.ThemeMode.DARK, preferencesRepository.getThemeMode())
+
+        preferencesRepository.toggleTheme(currentIsDark = true)
+        assertEquals(UserPreferencesRepository.ThemeMode.LIGHT, preferencesRepository.getThemeMode())
+
+        preferencesRepository.toggleTheme(currentIsDark = false)
+        assertEquals(UserPreferencesRepository.ThemeMode.DARK, preferencesRepository.getThemeMode())
     }
 
     @Test

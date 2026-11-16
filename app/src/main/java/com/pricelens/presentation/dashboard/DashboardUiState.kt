@@ -16,5 +16,7 @@ data class DashboardUiState(
     val isPasteUrlSheetOpen: Boolean = false,
     val pasteUrlInput: String = "",
     val urlValidation: UrlValidationResult? = null,
-    val confirmedIdentity: ConfirmedProductIdentity? = null
+    val confirmedIdentity: ConfirmedProductIdentity? = null,
+    val extractedMetadata: com.pricelens.domain.service.UniversalProductMetadata? = null,
+    val isExtractingMetadata: Boolean = false
 )
