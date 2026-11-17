@@ -109,6 +109,48 @@ class MainActivity : ComponentActivity() {
                                 restoreState = true
                             }
                         },
+                        onTabReselected = { tab ->
+                            val targetRoute = when (tab) {
+                                DockTab.EXPLORE -> PriceLensDestination.Dashboard.route
+                                DockTab.SEARCH -> PriceLensDestination.Search.createRoute("")
+                                DockTab.DEALS -> PriceLensDestination.Deals.route
+                                DockTab.WATCHLIST -> PriceLensDestination.Watchlist.route
+                                DockTab.TOOLS -> PriceLensDestination.Tools.route
+                            }
+                            navController.navigate(targetRoute) {
+                                popUpTo(targetRoute) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        },
+                        onTabLongClick = { tab ->
+                            when (tab) {
+                                DockTab.EXPLORE -> {
+                                    navController.navigate(PriceLensDestination.Dashboard.route) {
+                                        popUpTo(PriceLensDestination.Dashboard.route) { inclusive = true }
+                                    }
+                                }
+                                DockTab.SEARCH -> {
+                                    navController.navigate(PriceLensDestination.Search.createRoute("")) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                                DockTab.DEALS -> {
+                                    navController.navigate(PriceLensDestination.Deals.route) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                                DockTab.WATCHLIST -> {
+                                    navController.navigate(PriceLensDestination.Watchlist.route) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                                DockTab.TOOLS -> {
+                                    navController.navigate(PriceLensDestination.Tools.route) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                            }
+                        },
                         watchlistCount = watchlistCount,
                         isVisible = isDockVisible,
                         modifier = Modifier.align(Alignment.BottomCenter)
