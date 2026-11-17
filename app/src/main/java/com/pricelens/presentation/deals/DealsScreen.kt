@@ -37,11 +37,15 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -84,6 +88,8 @@ fun DealsRoute(
         onStoreSelected = viewModel::onStoreSelected,
         onSortSelected = viewModel::onSortSelected,
         onBudgetSelected = viewModel::onBudgetSelected,
+        onSearchQueryChanged = viewModel::onSearchQueryChanged,
+        onMinDiscountChanged = viewModel::onMinDiscountChanged,
         onQuickAlert = viewModel::quickSetAlert,
         onDismissNotification = viewModel::clearNotification,
         onRefresh = viewModel::loadDeals,
@@ -99,6 +105,8 @@ fun DealsScreen(
     onStoreSelected: (String) -> Unit,
     onSortSelected: (DealSortOrder) -> Unit,
     onBudgetSelected: (BudgetFilter) -> Unit,
+    onSearchQueryChanged: (String) -> Unit,
+    onMinDiscountChanged: (Int) -> Unit,
     onQuickAlert: (DealItem, Double) -> Unit,
     onDismissNotification: () -> Unit,
     onRefresh: () -> Unit,
@@ -179,6 +187,81 @@ fun DealsScreen(
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = CyanAccent
+                        )
+                    }
+                }
+            }
+
+            // In-page search bar
+            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)) {
+                OutlinedTextField(
+                    value = uiState.searchQuery,
+                    onValueChange = onSearchQueryChanged,
+                    placeholder = {
+                        Text(
+                            text = "Filter active deals (e.g. iPhone, Sony, M3)...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PriceLensTheme.glassColors.textTertiary
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = CyanAccent,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    },
+                    trailingIcon = {
+                        if (uiState.searchQuery.isNotBlank()) {
+                            IconButton(onClick = { onSearchQueryChanged("") }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Clear search",
+                                    tint = PriceLensTheme.glassColors.textSecondary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AmberAlert,
+                        unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
+                        focusedTextColor = PriceLensTheme.glassColors.textPrimary,
+                        unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
+                    ),
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                )
+            }
+
+            // Min Discount % Filters
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                val discountOptions = listOf(0 to "All Discounts", 15 to "15%+ Off 🔥", 20 to "20%+ Off ⚡", 25 to "25%+ Off 💥")
+                discountOptions.forEach { (pct, label) ->
+                    val isSelected = uiState.minDiscountPercent == pct
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (isSelected) AmberAlert.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.4f),
+                        border = BorderStroke(1.dp, if (isSelected) AmberAlert else PriceLensTheme.glassColors.specularBorder),
+                        modifier = Modifier.clickable {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onMinDiscountChanged(pct)
+                        }
+                    ) {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) AmberAlert else PriceLensTheme.glassColors.textSecondary,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
                 }
@@ -453,6 +536,25 @@ private fun SpotlightDealCard(
                 overflow = TextOverflow.Ellipsis
             )
 
+            // Flash Countdown
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = AmberAlert,
+                    modifier = Modifier.size(13.dp)
+                )
+                Text(
+                    text = "FLASH SALE • ENDS IN 05h : 23m : 18s",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = AmberAlert
+                )
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -519,6 +621,7 @@ private fun DealCard(
     onOpenStore: () -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
@@ -717,6 +820,31 @@ private fun DealCard(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.OpenInNew,
                             contentDescription = "Open in browser",
+                            tint = PriceLensTheme.glassColors.textSecondary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = PriceLensTheme.glassColors.surfaceHighlight,
+                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
+                    modifier = Modifier.clickable {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        try {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, "🔥 PriceLens Deal: ${deal.title} is available at lowest price of ${currencyFormatter.format(deal.currentPrice)} (-${deal.discountPercent}% OFF) on ${deal.lowestRetailer}!\nLink: ${deal.storeUrl}")
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, "Share Deal"))
+                        } catch (_: Exception) {}
+                    }
+                ) {
+                    Box(modifier = Modifier.padding(8.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share deal",
                             tint = PriceLensTheme.glassColors.textSecondary,
                             modifier = Modifier.size(14.dp)
                         )

@@ -20,6 +20,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -78,6 +80,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pricelens.R
 import com.pricelens.core.designsystem.BrandMint
+import com.pricelens.core.designsystem.CyanAccent
 import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
@@ -832,6 +835,70 @@ private fun TrendingSection(
                 fontWeight = FontWeight.Bold,
                 color = PriceLensTheme.glassColors.textPrimary
             )
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = MintSuccess.copy(alpha = 0.15f)
+            ) {
+                Text(
+                    text = "LIVE STORE RATES",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                    fontWeight = FontWeight.Bold,
+                    color = MintSuccess,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        var selectedCategory by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("All Flagships") }
+        val categories = listOf("All Flagships", "Smartphones", "Laptops & Mac", "Audio & ANC")
+        val filteredTrending = androidx.compose.runtime.remember(trendingProducts, selectedCategory) {
+            when (selectedCategory) {
+                "Smartphones" -> trendingProducts.filter {
+                    it.name.contains("iPhone", ignoreCase = true) ||
+                    it.name.contains("Galaxy", ignoreCase = true) ||
+                    it.name.contains("OnePlus", ignoreCase = true)
+                }
+                "Laptops & Mac" -> trendingProducts.filter {
+                    it.name.contains("MacBook", ignoreCase = true) ||
+                    it.name.contains("Dell", ignoreCase = true) ||
+                    it.name.contains("Air", ignoreCase = true) ||
+                    it.name.contains("XPS", ignoreCase = true)
+                }
+                "Audio & ANC" -> trendingProducts.filter {
+                    it.name.contains("WH-", ignoreCase = true) ||
+                    it.name.contains("AirPods", ignoreCase = true) ||
+                    it.name.contains("QuietComfort", ignoreCase = true)
+                }
+                else -> trendingProducts
+            }
+        }
+
+        // Horizontal Category Filter
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            categories.forEach { cat ->
+                val isSelected = selectedCategory == cat
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isSelected) CyanAccent.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, if (isSelected) CyanAccent else PriceLensTheme.glassColors.specularBorder),
+                    modifier = Modifier.clickable { selectedCategory = cat }
+                ) {
+                    Text(
+                        text = cat,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) CyanAccent else PriceLensTheme.glassColors.textSecondary,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -849,7 +916,7 @@ private fun TrendingSection(
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                trendingProducts.forEach { product ->
+                filteredTrending.forEach { product ->
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),

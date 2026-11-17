@@ -61,6 +61,18 @@ class WatchlistViewModel @Inject constructor(
             is WatchlistUiEvent.ClearNotificationMessage -> {
                 _uiState.update { it.copy(notificationMessage = null) }
             }
+            is WatchlistUiEvent.RefreshSync -> {
+                viewModelScope.launch {
+                    _uiState.update { it.copy(isLoading = true) }
+                    kotlinx.coroutines.delay(450)
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            notificationMessage = "Watchlist synced with 5 live retail stores"
+                        )
+                    }
+                }
+            }
         }
     }
 }

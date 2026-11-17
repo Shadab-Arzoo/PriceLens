@@ -42,7 +42,9 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -167,7 +169,8 @@ fun WatchlistScreen(
         topBar = {
             WatchlistTopBar(
                 itemCount = uiState.totalTrackedCount,
-                onNavigateBack = onNavigateBack
+                onNavigateBack = onNavigateBack,
+                onSyncClick = { onEvent(WatchlistUiEvent.RefreshSync) }
             )
         }
     ) { innerPadding ->
@@ -424,6 +427,7 @@ fun WatchlistScreen(
 private fun WatchlistTopBar(
     itemCount: Int,
     onNavigateBack: () -> Unit,
+    onSyncClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -478,7 +482,24 @@ private fun WatchlistTopBar(
                 onToggle = LocalThemeToggle.current
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+
+            IconButton(
+                onClick = onSyncClick,
+                modifier = Modifier
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(PriceLensTheme.glassColors.surfaceGlass)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Sync Watchlist",
+                    tint = ElectricBlue,
+                    modifier = Modifier.size(17.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(6.dp))
 
             Box(
                 modifier = Modifier
@@ -686,6 +707,7 @@ private fun WatchlistItemCard(
     val target = item.targetPrice
     val current = item.currentLowestPrice
     val isPriceDrop = target != null && current != null && current <= target
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     GlassCard(
         modifier = modifier.fillMaxWidth(),
@@ -760,19 +782,49 @@ private fun WatchlistItemCard(
                     }
                 }
 
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(PriceLensTheme.glassColors.surfaceGlass)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "Remove from watchlist",
-                        tint = AmberAlert,
-                        modifier = Modifier.size(20.dp)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                val bestText = if (current != null) "Current Best Price: ${currencyFormatter.format(current)}" else ""
+                                val targetText = if (target != null) "Target Alert: ${currencyFormatter.format(target)}" else ""
+                                putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    "Tracking ${item.productName} on PriceLens!\n$bestText\n$targetText\nCompare live prices across Amazon, Flipkart, Croma, Reliance & Vijay Sales with PriceLens."
+                                )
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, "Share Tracked Item"))
+                        },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(PriceLensTheme.glassColors.surfaceGlass)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share tracked item",
+                            tint = PriceLensTheme.glassColors.textSecondary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(PriceLensTheme.glassColors.surfaceGlass)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = "Remove from watchlist",
+                            tint = AmberAlert,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
 

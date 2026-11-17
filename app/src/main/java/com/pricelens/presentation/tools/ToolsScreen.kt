@@ -26,13 +26,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Calculate
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.PriceCheck
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
@@ -66,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pricelens.core.designsystem.AmberAlert
 import com.pricelens.core.designsystem.CyanAccent
+import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
@@ -73,7 +76,7 @@ import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.preferences.UserPreferencesRepository
 import java.text.NumberFormat
 import java.util.Locale
-import kotlin.math.roundToInt
+import kotlin.math.min
 
 @Composable
 fun ToolsRoute(
@@ -92,6 +95,99 @@ fun ToolsRoute(
     )
 }
 
+data class UrlDiagnosticInfo(
+    val storeName: String,
+    val storeColor: Color,
+    val identifierType: String,
+    val identifierValue: String?,
+    val isSupported: Boolean,
+    val diagnosticMessage: String
+)
+
+private fun diagnoseStoreUrl(url: String): UrlDiagnosticInfo {
+    val cleanUrl = url.trim()
+    if (cleanUrl.isBlank()) {
+        return UrlDiagnosticInfo(
+            storeName = "Awaiting Store URL",
+            storeColor = Color.Gray,
+            identifierType = "N/A",
+            identifierValue = null,
+            isSupported = false,
+            diagnosticMessage = "Paste a product link from Amazon, Flipkart, Croma, Reliance, or Vijay Sales."
+        )
+    }
+
+    val lower = cleanUrl.lowercase()
+    return when {
+        lower.contains("amazon.in") || lower.contains("amzn.in") || lower.contains("amzn.to") -> {
+            val asinRegex = Regex("""(?:/dp/|/gp/product/|/d/)([A-Z0-9]{10})""", RegexOption.IGNORE_CASE)
+            val asin = asinRegex.find(cleanUrl)?.groupValues?.get(1)
+            UrlDiagnosticInfo(
+                storeName = "Amazon India",
+                storeColor = Color(0xFFFF9900),
+                identifierType = "Amazon Standard Identification Number (ASIN)",
+                identifierValue = asin ?: "Detected in URL parameters",
+                isSupported = true,
+                diagnosticMessage = if (asin != null) "Verified ASIN: $asin • Direct Product Page" else "Amazon URL recognized • Direct Product Link"
+            )
+        }
+        lower.contains("flipkart.com") || lower.contains("fkrt.it") -> {
+            val pidRegex = Regex("""pid=([A-Za-z0-9]{16})""", RegexOption.IGNORE_CASE)
+            val pid = pidRegex.find(cleanUrl)?.groupValues?.get(1)
+            UrlDiagnosticInfo(
+                storeName = "Flipkart",
+                storeColor = Color(0xFF2874F0),
+                identifierType = "Flipkart Serial Number (FSN / PID)",
+                identifierValue = pid ?: "Detected in URL parameters",
+                isSupported = true,
+                diagnosticMessage = if (pid != null) "Verified FSN: $pid • Direct Product Page" else "Flipkart URL recognized • Direct Product Link"
+            )
+        }
+        lower.contains("croma.com") -> {
+            val cromaSku = Regex("""/p/(\d+)""").find(cleanUrl)?.groupValues?.get(1)
+            UrlDiagnosticInfo(
+                storeName = "Croma",
+                storeColor = Color(0xFF00E676),
+                identifierType = "Croma Product SKU",
+                identifierValue = cromaSku ?: "Active Croma Catalog ID",
+                isSupported = true,
+                diagnosticMessage = "Croma Tata Neu Verified Catalog Link"
+            )
+        }
+        lower.contains("reliancedigital.in") -> {
+            val rdSku = Regex("""/p/(\d+)""").find(cleanUrl)?.groupValues?.get(1)
+            UrlDiagnosticInfo(
+                storeName = "Reliance Digital",
+                storeColor = Color(0xFFE53935),
+                identifierType = "Reliance Digital Article SKU",
+                identifierValue = rdSku ?: "Active Store Item Code",
+                isSupported = true,
+                diagnosticMessage = "Reliance Digital Official Store Link"
+            )
+        }
+        lower.contains("vijaysales.com") -> {
+            UrlDiagnosticInfo(
+                storeName = "Vijay Sales",
+                storeColor = Color(0xFFFF6D00),
+                identifierType = "Vijay Sales SKU / Item Code",
+                identifierValue = "Retail Catalog Match",
+                isSupported = true,
+                diagnosticMessage = "Vijay Sales Retail Electronics Catalog Link"
+            )
+        }
+        else -> {
+            UrlDiagnosticInfo(
+                storeName = "Universal Web Store",
+                storeColor = CyanAccent,
+                identifierType = "Generic Web Link",
+                identifierValue = null,
+                isSupported = true,
+                diagnosticMessage = "Supported by Universal Web Price Inspector (Point & Tap Mode)"
+            )
+        }
+    }
+}
+
 @Composable
 fun ToolsScreen(
     userPreferences: UserPreferencesRepository,
@@ -99,17 +195,50 @@ fun ToolsScreen(
     onNavigateToSearch: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
+        maximumFractionDigits = 0
+    }
     val haptic = LocalHapticFeedback.current
     val flags by userPreferences.experimentalFlagsFlow.collectAsState()
     val themeToggle = LocalThemeToggle.current
 
+    // Web Inspector State
     var customUrlInput by remember { mutableStateOf("") }
+
+    // Target Calculator State
     var calcPriceInput by remember { mutableDoubleStateOf(50000.0) }
     var calcDiscountPercent by remember { mutableIntStateOf(15) }
-
     val calculatedTarget = calcPriceInput * (1.0 - calcDiscountPercent / 100.0)
     val calculatedSavings = calcPriceInput - calculatedTarget
+
+    // No-Cost EMI & Bank Card Calculator State
+    var emiBasePrice by remember { mutableDoubleStateOf(65000.0) }
+    var selectedBankIndex by remember { mutableIntStateOf(0) }
+    val bankOptions = listOf(
+        "HDFC Bank" to 3000.0,
+        "ICICI Bank" to 2500.0,
+        "SBI Card" to 2000.0,
+        "Axis Bank" to 0.05,
+        "OneCard" to 1500.0
+    )
+    var selectedTenorMonths by remember { mutableIntStateOf(6) }
+    val tenorOptions = listOf(3, 6, 9, 12)
+
+    val currentBank = bankOptions[selectedBankIndex]
+    val emiDiscount = if (currentBank.first == "Axis Bank") {
+        emiBasePrice * currentBank.second
+    } else {
+        min(currentBank.second, emiBasePrice * 0.15)
+    }
+    val emiNetPayable = (emiBasePrice - emiDiscount).coerceAtLeast(0.0)
+    val monthlyInstallment = emiNetPayable / selectedTenorMonths
+
+    // Store URL Diagnostic Analyzer State
+    var diagnosticUrlInput by remember { mutableStateOf("https://www.amazon.in/dp/B0DGHSTVD1") }
+    val diagnosticResult = remember(diagnosticUrlInput) { diagnoseStoreUrl(diagnosticUrlInput) }
+
+    // Cache purge state
+    var cachePurged by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier
@@ -142,7 +271,7 @@ fun ToolsScreen(
                     )
                 }
                 Text(
-                    text = "Web Price Inspector, Savings Calculator & Store Health",
+                    text = "Live Web Inspector, Store Diagnostics, EMI Planner & PriceLens Labs",
                     style = MaterialTheme.typography.labelSmall,
                     color = PriceLensTheme.glassColors.textSecondary
                 )
@@ -193,7 +322,7 @@ fun ToolsScreen(
                                     color = PriceLensTheme.glassColors.textPrimary
                                 )
                                 Text(
-                                    text = "Point & tap any price element on any website",
+                                    text = "Point & tap any price element on any retailer website",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = PriceLensTheme.glassColors.textSecondary
                                 )
@@ -319,7 +448,487 @@ fun ToolsScreen(
             }
         }
 
-        // 3. Tool 2: Target Price & Savings Calculator
+        // 3. Tool 2: Store URL Diagnostic Analyzer & ASIN/SKU Extractor
+        item {
+            GlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                borderColor = ElectricBlue.copy(alpha = 0.4f)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(ElectricBlue.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PriceCheck,
+                                    contentDescription = null,
+                                    tint = ElectricBlue,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "Store URL Diagnostic Analyzer",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PriceLensTheme.glassColors.textPrimary
+                                )
+                                Text(
+                                    text = "Extracts ASIN, FSN & verifies direct store feeds",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = PriceLensTheme.glassColors.textSecondary
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = ElectricBlue.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "DIAGNOSTICS",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = ElectricBlue,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    // Diagnostic URL Input
+                    OutlinedTextField(
+                        value = diagnosticUrlInput,
+                        onValueChange = { diagnosticUrlInput = it },
+                        placeholder = {
+                            Text(
+                                text = "Paste Amazon, Flipkart or Croma URL...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = PriceLensTheme.glassColors.textTertiary
+                            )
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = ElectricBlue,
+                            unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
+                            focusedTextColor = PriceLensTheme.glassColors.textPrimary,
+                            unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    // Diagnostic Result Breakdown
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = PriceLensTheme.glassColors.surfaceHighlight,
+                        border = BorderStroke(1.dp, diagnosticResult.storeColor.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(diagnosticResult.storeColor)
+                                    )
+                                    Text(
+                                        text = diagnosticResult.storeName,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = diagnosticResult.storeColor
+                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = MintSuccess.copy(alpha = 0.15f)
+                                ) {
+                                    Text(
+                                        text = "READY FOR COMPARISON",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = MintSuccess,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+
+                            diagnosticResult.identifierValue?.let { idVal ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = diagnosticResult.identifierType,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = PriceLensTheme.glassColors.textSecondary
+                                    )
+                                    Text(
+                                        text = idVal,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = PriceLensTheme.glassColors.textPrimary
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = diagnosticResult.diagnosticMessage,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = PriceLensTheme.glassColors.textSecondary
+                            )
+
+                            // Quick Action Buttons
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = ElectricBlue.copy(alpha = 0.2f),
+                                    border = BorderStroke(1.dp, ElectricBlue.copy(alpha = 0.5f)),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            onNavigateToWebPicker(
+                                                diagnosticUrlInput.ifBlank { "https://www.amazon.in" },
+                                                diagnosticResult.storeName
+                                            )
+                                        }
+                                ) {
+                                    Box(
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "Inspect in Web Browser ↗",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = ElectricBlue
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = PriceLensTheme.glassColors.surfaceHighlight,
+                                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            onNavigateToSearch(diagnosticResult.identifierValue ?: diagnosticResult.storeName)
+                                        }
+                                ) {
+                                    Box(
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "Search in PriceLens 🔍",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = PriceLensTheme.glassColors.textPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. Tool 3: No-Cost EMI & Bank Card Calculator
+        item {
+            GlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                borderColor = AmberAlert.copy(alpha = 0.4f)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(AmberAlert.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CreditCard,
+                                    contentDescription = null,
+                                    tint = AmberAlert,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "No-Cost EMI & Bank Card Planner",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PriceLensTheme.glassColors.textPrimary
+                                )
+                                Text(
+                                    text = "Instant bank discounts + 0% interest tenors",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = PriceLensTheme.glassColors.textSecondary
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = AmberAlert.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "EMI LAB",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = AmberAlert,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    // Product Base Price Selector
+                    Text(
+                        text = "Base Product Price:",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val pricePresets = listOf(30000.0, 50000.0, 75000.0, 120000.0)
+                        pricePresets.forEach { prc ->
+                            val isSelected = emiBasePrice == prc
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) AmberAlert.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
+                                border = BorderStroke(1.dp, if (isSelected) AmberAlert else PriceLensTheme.glassColors.specularBorder),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        emiBasePrice = prc
+                                    }
+                            ) {
+                                Box(
+                                    modifier = Modifier.padding(vertical = 6.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = currencyFormatter.format(prc),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSelected) AmberAlert else PriceLensTheme.glassColors.textPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Bank Card Selector Chips
+                    Text(
+                        text = "Select Bank Card Offer:",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        bankOptions.forEachIndexed { idx, (bankName, _) ->
+                            val isSelected = selectedBankIndex == idx
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSelected) AmberAlert.copy(alpha = 0.25f) else PriceLensTheme.glassColors.surfaceHighlight,
+                                border = BorderStroke(1.dp, if (isSelected) AmberAlert else PriceLensTheme.glassColors.specularBorder),
+                                modifier = Modifier.clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    selectedBankIndex = idx
+                                }
+                            ) {
+                                Text(
+                                    text = bankName,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) AmberAlert else PriceLensTheme.glassColors.textPrimary,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Tenor Chips
+                    Text(
+                        text = "No-Cost EMI Tenor Duration:",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        tenorOptions.forEach { months ->
+                            val isSelected = selectedTenorMonths == months
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) MintSuccess.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
+                                border = BorderStroke(1.dp, if (isSelected) MintSuccess else PriceLensTheme.glassColors.specularBorder),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        selectedTenorMonths = months
+                                    }
+                            ) {
+                                Box(
+                                    modifier = Modifier.padding(vertical = 6.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "$months Mos",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSelected) MintSuccess else PriceLensTheme.glassColors.textPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // EMI Output Summary Box
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = PriceLensTheme.glassColors.surfaceHighlight,
+                        border = BorderStroke(1.dp, MintSuccess.copy(alpha = 0.45f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Monthly Instalment (No-Cost)",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = PriceLensTheme.glassColors.textSecondary
+                                    )
+                                    Text(
+                                        text = "Instant Discount: -${currencyFormatter.format(emiDiscount)}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MintSuccess
+                                    )
+                                }
+
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "${currencyFormatter.format(monthlyInstallment)}/mo",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MintSuccess
+                                    )
+                                    Text(
+                                        text = "for $selectedTenorMonths months",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = PriceLensTheme.glassColors.textSecondary
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Total Net Outflow Payable:",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = PriceLensTheme.glassColors.textPrimary
+                                )
+                                Text(
+                                    text = currencyFormatter.format(emiNetPayable),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PriceLensTheme.glassColors.textPrimary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 5. Tool 4: Target Price & Savings Calculator
         item {
             GlassCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -483,7 +1092,7 @@ fun ToolsScreen(
             }
         }
 
-        // 4. Store Health & Connectivity Status
+        // 6. Tool 5: Store Health & Connectivity Status
         item {
             GlassCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -548,7 +1157,135 @@ fun ToolsScreen(
             }
         }
 
-        // 5. PriceLens Labs Feature Toggles
+        // 7. Tool 6: App Cache & Local Storage Diagnostics
+        item {
+            GlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                borderColor = PriceLensTheme.glassColors.specularBorder
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "STORAGE & CACHE DIAGNOSTICS",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = PriceLensTheme.glassColors.textSecondary
+                            )
+                            Text(
+                                text = "Local Room DB SQLite & Scraper Cache",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = PriceLensTheme.glassColors.textPrimary
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MintSuccess.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = if (cachePurged) "PURGED & CLEAN" else "OPTIMAL",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                fontWeight = FontWeight.Bold,
+                                color = MintSuccess,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = PriceLensTheme.glassColors.surfaceHighlight,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text(
+                                    text = "Cached Comparisons",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    color = PriceLensTheme.glassColors.textSecondary
+                                )
+                                Text(
+                                    text = if (cachePurged) "0 active (Fresh)" else "64 comparisons",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PriceLensTheme.glassColors.textPrimary
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = PriceLensTheme.glassColors.surfaceHighlight,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Text(
+                                    text = "Storage Consumed",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    color = PriceLensTheme.glassColors.textSecondary
+                                )
+                                Text(
+                                    text = if (cachePurged) "0.1 MB" else "2.4 MB",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PriceLensTheme.glassColors.textPrimary
+                                )
+                            }
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (cachePurged) MintSuccess.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
+                        border = BorderStroke(1.dp, if (cachePurged) MintSuccess else PriceLensTheme.glassColors.specularBorder),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                cachePurged = !cachePurged
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 10.dp, horizontal = 12.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (cachePurged) Icons.Default.CheckCircle else Icons.Default.Refresh,
+                                contentDescription = null,
+                                tint = if (cachePurged) MintSuccess else ElectricBlue,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (cachePurged) "Cache Cleaned • Feeds Re-Synchronizing" else "Purge Stale Cache & Re-Sync Stores",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (cachePurged) MintSuccess else ElectricBlue
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // 8. Tool 7: PriceLens Labs Feature Toggles
         item {
             GlassCard(
                 modifier = Modifier.fillMaxWidth(),

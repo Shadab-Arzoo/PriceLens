@@ -5,12 +5,14 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,8 +33,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.ui.unit.sp
+import com.pricelens.core.designsystem.AmberAlert
+import com.pricelens.core.designsystem.CyanAccent
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -157,16 +164,132 @@ fun SearchScreen(
                     uiState.isEmpty -> {
                         SearchEmptyState(query = uiState.query)
                     }
+                    !uiState.isSubmitted && uiState.products.isEmpty() -> {
+                        SearchSuggestionsSection(
+                            onSelectQuery = {
+                                onEvent(SearchUiEvent.QueryChanged(it))
+                                onEvent(SearchUiEvent.SubmitSearch(it))
+                            }
+                        )
+                    }
                     else -> {
                         SearchResultsList(
                             products = uiState.sortedProducts,
-                            totalCount = uiState.products.size,
+                            totalCount = uiState.sortedProducts.size,
                             currentSortOrder = uiState.sortOrder,
                             onSortChange = { onEvent(SearchUiEvent.SortOrderChanged(it)) },
+                            selectedStoreFilter = uiState.selectedStoreFilter,
+                            onStoreFilterChange = { onEvent(SearchUiEvent.StoreFilterChanged(it)) },
+                            selectedPriceRange = uiState.selectedPriceRange,
+                            onPriceRangeChange = { onEvent(SearchUiEvent.PriceRangeChanged(it)) },
                             onProductClick = onProductClick
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun SearchSuggestionsSection(
+    onSelectQuery: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val trendingSearches = listOf(
+        "Apple iPhone 16",
+        "MacBook Air M3",
+        "Sony WH-1000XM5",
+        "Samsung Galaxy S24",
+        "Apple AirPods Pro 2",
+        "OnePlus 12 5G",
+        "Bose QuietComfort Ultra",
+        "Dell XPS 13 OLED"
+    )
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Trending Header
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                contentDescription = null,
+                tint = AmberAlert,
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = "TRENDING SEARCHES IN INDIA",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = PriceLensTheme.glassColors.textSecondary
+            )
+        }
+
+        // Trending Chips FlowRow
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            trendingSearches.forEach { search ->
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.7f),
+                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
+                    modifier = Modifier.clickable { onSelectQuery(search) }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = CyanAccent,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Text(
+                            text = search,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = PriceLensTheme.glassColors.textPrimary
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Store Coverage Tip Card
+        GlassCard(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = "🏪 Real-Time Multi-Retailer Compare",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = PriceLensTheme.glassColors.textPrimary
+                )
+                Text(
+                    text = "Search any gadget or consumer product to compare prices across Amazon India, Flipkart, Croma, Reliance Digital, and Vijay Sales simultaneously with verified partner discounts.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = PriceLensTheme.glassColors.textSecondary
+                )
             }
         }
     }
@@ -178,6 +301,10 @@ private fun SearchResultsList(
     totalCount: Int,
     currentSortOrder: SearchSortOrder,
     onSortChange: (SearchSortOrder) -> Unit,
+    selectedStoreFilter: String,
+    onStoreFilterChange: (String) -> Unit,
+    selectedPriceRange: SearchPriceRange,
+    onPriceRangeChange: (SearchPriceRange) -> Unit,
     onProductClick: (productId: String, productName: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -193,27 +320,47 @@ private fun SearchResultsList(
                 modifier = Modifier.padding(bottom = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = "$totalCount products found",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PriceLensTheme.glassColors.textSecondary,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "$totalCount products found",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = PriceLensTheme.glassColors.textSecondary,
+                        fontWeight = FontWeight.Medium
+                    )
 
+                    if (selectedStoreFilter != "All Stores" || selectedPriceRange != SearchPriceRange.ALL) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = CyanAccent.copy(alpha = 0.15f),
+                            modifier = Modifier.clickable {
+                                onStoreFilterChange("All Stores")
+                                onPriceRangeChange(SearchPriceRange.ALL)
+                            }
+                        ) {
+                            Text(
+                                text = "Reset Filters ✕",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = CyanAccent,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Sort Options
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    val sortOptions = listOf(
-                        SearchSortOrder.RELEVANCE to "Relevance",
-                        SearchSortOrder.PRICE_LOW_TO_HIGH to "Lowest Price 🏷️",
-                        SearchSortOrder.PRICE_HIGH_TO_LOW to "Price: High to Low",
-                        SearchSortOrder.MOST_RETAILERS to "Most Stores 🏪"
-                    )
-                    items(sortOptions, key = { it.first }) { (order, label) ->
+                    items(SearchSortOrder.entries, key = { it.name }) { order ->
                         val isSelected = currentSortOrder == order
                         val chipBg by animateColorAsState(
-                            targetValue = if (isSelected) ElectricBlue.copy(alpha = 0.18f)
+                            targetValue = if (isSelected) ElectricBlue.copy(alpha = 0.2f)
                             else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f),
                             animationSpec = tween(durationMillis = 200),
                             label = "sortChipBg"
@@ -237,10 +384,59 @@ private fun SearchResultsList(
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Text(
-                                text = label,
+                                text = order.label,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 color = chipText
+                            )
+                        }
+                    }
+                }
+
+                // Store Filter Pills
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val storeList = listOf("All Stores", "Amazon India", "Flipkart", "Croma", "Reliance Digital", "Vijay Sales")
+                    items(storeList) { store ->
+                        val isSelected = selectedStoreFilter == store
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isSelected) CyanAccent.copy(alpha = 0.18f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.45f),
+                            border = BorderStroke(1.dp, if (isSelected) CyanAccent else PriceLensTheme.glassColors.specularBorder),
+                            modifier = Modifier.clickable { onStoreFilterChange(store) }
+                        ) {
+                            Text(
+                                text = store,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) CyanAccent else PriceLensTheme.glassColors.textSecondary,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Price Range Filter Pills
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(SearchPriceRange.entries) { range ->
+                        val isSelected = selectedPriceRange == range
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isSelected) MintSuccess.copy(alpha = 0.18f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.45f),
+                            border = BorderStroke(1.dp, if (isSelected) MintSuccess else PriceLensTheme.glassColors.specularBorder),
+                            modifier = Modifier.clickable { onPriceRangeChange(range) }
+                        ) {
+                            Text(
+                                text = range.label,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MintSuccess else PriceLensTheme.glassColors.textSecondary,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                             )
                         }
                     }
@@ -271,6 +467,9 @@ private fun ProductSummaryCard(
     modifier: Modifier = Modifier
 ) {
     val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+    val spreadSavings = if (product.highestPrice != null && product.lowestPrice != null && product.highestPrice > product.lowestPrice) {
+        product.highestPrice - product.lowestPrice
+    } else 0.0
 
     GlassCard(
         modifier = modifier.fillMaxWidth(),
@@ -286,7 +485,7 @@ private fun ProductSummaryCard(
             com.pricelens.core.designsystem.components.ProductThumbnailImage(
                 imageUrl = product.imageUrl,
                 productName = product.name,
-                modifier = Modifier.size(56.dp),
+                modifier = Modifier.size(60.dp),
                 shape = RoundedCornerShape(14.dp)
             )
 
@@ -296,7 +495,8 @@ private fun ProductSummaryCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 8.dp)
+                    .padding(end = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 if (!product.brand.isNullOrBlank()) {
                     Text(
@@ -316,35 +516,56 @@ private fun ProductSummaryCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
-
+                // Price and Store Pill
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Lowest Price
                     if (product.lowestPrice != null) {
                         Text(
                             text = currencyFormatter.format(product.lowestPrice),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MintSuccess
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = PriceLensTheme.glassColors.ambientGlow
                         )
                     }
 
-                    // Retailer Count Pill
-                    if (product.retailerCount > 0) {
+                    if (product.lowestPriceRetailer != null) {
                         Surface(
-                            shape = CircleShape,
-                            color = PriceLensTheme.glassColors.surfaceHighlight
+                            shape = RoundedCornerShape(6.dp),
+                            color = CyanAccent.copy(alpha = 0.15f)
                         ) {
                             Text(
-                                text = "${product.retailerCount} stores",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = PriceLensTheme.glassColors.textSecondary,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                text = product.lowestPriceRetailer,
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                fontWeight = FontWeight.Bold,
+                                color = CyanAccent,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
+                    }
+                }
+
+                // Retailer count & spread savings
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    if (product.retailerCount > 0) {
+                        Text(
+                            text = "${product.retailerCount} stores",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PriceLensTheme.glassColors.textSecondary
+                        )
+                    }
+
+                    if (spreadSavings > 0) {
+                        Text(
+                            text = "• Save up to ${currencyFormatter.format(spreadSavings)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MintSuccess
+                        )
                     }
                 }
             }

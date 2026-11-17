@@ -201,4 +201,36 @@ class SearchViewModelTest {
         assertEquals("Sony B", sorted.first().name)
         assertEquals(15000.0, sorted.first().lowestPrice)
     }
+
+    @Test
+    fun `store filter changed filters products by retailer name`() = runTest {
+        catalogRepo.productsToReturn = listOf(
+            ProductSummary(id = "1", name = "Sony Amazon", lowestPrice = 30000.0, lowestPriceRetailer = "Amazon India", retailerCount = 2),
+            ProductSummary(id = "2", name = "Sony Flipkart", lowestPrice = 15000.0, lowestPriceRetailer = "Flipkart", retailerCount = 5)
+        )
+        val viewModel = SearchViewModel(searchUseCase, SavedStateHandle())
+        viewModel.onEvent(SearchUiEvent.SubmitSearch("Sony"))
+        advanceUntilIdle()
+
+        viewModel.onEvent(SearchUiEvent.StoreFilterChanged("Flipkart"))
+        val filtered = viewModel.uiState.value.sortedProducts
+        assertEquals(1, filtered.size)
+        assertEquals("Sony Flipkart", filtered.first().name)
+    }
+
+    @Test
+    fun `price range filter filters products by price range`() = runTest {
+        catalogRepo.productsToReturn = listOf(
+            ProductSummary(id = "1", name = "Sony Budget", lowestPrice = 8000.0, retailerCount = 2),
+            ProductSummary(id = "2", name = "Sony Flagship", lowestPrice = 85000.0, retailerCount = 5)
+        )
+        val viewModel = SearchViewModel(searchUseCase, SavedStateHandle())
+        viewModel.onEvent(SearchUiEvent.SubmitSearch("Sony"))
+        advanceUntilIdle()
+
+        viewModel.onEvent(SearchUiEvent.PriceRangeChanged(com.pricelens.presentation.search.SearchPriceRange.UNDER_10K))
+        val filtered = viewModel.uiState.value.sortedProducts
+        assertEquals(1, filtered.size)
+        assertEquals("Sony Budget", filtered.first().name)
+    }
 }

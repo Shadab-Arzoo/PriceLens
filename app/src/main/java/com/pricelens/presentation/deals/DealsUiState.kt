@@ -42,6 +42,8 @@ data class DealsUiState(
     val isLoading: Boolean = true,
     val deals: List<DealItem> = emptyList(),
     val spotlightDeal: DealItem? = null,
+    val searchQuery: String = "",
+    val minDiscountPercent: Int = 0,
     val selectedCategory: DealCategory = DealCategory.ALL,
     val selectedStore: String = "All Stores",
     val selectedSort: DealSortOrder = DealSortOrder.BIGGEST_DISCOUNT,

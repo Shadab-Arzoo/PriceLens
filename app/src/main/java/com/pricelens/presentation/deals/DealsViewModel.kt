@@ -126,6 +126,16 @@ class DealsViewModel @Inject constructor(
         applyFilterAndSort()
     }
 
+    fun onSearchQueryChanged(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+        applyFilterAndSort()
+    }
+
+    fun onMinDiscountChanged(minDiscount: Int) {
+        _uiState.update { it.copy(minDiscountPercent = minDiscount) }
+        applyFilterAndSort()
+    }
+
     fun quickSetAlert(deal: DealItem, targetPrice: Double) {
         viewModelScope.launch {
             if (targetPriceAlertRepository != null) {
@@ -171,6 +181,21 @@ class DealsViewModel @Inject constructor(
             BudgetFilter.UNDER_25K -> filtered.filter { it.currentPrice < 25000 }
             BudgetFilter.UNDER_50K -> filtered.filter { it.currentPrice < 50000 }
             BudgetFilter.FLAGSHIPS -> filtered.filter { it.currentPrice >= 50000 }
+        }
+
+        // 4. In-page Search Query Filter
+        if (state.searchQuery.isNotBlank()) {
+            val q = state.searchQuery.trim().lowercase()
+            filtered = filtered.filter {
+                it.title.lowercase().contains(q) ||
+                it.brand.lowercase().contains(q) ||
+                it.lowestRetailer.lowercase().contains(q)
+            }
+        }
+
+        // 5. Min Discount Filter
+        if (state.minDiscountPercent > 0) {
+            filtered = filtered.filter { it.discountPercent >= state.minDiscountPercent }
         }
 
         // 4. Sort

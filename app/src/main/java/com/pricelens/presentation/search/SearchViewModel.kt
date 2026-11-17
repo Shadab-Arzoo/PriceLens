@@ -41,6 +41,12 @@ class SearchViewModel @Inject constructor(
             is SearchUiEvent.SortOrderChanged -> {
                 _uiState.update { it.copy(sortOrder = event.sortOrder) }
             }
+            is SearchUiEvent.StoreFilterChanged -> {
+                _uiState.update { it.copy(selectedStoreFilter = event.store) }
+            }
+            is SearchUiEvent.PriceRangeChanged -> {
+                _uiState.update { it.copy(selectedPriceRange = event.range) }
+            }
             SearchUiEvent.RetrySearch -> {
                 performSearch(_uiState.value.query)
             }

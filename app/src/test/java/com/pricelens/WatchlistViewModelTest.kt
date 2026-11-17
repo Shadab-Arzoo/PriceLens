@@ -209,4 +209,16 @@ class WatchlistViewModelTest {
         assertEquals("prod_big", viewModel.uiState.value.filteredItems.first().productId)
         assertEquals("prod_small", viewModel.uiState.value.filteredItems.last().productId)
     }
+
+    @Test
+    fun `RefreshSync triggers loading and sets notification message`() = runTest {
+        val viewModel = WatchlistViewModel(dashboardRepo, alertRepo)
+        advanceUntilIdle()
+
+        viewModel.onEvent(WatchlistUiEvent.RefreshSync)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertTrue(viewModel.uiState.value.notificationMessage?.contains("Watchlist synced") == true)
+    }
 }

@@ -167,4 +167,32 @@ class DealsViewModelTest {
         assertEquals(25000.0, alertRepo.savedAlerts.first().targetPrice, 0.01)
         assertTrue(viewModel.uiState.value.notificationMessage?.contains("Price Alert set") == true)
     }
+
+    @Test
+    fun `search query filters deals by text matching title or store`() = runTest {
+        val catalogRepo = FakeProductCatalogRepository()
+        val viewModel = DealsViewModel(catalogRepo)
+
+        advanceUntilIdle()
+        viewModel.onSearchQueryChanged("MacBook")
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(1, state.deals.size)
+        assertEquals("Apple MacBook Air M3 (16GB)", state.deals.first().title)
+    }
+
+    @Test
+    fun `min discount percentage filters deals appropriately`() = runTest {
+        val catalogRepo = FakeProductCatalogRepository()
+        val viewModel = DealsViewModel(catalogRepo)
+
+        advanceUntilIdle()
+        viewModel.onMinDiscountChanged(20)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(1, state.deals.size)
+        assertEquals("prod_sony_xm5", state.deals.first().productId)
+    }
 }
