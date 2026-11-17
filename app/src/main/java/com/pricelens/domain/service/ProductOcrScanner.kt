@@ -65,10 +65,38 @@ class ProductOcrScanner @Inject constructor() {
         ),
         CatalogSignature(
             productId = "prod_dell_xps13",
-            title = "Dell XPS 13 9315 Laptop (Intel Core i7 12th Gen, 16GB, 512GB SSD)",
+            title = "Dell XPS 13 9340 Laptop (Intel Core Ultra 7 155H, 16GB, 512GB SSD) - Platinum",
             brand = "Dell",
-            model = "XPS9315-7001SLV",
-            keywords = listOf("xps 13", "xps 9315", "xps9315", "dell 9315")
+            model = "XPS9340-7452SLV",
+            keywords = listOf("xps 13", "xps 9340", "xps 9315", "xps9340", "dell 9340")
+        ),
+        CatalogSignature(
+            productId = "prod_iphone_16_128",
+            title = "Apple iPhone 16 (128 GB) - Black",
+            brand = "Apple",
+            model = "A3287 / MYEE3HN/A",
+            keywords = listOf("iphone 16", "a3287", "myee3hn/a", "myee3")
+        ),
+        CatalogSignature(
+            productId = "prod_macbook_air_m3",
+            title = "Apple MacBook Air M3 (13.6-inch, 16GB Unified Memory, 256GB SSD) - Space Grey",
+            brand = "Apple",
+            model = "MRXN3HN/A",
+            keywords = listOf("macbook air m3", "mrxn3hn/a", "mrxn3", "macbook m3")
+        ),
+        CatalogSignature(
+            productId = "prod_airpods_pro_2",
+            title = "Apple AirPods Pro (2nd Generation with MagSafe Case USB-C)",
+            brand = "Apple",
+            model = "MTJV3HN/A",
+            keywords = listOf("airpods pro 2", "airpods pro", "mtjv3hn/a", "mtjv3")
+        ),
+        CatalogSignature(
+            productId = "prod_bose_qc_ultra",
+            title = "Bose QuietComfort Ultra Wireless Noise Cancelling Headphones - Black",
+            brand = "Bose",
+            model = "880066-0100",
+            keywords = listOf("qc ultra", "quietcomfort ultra", "bose ultra", "880066-0100")
         )
     )
 

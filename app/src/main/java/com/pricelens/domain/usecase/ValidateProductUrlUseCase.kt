@@ -57,7 +57,11 @@ class ValidateProductUrlUseCase @Inject constructor() {
         "493839343" to CatalogMapping("prod_iphone_15_128", "Apple iPhone 15 (128 GB) - Black", "Apple", "A3090 / MTP03HN/A"),
         "492849502" to CatalogMapping("prod_macbook_air_m2", "Apple MacBook Air M2 (13.6-inch, 8GB, 256GB SSD) - Midnight", "Apple", "MLY33HN/A"),
 
-        "23491" to CatalogMapping("prod_samsung_s24", "Samsung Galaxy S24 5G (Onyx Black, 128 GB)", "Samsung", "SM-S921BZKDINS")
+        "23491" to CatalogMapping("prod_samsung_s24", "Samsung Galaxy S24 5G (Onyx Black, 128 GB)", "Samsung", "SM-S921BZKDINS"),
+        "B0DG" to CatalogMapping("prod_iphone_16_128", "Apple iPhone 16 (128 GB) - Black", "Apple", "A3287 / MYEE3HN/A"),
+        "iphone-16" to CatalogMapping("prod_iphone_16_128", "Apple iPhone 16 (128 GB) - Black", "Apple", "A3287 / MYEE3HN/A"),
+        "macbook-air-m3" to CatalogMapping("prod_macbook_air_m3", "Apple MacBook Air M3 (13.6-inch, 16GB, 256GB SSD) - Space Grey", "Apple", "MRXN3HN/A"),
+        "airpods-pro-2" to CatalogMapping("prod_airpods_pro_2", "Apple AirPods Pro (2nd Generation with MagSafe Case USB-C)", "Apple", "MTJV3HN/A")
     )
 
     operator fun invoke(rawUrl: String): UrlValidationResult {

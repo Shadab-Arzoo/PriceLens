@@ -159,8 +159,14 @@ fun ProductComparisonRoute(
         onNavigateBack = onNavigateBack,
         onOpenOfferUrl = { url ->
             if (url.isNotBlank()) {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                context.startActivity(intent)
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(context, "Could not open retailer link", android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
         },
         modifier = modifier

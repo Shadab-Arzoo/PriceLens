@@ -22,6 +22,300 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
 
     // Immutable catalog of verified products mapped from authorized retailer feeds
     private val catalog: Map<String, ProductOffersDto> = mapOf(
+        "prod_iphone_16_128" to ProductOffersDto(
+            productId = "prod_iphone_16_128",
+            productTitle = "Apple iPhone 16 (128 GB) - Black",
+            brand = "Apple",
+            modelNumber = "A3287 / MYEE3HN/A",
+            category = "Smartphone",
+            imageUrl = "https://images.unsplash.com/photo-1592750475338-74b7b21085ab",
+            description = "Camera Control, 48MP Fusion camera, Action button, and A18 chip in a durable color-infused glass and aluminum design.",
+            specifications = mapOf(
+                "Display" to "6.1-inch Super Retina XDR OLED (2000 nits)",
+                "Processor" to "A18 chip with 6-core CPU & 5-core GPU",
+                "Storage" to "128 GB",
+                "Camera" to "48MP Fusion + 12MP Ultra Wide with Macro",
+                "Connector" to "USB-C",
+                "Water Resistance" to "IP68 (6m up to 30 mins)"
+            ),
+            offers = listOf(
+                RetailerOfferDto(
+                    retailerId = "flipkart",
+                    retailerName = "Flipkart",
+                    price = 73999.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.flipkart.com/search?q=Apple+iPhone+16+128GB",
+                    observedAtTimestamp = System.currentTimeMillis() - 1200000L,
+                    condition = "NEW",
+                    sellerRating = 4.8,
+                    deliveryInfo = "Express Delivery Available"
+                ),
+                RetailerOfferDto(
+                    retailerId = "amazon_in",
+                    retailerName = "Amazon India",
+                    price = 74900.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.amazon.in/s?k=Apple+iPhone+16+128GB",
+                    observedAtTimestamp = System.currentTimeMillis() - 1800000L,
+                    condition = "NEW",
+                    sellerRating = 4.8,
+                    deliveryInfo = "Prime Next Day Delivery"
+                ),
+                RetailerOfferDto(
+                    retailerId = "croma",
+                    retailerName = "Croma",
+                    price = 74990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.croma.com/searchB?q=Apple+iPhone+16+128GB",
+                    observedAtTimestamp = System.currentTimeMillis() - 3600000L,
+                    condition = "NEW",
+                    sellerRating = 4.6,
+                    deliveryInfo = "Store Pickup or Home Delivery"
+                ),
+                RetailerOfferDto(
+                    retailerId = "reliance_digital",
+                    retailerName = "Reliance Digital",
+                    price = 75900.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.reliancedigital.in/search?q=Apple+iPhone+16+128GB",
+                    observedAtTimestamp = System.currentTimeMillis() - 5400000L,
+                    condition = "NEW",
+                    sellerRating = 4.5,
+                    deliveryInfo = "Standard Delivery in 2 days"
+                ),
+                RetailerOfferDto(
+                    retailerId = "vijay_sales",
+                    retailerName = "Vijay Sales",
+                    price = 75900.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.vijaysales.com/search/Apple%20iPhone%2016%20128GB",
+                    observedAtTimestamp = System.currentTimeMillis() - 7200000L,
+                    condition = "NEW",
+                    sellerRating = 4.4,
+                    deliveryInfo = "Free Home Delivery"
+                )
+            ),
+            unavailableRetailers = emptyList(),
+            confidenceScore = 0.99,
+            lastRefreshedTimestamp = System.currentTimeMillis() - 1200000L
+        ),
+
+        "prod_macbook_air_m3" to ProductOffersDto(
+            productId = "prod_macbook_air_m3",
+            productTitle = "Apple MacBook Air M3 (13.6-inch, 16GB Unified Memory, 256GB SSD) - Space Grey",
+            brand = "Apple",
+            modelNumber = "MRXN3HN/A",
+            category = "Laptop",
+            imageUrl = "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
+            description = "Supercharged by the next-generation M3 chip with 8-core CPU and 8-core GPU. Up to 18 hours of battery life and support for dual external displays.",
+            specifications = mapOf(
+                "Processor" to "Apple M3 8-core CPU / 8-core GPU",
+                "Display" to "13.6-inch Liquid Retina with True Tone (500 nits)",
+                "Memory" to "16GB unified memory",
+                "Storage" to "256GB SSD storage",
+                "Weight" to "1.24 kg",
+                "Battery" to "Up to 18 hours with MagSafe 3"
+            ),
+            offers = listOf(
+                RetailerOfferDto(
+                    retailerId = "amazon_in",
+                    retailerName = "Amazon India",
+                    price = 104990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.amazon.in/s?k=Apple+MacBook+Air+M3+13.6-inch+16GB+256GB",
+                    observedAtTimestamp = System.currentTimeMillis() - 1500000L,
+                    condition = "NEW",
+                    sellerRating = 4.8,
+                    deliveryInfo = "Prime Next Day"
+                ),
+                RetailerOfferDto(
+                    retailerId = "flipkart",
+                    retailerName = "Flipkart",
+                    price = 106990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.flipkart.com/search?q=Apple+MacBook+Air+M3",
+                    observedAtTimestamp = System.currentTimeMillis() - 3000000L,
+                    condition = "NEW",
+                    sellerRating = 4.6,
+                    deliveryInfo = "Free Delivery"
+                ),
+                RetailerOfferDto(
+                    retailerId = "croma",
+                    retailerName = "Croma",
+                    price = 107900.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.croma.com/searchB?q=Apple+MacBook+Air+M3",
+                    observedAtTimestamp = System.currentTimeMillis() - 4500000L,
+                    condition = "NEW",
+                    sellerRating = 4.5,
+                    deliveryInfo = "Express Store Pickup"
+                ),
+                RetailerOfferDto(
+                    retailerId = "reliance_digital",
+                    retailerName = "Reliance Digital",
+                    price = 108900.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.reliancedigital.in/search?q=Apple+MacBook+Air+M3",
+                    observedAtTimestamp = System.currentTimeMillis() - 6000000L,
+                    condition = "NEW",
+                    sellerRating = 4.4,
+                    deliveryInfo = "Delivery within 2 days"
+                )
+            ),
+            unavailableRetailers = emptyList(),
+            confidenceScore = 0.98,
+            lastRefreshedTimestamp = System.currentTimeMillis() - 1500000L
+        ),
+
+        "prod_airpods_pro_2" to ProductOffersDto(
+            productId = "prod_airpods_pro_2",
+            productTitle = "Apple AirPods Pro (2nd Generation with MagSafe Case USB-C)",
+            brand = "Apple",
+            modelNumber = "MTJV3HN/A",
+            category = "Headphones",
+            imageUrl = "https://images.unsplash.com/photo-1600294037681-c80b4cb5b434",
+            description = "Up to 2x more Active Noise Cancellation, Adaptive Audio, and Transparency mode. MagSafe Charging Case (USB-C) with speaker and lanyard loop.",
+            specifications = mapOf(
+                "Chip" to "Apple H2 headphone chip / U1 chip in case",
+                "Noise Cancellation" to "Active Noise Cancellation with Transparency Mode",
+                "Battery Life" to "Up to 6 hours listening time (30 hours with case)",
+                "Connector" to "USB-C / MagSafe / Qi wireless charging",
+                "Water Resistance" to "IP54 dust, sweat, and water resistant"
+            ),
+            offers = listOf(
+                RetailerOfferDto(
+                    retailerId = "amazon_in",
+                    retailerName = "Amazon India",
+                    price = 20999.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.amazon.in/s?k=Apple+AirPods+Pro+2nd+Generation+USB-C",
+                    observedAtTimestamp = System.currentTimeMillis() - 1000000L,
+                    condition = "NEW",
+                    sellerRating = 4.7,
+                    deliveryInfo = "Prime Next Day"
+                ),
+                RetailerOfferDto(
+                    retailerId = "flipkart",
+                    retailerName = "Flipkart",
+                    price = 21499.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.flipkart.com/search?q=Apple+AirPods+Pro+2nd+Gen+USB-C",
+                    observedAtTimestamp = System.currentTimeMillis() - 2500000L,
+                    condition = "NEW",
+                    sellerRating = 4.6,
+                    deliveryInfo = "Free Delivery"
+                ),
+                RetailerOfferDto(
+                    retailerId = "croma",
+                    retailerName = "Croma",
+                    price = 22990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.croma.com/searchB?q=Apple+AirPods+Pro+2nd+Gen",
+                    observedAtTimestamp = System.currentTimeMillis() - 4000000L,
+                    condition = "NEW",
+                    sellerRating = 4.5,
+                    deliveryInfo = "Store Pickup Available"
+                ),
+                RetailerOfferDto(
+                    retailerId = "reliance_digital",
+                    retailerName = "Reliance Digital",
+                    price = 22990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.reliancedigital.in/search?q=Apple+AirPods+Pro+2nd+Gen",
+                    observedAtTimestamp = System.currentTimeMillis() - 5000000L,
+                    condition = "NEW",
+                    sellerRating = 4.4,
+                    deliveryInfo = "Delivery in 2 days"
+                )
+            ),
+            unavailableRetailers = emptyList(),
+            confidenceScore = 0.98,
+            lastRefreshedTimestamp = System.currentTimeMillis() - 1000000L
+        ),
+
+        "prod_bose_qc_ultra" to ProductOffersDto(
+            productId = "prod_bose_qc_ultra",
+            productTitle = "Bose QuietComfort Ultra Wireless Noise Cancelling Headphones - Black",
+            brand = "Bose",
+            modelNumber = "880066-0100",
+            category = "Headphones",
+            imageUrl = "https://images.unsplash.com/photo-1546435770-a3e426bf472b",
+            description = "World-class active noise cancellation with CustomTune technology and Bose Immersive Audio for revolutionary spatialized sound.",
+            specifications = mapOf(
+                "Audio" to "Bose Immersive Audio with spatialized sound",
+                "Noise Cancellation" to "World-class ANC with Quiet, Aware, and Immersion modes",
+                "Battery Life" to "Up to 24 hours (18 hours with Immersive Audio)",
+                "Bluetooth" to "v5.3 with Snapdragon Sound & aptX Adaptive",
+                "Microphones" to "Advanced microphone array for clear calls"
+            ),
+            offers = listOf(
+                RetailerOfferDto(
+                    retailerId = "amazon_in",
+                    retailerName = "Amazon India",
+                    price = 29999.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.amazon.in/s?k=Bose+QuietComfort+Ultra+Headphones",
+                    observedAtTimestamp = System.currentTimeMillis() - 1400000L,
+                    condition = "NEW",
+                    sellerRating = 4.7,
+                    deliveryInfo = "Prime Next Day"
+                ),
+                RetailerOfferDto(
+                    retailerId = "flipkart",
+                    retailerName = "Flipkart",
+                    price = 32999.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.flipkart.com/search?q=Bose+QuietComfort+Ultra",
+                    observedAtTimestamp = System.currentTimeMillis() - 2800000L,
+                    condition = "NEW",
+                    sellerRating = 4.5,
+                    deliveryInfo = "Free Delivery"
+                ),
+                RetailerOfferDto(
+                    retailerId = "croma",
+                    retailerName = "Croma",
+                    price = 32900.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.croma.com/searchB?q=Bose+QuietComfort+Ultra",
+                    observedAtTimestamp = System.currentTimeMillis() - 4200000L,
+                    condition = "NEW",
+                    sellerRating = 4.4,
+                    deliveryInfo = "Store Pickup Available"
+                ),
+                RetailerOfferDto(
+                    retailerId = "reliance_digital",
+                    retailerName = "Reliance Digital",
+                    price = 33900.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.reliancedigital.in/search?q=Bose+QuietComfort+Ultra",
+                    observedAtTimestamp = System.currentTimeMillis() - 6000000L,
+                    condition = "NEW",
+                    sellerRating = 4.3,
+                    deliveryInfo = "Standard Delivery in 3 days"
+                )
+            ),
+            unavailableRetailers = emptyList(),
+            confidenceScore = 0.97,
+            lastRefreshedTimestamp = System.currentTimeMillis() - 1400000L
+        ),
+
         "prod_sony_wh1000xm5" to ProductOffersDto(
             productId = "prod_sony_wh1000xm5",
             productTitle = "Sony WH-1000XM5 Wireless Noise Cancelling Headphones",
@@ -68,7 +362,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 28999.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.flipkart.com/p/itm543210",
+                    productUrl = "https://www.flipkart.com/search?q=Sony+WH-1000XM5+Wireless+Headphones",
                     observedAtTimestamp = System.currentTimeMillis() - 10800000L,
                     condition = "NEW",
                     sellerRating = 4.5,
@@ -189,7 +483,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 62999.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.amazon.in/dp/B0CS9Y34L1",
+                    productUrl = "https://www.amazon.in/s?k=Samsung+Galaxy+S24+5G+128GB",
                     observedAtTimestamp = System.currentTimeMillis() - 2500000L,
                     condition = "NEW",
                     sellerRating = 4.5,
@@ -208,30 +502,43 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     deliveryInfo = "Delivery in 2 days"
                 ),
                 RetailerOfferDto(
+                    retailerId = "croma",
+                    retailerName = "Croma",
+                    price = 64990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.croma.com/searchB?q=Samsung+Galaxy+S24+5G",
+                    observedAtTimestamp = System.currentTimeMillis() - 4800000L,
+                    condition = "NEW",
+                    sellerRating = 4.4,
+                    deliveryInfo = "Store Pickup Available"
+                ),
+                RetailerOfferDto(
+                    retailerId = "reliance_digital",
+                    retailerName = "Reliance Digital",
+                    price = 64990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.reliancedigital.in/search?q=Samsung+Galaxy+S24+5G",
+                    observedAtTimestamp = System.currentTimeMillis() - 5200000L,
+                    condition = "NEW",
+                    sellerRating = 4.3,
+                    deliveryInfo = "Express Delivery in 2 days"
+                ),
+                RetailerOfferDto(
                     retailerId = "vijay_sales",
                     retailerName = "Vijay Sales",
                     price = 64990.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.vijaysales.com/samsung-galaxy-s24-5g-128-gb-onyx-black/23491",
+                    productUrl = "https://www.vijaysales.com/search/Samsung%20Galaxy%20S24%205G",
                     observedAtTimestamp = System.currentTimeMillis() - 6000000L,
                     condition = "NEW",
                     sellerRating = 4.2,
                     deliveryInfo = "Free Home Delivery"
                 )
             ),
-            unavailableRetailers = listOf(
-                UnavailableRetailerDto(
-                    retailerId = "croma",
-                    retailerName = "Croma",
-                    reason = "128 GB variant not listed at regional warehouse"
-                ),
-                UnavailableRetailerDto(
-                    retailerId = "reliance_digital",
-                    retailerName = "Reliance Digital",
-                    reason = "Out of stock online"
-                )
-            ),
+            unavailableRetailers = emptyList(),
             confidenceScore = 0.97,
             lastRefreshedTimestamp = System.currentTimeMillis() - 2500000L
         ),
@@ -258,11 +565,23 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 84990.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.amazon.in/dp/B0B3CGS25C",
+                    productUrl = "https://www.amazon.in/s?k=Apple+MacBook+Air+M2+13.6-inch",
                     observedAtTimestamp = System.currentTimeMillis() - 1200000L,
                     condition = "NEW",
                     sellerRating = 4.7,
                     deliveryInfo = "Prime Next Day"
+                ),
+                RetailerOfferDto(
+                    retailerId = "flipkart",
+                    retailerName = "Flipkart",
+                    price = 85990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.flipkart.com/search?q=Apple+MacBook+Air+M2",
+                    observedAtTimestamp = System.currentTimeMillis() - 2400000L,
+                    condition = "NEW",
+                    sellerRating = 4.5,
+                    deliveryInfo = "Free Delivery"
                 ),
                 RetailerOfferDto(
                     retailerId = "croma",
@@ -270,7 +589,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 86900.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.croma.com/apple-macbook-air-m2-8gb-256gb-ssd-midnight/p/256608",
+                    productUrl = "https://www.croma.com/searchB?q=Apple+MacBook+Air+M2",
                     observedAtTimestamp = System.currentTimeMillis() - 3600000L,
                     condition = "NEW",
                     sellerRating = 4.6,
@@ -289,18 +608,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     deliveryInfo = "Delivery within 2 days"
                 )
             ),
-            unavailableRetailers = listOf(
-                UnavailableRetailerDto(
-                    retailerId = "flipkart",
-                    retailerName = "Flipkart",
-                    reason = "Seller inventory awaiting restock"
-                ),
-                UnavailableRetailerDto(
-                    retailerId = "vijay_sales",
-                    retailerName = "Vijay Sales",
-                    reason = "Midnight color SKU out of stock"
-                )
-            ),
+            unavailableRetailers = emptyList(),
             confidenceScore = 0.98,
             lastRefreshedTimestamp = System.currentTimeMillis() - 1200000L
         ),
@@ -327,7 +635,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 24990.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.amazon.in/dp/B0B171Q435",
+                    productUrl = "https://www.amazon.in/s?k=Bose+QuietComfort+45+Headphones",
                     observedAtTimestamp = System.currentTimeMillis() - 2400000L,
                     condition = "NEW",
                     sellerRating = 4.6,
@@ -339,7 +647,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 25490.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.croma.com/p/262840",
+                    productUrl = "https://www.croma.com/searchB?q=Bose+QuietComfort",
                     observedAtTimestamp = System.currentTimeMillis() - 4000000L,
                     condition = "NEW",
                     sellerRating = 4.4,
@@ -351,7 +659,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 26990.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.flipkart.com/p/itm876543",
+                    productUrl = "https://www.flipkart.com/search?q=Bose+QuietComfort+45",
                     observedAtTimestamp = System.currentTimeMillis() - 5000000L,
                     condition = "NEW",
                     sellerRating = 4.3,
@@ -391,7 +699,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 24990.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.amazon.in/dp/B0B6488349",
+                    productUrl = "https://www.amazon.in/s?k=Sennheiser+Momentum+4+Wireless+Headphones",
                     observedAtTimestamp = System.currentTimeMillis() - 3000000L,
                     condition = "NEW",
                     sellerRating = 4.5,
@@ -403,7 +711,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 25990.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.vijaysales.com/p/24180",
+                    productUrl = "https://www.vijaysales.com/search/Sennheiser%20Momentum%204",
                     observedAtTimestamp = System.currentTimeMillis() - 6000000L,
                     condition = "NEW",
                     sellerRating = 4.2,
@@ -444,11 +752,23 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 59999.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.amazon.in/dp/B0CSKPT55P",
+                    productUrl = "https://www.amazon.in/s?k=OnePlus+12+5G+256GB",
                     observedAtTimestamp = System.currentTimeMillis() - 1500000L,
                     condition = "NEW",
                     sellerRating = 4.7,
                     deliveryInfo = "Prime Next Day"
+                ),
+                RetailerOfferDto(
+                    retailerId = "flipkart",
+                    retailerName = "Flipkart",
+                    price = 62999.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.flipkart.com/search?q=OnePlus+12+5G",
+                    observedAtTimestamp = System.currentTimeMillis() - 2500000L,
+                    condition = "NEW",
+                    sellerRating = 4.5,
+                    deliveryInfo = "Free Delivery"
                 ),
                 RetailerOfferDto(
                     retailerId = "croma",
@@ -456,7 +776,7 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 61999.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.croma.com/p/304120",
+                    productUrl = "https://www.croma.com/searchB?q=OnePlus+12+5G",
                     observedAtTimestamp = System.currentTimeMillis() - 3600000L,
                     condition = "NEW",
                     sellerRating = 4.5,
@@ -468,76 +788,82 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     price = 61999.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.reliancedigital.in/p/494200192",
+                    productUrl = "https://www.reliancedigital.in/search?q=OnePlus+12+5G",
                     observedAtTimestamp = System.currentTimeMillis() - 5000000L,
                     condition = "NEW",
                     sellerRating = 4.3,
                     deliveryInfo = "Delivery in 2 days"
                 )
             ),
-            unavailableRetailers = listOf(
-                UnavailableRetailerDto(
-                    retailerId = "flipkart",
-                    retailerName = "Flipkart",
-                    reason = "Out of stock from authorized seller"
-                )
-            ),
+            unavailableRetailers = emptyList(),
             confidenceScore = 0.98,
             lastRefreshedTimestamp = System.currentTimeMillis() - 1500000L
         ),
 
         "prod_dell_xps13" to ProductOffersDto(
             productId = "prod_dell_xps13",
-            productTitle = "Dell XPS 13 9315 Laptop (Intel Core i7 12th Gen, 16GB, 512GB SSD)",
+            productTitle = "Dell XPS 13 9340 Laptop (Intel Core Ultra 7 155H, 16GB, 512GB SSD) - Platinum",
             brand = "Dell",
-            modelNumber = "XPS9315-7001SLV",
+            modelNumber = "XPS9340-7452SLV",
             category = "Laptop",
             imageUrl = "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed",
-            description = "Our thinnest and lightest 13-inch XPS is built for a lifestyle on the move. Features 12th Gen Intel Core processors.",
+            description = "Iconic, innovative design powered by Intel Core Ultra processors with dedicated AI engine. Ultra-portable at just 1.19 kg.",
             specifications = mapOf(
-                "Processor" to "Intel Core i7-1250U 10-core (Up to 4.7GHz)",
-                "Display" to "13.4-inch FHD+ 500 nits Anti-glare",
-                "Memory" to "16GB LPDDR5 dual-channel",
+                "Processor" to "Intel Core Ultra 7 155H 16-core (Up to 4.8GHz)",
+                "Display" to "13.4-inch FHD+ 120Hz 500 nits Anti-glare",
+                "Memory" to "16GB LPDDR5X dual-channel",
                 "Storage" to "512GB PCIe NVMe SSD",
-                "Weight" to "1.17 kg",
-                "Battery" to "Up to 12 hours"
+                "Weight" to "1.19 kg",
+                "Battery" to "Up to 18 hours"
             ),
             offers = listOf(
                 RetailerOfferDto(
                     retailerId = "amazon_in",
                     retailerName = "Amazon India",
-                    price = 79990.0,
+                    price = 119990.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.amazon.in/dp/B0B9ZJ7W5M",
+                    productUrl = "https://www.amazon.in/s?k=Dell+XPS+13+Intel+Core+Ultra+7",
                     observedAtTimestamp = System.currentTimeMillis() - 2000000L,
                     condition = "NEW",
-                    sellerRating = 4.5,
+                    sellerRating = 4.6,
                     deliveryInfo = "Prime Next Day"
-                ),
-                RetailerOfferDto(
-                    retailerId = "reliance_digital",
-                    retailerName = "Reliance Digital",
-                    price = 81990.0,
-                    currency = "INR",
-                    isAvailable = true,
-                    productUrl = "https://www.reliancedigital.in/p/493120194",
-                    observedAtTimestamp = System.currentTimeMillis() - 4000000L,
-                    condition = "NEW",
-                    sellerRating = 4.4,
-                    deliveryInfo = "Standard Delivery"
                 ),
                 RetailerOfferDto(
                     retailerId = "croma",
                     retailerName = "Croma",
-                    price = 82990.0,
+                    price = 124990.0,
                     currency = "INR",
                     isAvailable = true,
-                    productUrl = "https://www.croma.com/p/271920",
+                    productUrl = "https://www.croma.com/searchB?q=Dell+XPS+13",
+                    observedAtTimestamp = System.currentTimeMillis() - 4000000L,
+                    condition = "NEW",
+                    sellerRating = 4.4,
+                    deliveryInfo = "Store Pickup Available"
+                ),
+                RetailerOfferDto(
+                    retailerId = "reliance_digital",
+                    retailerName = "Reliance Digital",
+                    price = 124990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.reliancedigital.in/search?q=Dell+XPS+13",
+                    observedAtTimestamp = System.currentTimeMillis() - 5000000L,
+                    condition = "NEW",
+                    sellerRating = 4.3,
+                    deliveryInfo = "Standard Delivery"
+                ),
+                RetailerOfferDto(
+                    retailerId = "vijay_sales",
+                    retailerName = "Vijay Sales",
+                    price = 125990.0,
+                    currency = "INR",
+                    isAvailable = true,
+                    productUrl = "https://www.vijaysales.com/search/Dell%20XPS%2013",
                     observedAtTimestamp = System.currentTimeMillis() - 6000000L,
                     condition = "NEW",
                     sellerRating = 4.3,
-                    deliveryInfo = "Store Pickup Available"
+                    deliveryInfo = "Free Home Delivery"
                 )
             ),
             unavailableRetailers = listOf(
@@ -545,11 +871,6 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
                     retailerId = "flipkart",
                     retailerName = "Flipkart",
                     reason = "Seller inventory awaiting restock"
-                ),
-                UnavailableRetailerDto(
-                    retailerId = "vijay_sales",
-                    retailerName = "Vijay Sales",
-                    reason = "Configuration not carried in offline network"
                 )
             ),
             confidenceScore = 0.97,
@@ -688,10 +1009,19 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
     }
 
     override suspend fun getTrendingProducts(): AdapterResult<List<ProductSummaryDto>> {
-        // Return verified catalog products with active offers as trending
-        val trending = catalog.values
+        // Return verified modern trending products with active, verified retailer offers
+        val trendingOrder = listOf(
+            "prod_iphone_16_128",
+            "prod_samsung_s24",
+            "prod_macbook_air_m3",
+            "prod_sony_wh1000xm5",
+            "prod_airpods_pro_2",
+            "prod_oneplus_12",
+            "prod_bose_qc_ultra",
+            "prod_iphone_15_128"
+        )
+        val trending = trendingOrder.mapNotNull { catalog[it] }
             .filter { it.confidenceScore >= 0.85 && it.offers.isNotEmpty() }
-            .take(4)
             .map { it.toSummaryDto() }
         return AdapterResult.Success(trending)
     }

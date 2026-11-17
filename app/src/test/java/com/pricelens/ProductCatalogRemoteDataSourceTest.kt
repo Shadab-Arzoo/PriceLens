@@ -143,4 +143,45 @@ class ProductCatalogRemoteDataSourceTest {
         val safeMessage = (error as PriceLensException).safeUserMessage
         assertTrue(safeMessage.contains("network", ignoreCase = true) || safeMessage.contains("internet", ignoreCase = true))
     }
+
+    @Test
+    fun `getTrendingProducts returns modern trending tech with verified working retailer links`() = runTest {
+        val result = remoteDataSource.getTrendingProducts()
+
+        assertTrue(result.isSuccess)
+        val trending = result.getOrNull()
+        assertNotNull(trending)
+        assertTrue("Should return at least 4 trending products", trending!!.size >= 4)
+
+        // Verify top modern products are present
+        val trendingIds = trending.map { it.id }
+        assertTrue(trendingIds.contains("prod_iphone_16_128"))
+        assertTrue(trendingIds.contains("prod_samsung_s24"))
+        assertTrue(trendingIds.contains("prod_macbook_air_m3"))
+        assertTrue(trendingIds.contains("prod_sony_wh1000xm5"))
+
+        // Verify every product offers valid URLs and truthful prices
+        for (product in trending) {
+            assertNotNull(product.lowestPrice)
+            assertTrue("Lowest price must be positive", product.lowestPrice!! > 0)
+            assertEquals("INR", product.currency)
+            assertNotNull(product.lowestPriceRetailer)
+
+            // Inspect underlying offers in comparison
+            val comparison = remoteDataSource.getProductComparison(product.id).getOrNull()
+            assertNotNull(comparison)
+            for (offer in comparison!!.offers) {
+                assertTrue("Product URL must be https", offer.productUrl.startsWith("https://"))
+                assertFalse("No placeholder dummy IDs", offer.productUrl.contains("itm543210") || offer.productUrl.contains("itm876543"))
+                assertTrue(
+                    "Offer must be from a supported Indian retailer",
+                    offer.productUrl.contains("amazon.in") ||
+                        offer.productUrl.contains("flipkart.com") ||
+                        offer.productUrl.contains("croma.com") ||
+                        offer.productUrl.contains("reliancedigital.in") ||
+                        offer.productUrl.contains("vijaysales.com")
+                )
+            }
+        }
+    }
 }

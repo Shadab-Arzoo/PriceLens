@@ -974,11 +974,12 @@ private fun FlashDealsTicker(
 
     val flashDeals = remember {
         listOf(
-            Triple("prod_iphone15_128", "Apple iPhone 15 (128GB)", Triple(64999.0, 69999.0, "Amazon")),
-            Triple("prod_macbook_air_m2", "Apple MacBook Air M2", Triple(79990.0, 91990.0, "Flipkart")),
-            Triple("prod_sony_wh1000xm5", "Sony WH-1000XM5 ANC", Triple(26990.0, 29990.0, "Croma")),
-            Triple("prod_galaxy_s24_256", "Samsung Galaxy S24 (256GB)", Triple(69999.0, 79999.0, "Reliance Digital")),
-            Triple("prod_oneplus_12_256", "OnePlus 12 (256GB)", Triple(59999.0, 64999.0, "Amazon"))
+            Triple("prod_iphone_16_128", "Apple iPhone 16 (128GB)", Triple(73999.0, 79900.0, "Flipkart")),
+            Triple("prod_samsung_s24", "Samsung Galaxy S24 (128GB)", Triple(62999.0, 79999.0, "Amazon")),
+            Triple("prod_macbook_air_m3", "Apple MacBook Air M3", Triple(104990.0, 114900.0, "Amazon")),
+            Triple("prod_sony_wh1000xm5", "Sony WH-1000XM5 ANC", Triple(26990.0, 34990.0, "Amazon")),
+            Triple("prod_airpods_pro_2", "Apple AirPods Pro 2 USB-C", Triple(20999.0, 24900.0, "Amazon")),
+            Triple("prod_oneplus_12", "OnePlus 12 (256GB)", Triple(59999.0, 64999.0, "Amazon"))
         )
     }
 
