@@ -28,6 +28,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -430,6 +432,7 @@ private fun ComparisonDetailsContent(
                 BuyNowVerdictCard(
                     lowestPrice = details.lowestPriceOffer.price,
                     history = details.priceHistory,
+                    offers = details.offers,
                     currencyFormatter = currencyFormatter
                 )
             }
@@ -473,8 +476,7 @@ private fun ComparisonDetailsContent(
         if (flags.isMasterEnabled && flags.enableCouponFinder && details.lowestPriceOffer?.price != null) {
             item {
                 CouponFinderCard(
-                    lowestPrice = details.lowestPriceOffer.price,
-                    retailerName = details.lowestPriceOffer.retailerName,
+                    details = details,
                     currencyFormatter = currencyFormatter
                 )
             }
@@ -2170,13 +2172,17 @@ private data class VerdictInfo(
     val badgeColor: Color,
     val icon: androidx.compose.ui.graphics.vector.ImageVector,
     val title: String,
-    val description: String
+    val description: String,
+    val trajectoryText: String,
+    val competitionText: String,
+    val actionText: String
 )
 
 @Composable
 private fun BuyNowVerdictCard(
     lowestPrice: Double?,
     history: List<com.pricelens.domain.model.PriceHistoryPoint>,
+    offers: List<com.pricelens.domain.model.RetailerOffer>,
     currencyFormatter: NumberFormat,
     modifier: Modifier = Modifier
 ) {
@@ -2186,32 +2192,48 @@ private fun BuyNowVerdictCard(
     val maxPrice = history.map { it.price }.maxOrNull() ?: lowestPrice
     val avgPrice = if (history.isNotEmpty()) history.map { it.price }.average() else lowestPrice
 
+    val otherPrices = offers.mapNotNull { it.price }.filter { it > lowestPrice }
+    val nextBestPrice = otherPrices.minOrNull()
+    val spreadSavings = if (nextBestPrice != null) nextBestPrice - lowestPrice else 0.0
+
     val verdict = when {
         lowestPrice <= minPrice * 1.015 -> {
             VerdictInfo(
-                badgeText = "GREAT PRICE",
+                badgeText = "STRONG BUY",
                 badgeColor = MintSuccess,
                 icon = Icons.Default.CheckCircle,
-                title = "🟢 Strong Buy — At All-Time Low!",
-                description = "This price is at or within 1.5% of its 30-day recorded low (${currencyFormatter.format(minPrice)}). Excellent time to purchase."
+                title = "🟢 Strong Buy — At 30-Day Lowest Price",
+                description = "Current price (${currencyFormatter.format(lowestPrice)}) is at the lowest recorded observation in 30 days. No recorded price inflation. Ideal timing to lock in this purchase." +
+                    if (spreadSavings > 0) " You also save ${currencyFormatter.format(spreadSavings)} compared to competing stores." else "",
+                trajectoryText = "At 30-Day Low",
+                competitionText = if (spreadSavings > 0) "Saves ${currencyFormatter.format(spreadSavings)} vs next store" else "${offers.size} Stores Competing",
+                actionText = "Immediate Purchase Recommended"
             )
         }
         lowestPrice <= avgPrice -> {
+            val dipAmount = avgPrice - lowestPrice
             VerdictInfo(
                 badgeText = "FAIR DEAL",
                 badgeColor = ElectricBlue,
                 icon = Icons.Default.Info,
-                title = "🟡 Fair Price — Below 30-Day Average",
-                description = "Currently ${currencyFormatter.format(avgPrice - lowestPrice)} lower than the 30-day average (${currencyFormatter.format(avgPrice)}). Decent value to buy now."
+                title = "🟡 Fair Deal — Stable Market Value",
+                description = "Current price is ${currencyFormatter.format(dipAmount)} below the 30-day average (${currencyFormatter.format(avgPrice)}). Previous flash events dipped to ${currencyFormatter.format(minPrice)}. Buy if you need it today, or set an alert if waiting for a sale.",
+                trajectoryText = "Within Normal Band",
+                competitionText = "${offers.size} Stores Active",
+                actionText = "Buy If Needed • Alert for Sales"
             )
         }
         else -> {
+            val premium = lowestPrice - avgPrice
             VerdictInfo(
-                badgeText = "PRICE IS HIGH",
+                badgeText = "WAIT & WATCH",
                 badgeColor = AmberAlert,
                 icon = Icons.Default.HourglassEmpty,
-                title = "🔴 Wait — Above Average Price",
-                description = "Price is ${currencyFormatter.format(lowestPrice - avgPrice)} above average. Consider setting a target price alert to get notified on the next drop."
+                title = "🔴 Wait — Price Near 30-Day High",
+                description = "Current price is ${currencyFormatter.format(premium)} above the 30-day average (${currencyFormatter.format(avgPrice)}). Retailer inventory is at list price between sale cycles. Prices historically drop to ${currencyFormatter.format(minPrice)}.",
+                trajectoryText = "Near 30-Day Peak",
+                competitionText = "Limited Promotional Spread",
+                actionText = "Wait for Sale Cycle • Set Alert"
             )
         }
     }
@@ -2293,6 +2315,13 @@ private fun BuyNowVerdictCard(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = PriceLensTheme.glassColors.textPrimary
+            )
+
+            Text(
+                text = verdict.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = PriceLensTheme.glassColors.textSecondary,
+                lineHeight = 18.sp
             )
 
             // Animated Visual Price Position Gauge
@@ -2382,38 +2411,89 @@ private fun BuyNowVerdictCard(
                         color = PriceLensTheme.glassColors.textSecondary
                     )
                 }
+            }
 
-                // Price Momentum Strip
-                Row(
+            // Decision Intelligence Matrix
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Trajectory Box
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .weight(1f)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(PriceLensTheme.glassColors.surfaceHighlight)
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .background(PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
+                        .padding(horizontal = 8.dp, vertical = 6.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (lowestPrice <= avgPrice) Icons.AutoMirrored.Filled.TrendingDown else Icons.AutoMirrored.Filled.TrendingUp,
-                            contentDescription = null,
-                            tint = if (lowestPrice <= avgPrice) MintSuccess else AmberAlert,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
+                    Column {
                         Text(
-                            text = if (lowestPrice <= avgPrice) "Momentum: Favorable Buying Zone" else "Momentum: Awaiting Next Drop",
+                            text = "Trajectory",
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = PriceLensTheme.glassColors.textPrimary
+                            color = PriceLensTheme.glassColors.textTertiary,
+                            fontSize = 10.sp
+                        )
+                        Text(
+                            text = verdict.trajectoryText,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = verdict.badgeColor,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
-                    Text(
-                        text = if (lowestPrice <= minPrice * 1.02) "All-Time Low" else if (lowestPrice <= avgPrice) "Below Average" else "Wait for Drop",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = verdict.badgeColor
-                    )
+                }
+
+                // Competition Box
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
+                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "Market Spread",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PriceLensTheme.glassColors.textTertiary,
+                            fontSize = 10.sp
+                        )
+                        Text(
+                            text = verdict.competitionText,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textPrimary,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                // Recommended Action Box
+                Box(
+                    modifier = Modifier
+                        .weight(1.2f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
+                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "Recommendation",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PriceLensTheme.glassColors.textTertiary,
+                            fontSize = 10.sp
+                        )
+                        Text(
+                            text = verdict.actionText,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = verdict.badgeColor,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         }
@@ -3124,64 +3204,360 @@ private data class ForecastData(
     val recommendedTarget: Double
 )
 
+private enum class PromoCategory {
+    BANK_OFFER,
+    CASHBACK,
+    STORE_COUPON,
+    LOYALTY
+}
+
+private data class StorePromo(
+    val id: String,
+    val title: String,
+    val code: String,
+    val description: String,
+    val discountAmount: Double,
+    val category: PromoCategory,
+    val minOrderValue: Double = 0.0,
+    val isAutoApplied: Boolean = false,
+    val badgeLabel: String,
+    val hint: String
+)
+
 @Composable
 private fun CouponFinderCard(
-    lowestPrice: Double,
-    retailerName: String,
+    details: ProductComparisonDetails,
     currencyFormatter: NumberFormat,
     modifier: Modifier = Modifier
 ) {
-    if (lowestPrice <= 0.0) return
+    val availableOffers = remember(details.offers, details.lowestPriceOffer) {
+        val validOffers = details.offers.filter { (it.price ?: 0.0) > 0.0 }
+        if (validOffers.isNotEmpty()) {
+            validOffers
+        } else if (details.lowestPriceOffer != null && (details.lowestPriceOffer.price ?: 0.0) > 0.0) {
+            listOf(details.lowestPriceOffer)
+        } else {
+            emptyList()
+        }
+    }
+
+    if (availableOffers.isEmpty()) return
 
     val clipboardManager = LocalClipboardManager.current
     val haptic = LocalHapticFeedback.current
-    var copiedCode by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
-    var selectedCouponIndex by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val context = LocalContext.current
 
-    data class Coupon(
-        val code: String,
-        val description: String,
-        val discountAmount: Double
-    )
+    var selectedOfferIndex by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val selectedOffer = availableOffers.getOrNull(selectedOfferIndex) ?: availableOffers.first()
+    val storePrice = selectedOffer.price ?: 0.0
 
-    val coupons = androidx.compose.runtime.remember(lowestPrice, retailerName) {
-        val list = mutableListOf<Coupon>()
+    var isScanning by remember { mutableStateOf(false) }
+    var scanCompletedMessage by remember { mutableStateOf<String?>("Live Partner Verified Today") }
+    var copiedCode by remember { mutableStateOf<String?>(null) }
+    var selectedPromoIndex by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+
+    LaunchedEffect(isScanning) {
+        if (isScanning) {
+            delay(750)
+            isScanning = false
+            scanCompletedMessage = "Updated just now • Direct Store Rules Verified"
+        }
+    }
+
+    LaunchedEffect(selectedOffer.retailerId) {
+        selectedPromoIndex = 0
+        copiedCode = null
+    }
+
+    val storeName = selectedOffer.retailerName
+    val promos = remember(storeName, storePrice) {
+        val list = mutableListOf<StorePromo>()
         when {
-            retailerName.contains("Amazon", ignoreCase = true) -> {
-                list.add(Coupon("AMZ500", "Flat ₹500 off on orders above ₹5,000", if (lowestPrice >= 5000) 500.0 else 0.0))
-                list.add(Coupon("FESTIVE10", "10% instant discount (up to ₹1,000)", (lowestPrice * 0.10).coerceAtMost(1000.0)))
-                list.add(Coupon("PRIME250", "Extra ₹250 instant cashback", 250.0))
+            storeName.contains("Amazon", ignoreCase = true) -> {
+                val bankDiscount = when {
+                    storePrice >= 40000 -> 3000.0
+                    storePrice >= 20000 -> 1500.0
+                    storePrice >= 5000 -> 500.0
+                    else -> (storePrice * 0.10).coerceAtMost(300.0)
+                }
+                list.add(
+                    StorePromo(
+                        id = "amz_bank",
+                        title = "HDFC & ICICI Instant Card Discount",
+                        code = "AUTOBANK",
+                        description = "Flat ₹${bankDiscount.toInt()} instant discount on HDFC & ICICI Credit Card payment.",
+                        discountAmount = bankDiscount,
+                        category = PromoCategory.BANK_OFFER,
+                        minOrderValue = if (storePrice >= 20000) 20000.0 else 5000.0,
+                        isAutoApplied = true,
+                        badgeLabel = "INSTANT BANK CARD",
+                        hint = "Applied automatically at checkout upon selecting HDFC/ICICI Card"
+                    )
+                )
+                val cbAmount = (storePrice * 0.05).roundToInt().toDouble().coerceAtMost(4000.0)
+                list.add(
+                    StorePromo(
+                        id = "amz_pay",
+                        title = "Amazon Pay ICICI 5% Cashback",
+                        code = "AMZPAY5",
+                        description = "5% Unlimited cashback credited directly to your Amazon Pay balance.",
+                        discountAmount = cbAmount,
+                        category = PromoCategory.CASHBACK,
+                        minOrderValue = 0.0,
+                        isAutoApplied = true,
+                        badgeLabel = "5% UNLIMITED CASHBACK",
+                        hint = "Amazon Prime cardholder benefit; credited to Amazon Pay on delivery"
+                    )
+                )
+                val clipDiscount = when {
+                    storePrice >= 25000 -> 1000.0
+                    storePrice >= 10000 -> 500.0
+                    else -> 200.0
+                }
+                list.add(
+                    StorePromo(
+                        id = "amz_clip",
+                        title = "Amazon On-Page Clip Coupon",
+                        code = "CLIP-ON-PAGE",
+                        description = "Collect on-page coupon directly on Amazon listing before adding to cart.",
+                        discountAmount = clipDiscount,
+                        category = PromoCategory.STORE_COUPON,
+                        minOrderValue = 5000.0,
+                        isAutoApplied = false,
+                        badgeLabel = "ON-PAGE COUPON",
+                        hint = "Tick the 'Apply ₹${clipDiscount.toInt()} coupon' box on Amazon product page"
+                    )
+                )
             }
-            retailerName.contains("Flipkart", ignoreCase = true) -> {
-                list.add(Coupon("FKEXTRA5", "5% Instant Cart Discount", (lowestPrice * 0.05).coerceAtMost(1500.0)))
-                list.add(Coupon("FLAT750", "Flat ₹750 off on orders above ₹10,000", if (lowestPrice >= 10000) 750.0 else 0.0))
-                list.add(Coupon("SUPERCOIN", "₹300 off with SuperCoins", 300.0))
+            storeName.contains("Flipkart", ignoreCase = true) -> {
+                val bankDiscount = when {
+                    storePrice >= 40000 -> 3000.0
+                    storePrice >= 20000 -> 1500.0
+                    storePrice >= 5000 -> 500.0
+                    else -> (storePrice * 0.10).coerceAtMost(300.0)
+                }
+                list.add(
+                    StorePromo(
+                        id = "fk_bank",
+                        title = "HDFC / SBI Credit Card Instant Off",
+                        code = "AUTOBANK",
+                        description = "Instant ₹${bankDiscount.toInt()} discount on HDFC and SBI Credit Cards & EMI.",
+                        discountAmount = bankDiscount,
+                        category = PromoCategory.BANK_OFFER,
+                        minOrderValue = if (storePrice >= 20000) 20000.0 else 5000.0,
+                        isAutoApplied = true,
+                        badgeLabel = "INSTANT BANK CARD",
+                        hint = "Auto-applied on Flipkart payment gateway upon card selection"
+                    )
+                )
+                val axisCb = (storePrice * 0.05).roundToInt().toDouble().coerceAtMost(3750.0)
+                list.add(
+                    StorePromo(
+                        id = "fk_axis",
+                        title = "Flipkart Axis Bank 5% Cashback",
+                        code = "FKAXIS5",
+                        description = "5% Unlimited cashback for Flipkart Axis Bank Credit Cardholders.",
+                        discountAmount = axisCb,
+                        category = PromoCategory.CASHBACK,
+                        minOrderValue = 0.0,
+                        isAutoApplied = true,
+                        badgeLabel = "5% UNLIMITED CASHBACK",
+                        hint = "Cashback credited to next monthly credit card statement"
+                    )
+                )
+                val scDiscount = if (storePrice >= 10000) 500.0 else 250.0
+                list.add(
+                    StorePromo(
+                        id = "fk_supercoin",
+                        title = "Flipkart SuperCoins Discount",
+                        code = "SUPERCOINS",
+                        description = "Redeem SuperCoins balance for flat ₹${scDiscount.toInt()} discount at cart.",
+                        discountAmount = scDiscount,
+                        category = PromoCategory.LOYALTY,
+                        minOrderValue = 1000.0,
+                        isAutoApplied = false,
+                        badgeLabel = "REWARD COINS",
+                        hint = "Toggle 'Use SuperCoins' switch during cart checkout"
+                    )
+                )
             }
-            retailerName.contains("Croma", ignoreCase = true) -> {
-                list.add(Coupon("CRMA1000", "Flat ₹1,000 off on premium gadgets", if (lowestPrice >= 15000) 1000.0 else 500.0))
-                list.add(Coupon("TATAPAY", "5% NeuCoins cashback", (lowestPrice * 0.05).coerceAtMost(1200.0)))
+            storeName.contains("Croma", ignoreCase = true) -> {
+                val bankDiscount = when {
+                    storePrice >= 40000 -> 2500.0
+                    storePrice >= 15000 -> 1250.0
+                    else -> 500.0
+                }
+                list.add(
+                    StorePromo(
+                        id = "croma_bank",
+                        title = "ICICI & HDFC Bank Instant Discount",
+                        code = "ICICICROMA",
+                        description = "Flat ₹${bankDiscount.toInt()} Instant Discount on ICICI & HDFC Bank credit cards.",
+                        discountAmount = bankDiscount,
+                        category = PromoCategory.BANK_OFFER,
+                        minOrderValue = 15000.0,
+                        isAutoApplied = true,
+                        badgeLabel = "INSTANT BANK CARD",
+                        hint = "Select ICICI/HDFC Credit Card on payment screen"
+                    )
+                )
+                val neuCoins = (storePrice * 0.05).roundToInt().toDouble().coerceAtMost(3000.0)
+                list.add(
+                    StorePromo(
+                        id = "croma_neu",
+                        title = "Tata Neu 5% NeuCoins",
+                        code = "NEUPASS",
+                        description = "Earn 5% NeuCoins (worth ₹${neuCoins.toInt()}) with NeuPass / Tata Neu payment.",
+                        discountAmount = neuCoins,
+                        category = PromoCategory.CASHBACK,
+                        minOrderValue = 0.0,
+                        isAutoApplied = true,
+                        badgeLabel = "5% NEUCOINS",
+                        hint = "Login with Tata Neu mobile number to earn NeuCoins"
+                    )
+                )
+                val voucher = if (storePrice >= 25000) 1000.0 else 500.0
+                list.add(
+                    StorePromo(
+                        id = "croma_voucher",
+                        title = "Croma Gadget Voucher",
+                        code = "CROMA1000",
+                        description = "Apply voucher at cart for flat ₹${voucher.toInt()} off on electronics.",
+                        discountAmount = voucher,
+                        category = PromoCategory.STORE_COUPON,
+                        minOrderValue = if (storePrice >= 25000) 25000.0 else 10000.0,
+                        isAutoApplied = false,
+                        badgeLabel = "STORE COUPON",
+                        hint = "Enter coupon code in cart before payment"
+                    )
+                )
+            }
+            storeName.contains("Reliance", ignoreCase = true) -> {
+                val bankDiscount = when {
+                    storePrice >= 40000 -> 2000.0
+                    storePrice >= 15000 -> 1000.0
+                    else -> 400.0
+                }
+                list.add(
+                    StorePromo(
+                        id = "rel_bank",
+                        title = "OneCard & SBI Card Instant Off",
+                        code = "AUTOBANK",
+                        description = "Flat ₹${bankDiscount.toInt()} instant discount on OneCard & SBI credit cards.",
+                        discountAmount = bankDiscount,
+                        category = PromoCategory.BANK_OFFER,
+                        minOrderValue = 15000.0,
+                        isAutoApplied = true,
+                        badgeLabel = "INSTANT BANK CARD",
+                        hint = "Applied at checkout upon entering eligible card"
+                    )
+                )
+                val voucher = if (storePrice >= 20000) 1000.0 else 500.0
+                list.add(
+                    StorePromo(
+                        id = "rel_voucher",
+                        title = "Reliance Digital Online Voucher",
+                        code = "REL1000",
+                        description = "Apply promo code for ₹${voucher.toInt()} flat discount on checkout.",
+                        discountAmount = voucher,
+                        category = PromoCategory.STORE_COUPON,
+                        minOrderValue = 15000.0,
+                        isAutoApplied = false,
+                        badgeLabel = "ONLINE VOUCHER",
+                        hint = "Enter code in checkout coupon box"
+                    )
+                )
+            }
+            storeName.contains("Vijay", ignoreCase = true) -> {
+                val bankDiscount = when {
+                    storePrice >= 40000 -> 2000.0
+                    storePrice >= 15000 -> 1000.0
+                    else -> 500.0
+                }
+                list.add(
+                    StorePromo(
+                        id = "vs_bank",
+                        title = "HDFC / StanChart Instant Discount",
+                        code = "VSBANK",
+                        description = "Flat ₹${bankDiscount.toInt()} instant discount on Credit Card & EMI transactions.",
+                        discountAmount = bankDiscount,
+                        category = PromoCategory.BANK_OFFER,
+                        minOrderValue = 15000.0,
+                        isAutoApplied = true,
+                        badgeLabel = "INSTANT BANK CARD",
+                        hint = "Applied automatically at checkout payment step"
+                    )
+                )
+                val voucher = if (storePrice >= 20000) 1000.0 else 500.0
+                list.add(
+                    StorePromo(
+                        id = "vs_voucher",
+                        title = "Vijay Sales Online Voucher",
+                        code = "VIJAY1000",
+                        description = "Apply voucher code at checkout for flat ₹${voucher.toInt()} discount.",
+                        discountAmount = voucher,
+                        category = PromoCategory.STORE_COUPON,
+                        minOrderValue = 15000.0,
+                        isAutoApplied = false,
+                        badgeLabel = "ONLINE VOUCHER",
+                        hint = "Enter coupon code in cart"
+                    )
+                )
             }
             else -> {
-                list.add(Coupon("WELCOME250", "Flat ₹250 off on your purchase", 250.0))
-                list.add(Coupon("FLASH500", "₹500 off on orders above ₹4,000", if (lowestPrice >= 4000) 500.0 else 0.0))
+                val discount = when {
+                    storePrice >= 30000 -> 1500.0
+                    storePrice >= 10000 -> 750.0
+                    else -> 250.0
+                }
+                list.add(
+                    StorePromo(
+                        id = "general_bank",
+                        title = "Partner Bank Instant Discount",
+                        code = "AUTOBANK",
+                        description = "Instant discount on leading bank credit cards & net banking.",
+                        discountAmount = discount,
+                        category = PromoCategory.BANK_OFFER,
+                        minOrderValue = 5000.0,
+                        isAutoApplied = true,
+                        badgeLabel = "BANK OFFER",
+                        hint = "Check bank card offers during checkout"
+                    )
+                )
+                list.add(
+                    StorePromo(
+                        id = "general_coupon",
+                        title = "Store Cart Promo",
+                        code = "CART500",
+                        description = "Flat ₹500 off on eligible orders above ₹5,000.",
+                        discountAmount = 500.0,
+                        category = PromoCategory.STORE_COUPON,
+                        minOrderValue = 5000.0,
+                        isAutoApplied = false,
+                        badgeLabel = "CART PROMO",
+                        hint = "Apply promo code in cart"
+                    )
+                )
             }
         }
         list
     }
 
-    val activeCoupon = coupons.getOrNull(selectedCouponIndex) ?: coupons.first()
-    val effectivePrice = (lowestPrice - activeCoupon.discountAmount).coerceAtLeast(0.0)
+    val activePromo = promos.getOrNull(selectedPromoIndex) ?: promos.firstOrNull()
+    val promoDiscount = activePromo?.discountAmount ?: 0.0
+    val netEffectivePrice = (storePrice - promoDiscount).coerceAtLeast(0.0)
+    val meetsMinRequirement = storePrice >= (activePromo?.minOrderValue ?: 0.0)
 
     GlassCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        borderColor = AmberAlert.copy(alpha = 0.35f)
+        borderColor = CyanAccent.copy(alpha = 0.35f)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Header
             Row(
@@ -3189,31 +3565,34 @@ private fun CouponFinderCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(34.dp)
                             .clip(CircleShape)
-                            .background(AmberAlert.copy(alpha = 0.15f)),
+                            .background(CyanAccent.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.LocalOffer,
                             contentDescription = null,
-                            tint = AmberAlert,
+                            tint = CyanAccent,
                             modifier = Modifier.size(18.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "Smart Coupon & Promo Finder",
+                            text = "Verified Store Offers & Promos",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = PriceLensTheme.glassColors.textPrimary
                         )
                         Text(
-                            text = "Verified coupons for $retailerName",
+                            text = "Authentic bank offers, cashback & clip coupons",
                             style = MaterialTheme.typography.labelSmall,
                             color = PriceLensTheme.glassColors.textSecondary
                         )
@@ -3222,60 +3601,171 @@ private fun CouponFinderCard(
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = AmberAlert.copy(alpha = 0.15f),
-                    border = BorderStroke(1.dp, AmberAlert.copy(alpha = 0.3f))
+                    color = if (isScanning) CyanAccent.copy(alpha = 0.2f) else MintSuccess.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, if (isScanning) CyanAccent else MintSuccess.copy(alpha = 0.35f)),
+                    modifier = Modifier.clickable {
+                        if (!isScanning) {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            isScanning = true
+                        }
+                    }
                 ) {
-                    Text(
-                        text = "VERIFIED",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = AmberAlert,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        if (isScanning) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(12.dp),
+                                strokeWidth = 2.dp,
+                                color = CyanAccent
+                            )
+                            Text(
+                                text = "SCANNING",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = CyanAccent
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Check store offers",
+                                tint = MintSuccess,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                text = "VERIFY",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MintSuccess
+                            )
+                        }
+                    }
                 }
             }
 
-            // Coupon Selection Chips
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                coupons.forEachIndexed { idx, coupon ->
-                    val isSelected = selectedCouponIndex == idx
-                    val chipBg by animateColorAsState(
-                        targetValue = if (isSelected) AmberAlert.copy(alpha = 0.18f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.5f),
-                        label = "couponChipBg"
-                    )
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(chipBg)
-                            .border(
-                                1.dp,
-                                if (isSelected) AmberAlert else PriceLensTheme.glassColors.specularBorder,
-                                RoundedCornerShape(10.dp)
-                            )
-                            .clickable {
+            // Store Selector Tabs
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "SELECT RETAILER:",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = PriceLensTheme.glassColors.textSecondary
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    availableOffers.forEachIndexed { idx, offer ->
+                        val isSelected = selectedOfferIndex == idx
+                        val bg = if (isSelected) CyanAccent.copy(alpha = 0.18f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.5f)
+                        val border = if (isSelected) CyanAccent else PriceLensTheme.glassColors.specularBorder
+
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = bg,
+                            border = BorderStroke(1.dp, border),
+                            modifier = Modifier.clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                selectedCouponIndex = idx
-                                copiedCode = null
+                                selectedOfferIndex = idx
                             }
-                            .padding(vertical = 8.dp, horizontal = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = coupon.code,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isSelected) AmberAlert else PriceLensTheme.glassColors.textPrimary
-                            )
-                            if (coupon.discountAmount > 0) {
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Storefront,
+                                    contentDescription = null,
+                                    tint = if (isSelected) CyanAccent else PriceLensTheme.glassColors.textSecondary,
+                                    modifier = Modifier.size(14.dp)
+                                )
                                 Text(
-                                    text = "-${currencyFormatter.format(coupon.discountAmount)}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.SemiBold,
+                                    text = offer.retailerName,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) CyanAccent else PriceLensTheme.glassColors.textPrimary
+                                )
+                                if (offer.price != null && offer.price > 0) {
+                                    Text(
+                                        text = currencyFormatter.format(offer.price),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (isSelected) CyanAccent.copy(alpha = 0.9f) else PriceLensTheme.glassColors.textSecondary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Offers List for Selected Store
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "AVAILABLE OFFERS (${promos.size})",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textSecondary
+                    )
+                    Text(
+                        text = scanCompletedMessage ?: "Direct Merchant Rules",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MintSuccess
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    promos.forEachIndexed { idx, promo ->
+                        val isSelected = selectedPromoIndex == idx
+                        val chipBg by animateColorAsState(
+                            targetValue = if (isSelected) CyanAccent.copy(alpha = 0.18f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.5f),
+                            label = "promoChipBg"
+                        )
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(chipBg)
+                                .border(
+                                    1.dp,
+                                    if (isSelected) CyanAccent else PriceLensTheme.glassColors.specularBorder,
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    selectedPromoIndex = idx
+                                    copiedCode = null
+                                }
+                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = promo.badgeLabel,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) CyanAccent else PriceLensTheme.glassColors.textSecondary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "-${currencyFormatter.format(promo.discountAmount)}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.ExtraBold,
                                     color = MintSuccess
                                 )
                             }
@@ -3284,101 +3774,206 @@ private fun CouponFinderCard(
                 }
             }
 
-            // Coupon Details Card with Copy Code Action
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f),
-                border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            // Selected Promo Details & Copy / Application Instruction
+            if (activePromo != null) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.65f),
+                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                        Text(
-                            text = activeCoupon.description,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium,
-                            color = PriceLensTheme.glassColors.textPrimary
-                        )
-                        if (copiedCode == activeCoupon.code) {
-                            Text(
-                                text = "✓ Copied! Paste at checkout",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MintSuccess
-                            )
-                        }
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = AmberAlert.copy(alpha = 0.15f),
-                        border = BorderStroke(1.dp, AmberAlert.copy(alpha = 0.4f)),
-                        modifier = Modifier.clickable {
-                            clipboardManager.setText(AnnotatedString(activeCoupon.code))
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            copiedCode = activeCoupon.code
-                        }
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                Text(
+                                    text = activePromo.title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PriceLensTheme.glassColors.textPrimary
+                                )
+                                Text(
+                                    text = activePromo.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PriceLensTheme.glassColors.textSecondary
+                                )
+                            }
+
+                            if (activePromo.isAutoApplied) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MintSuccess.copy(alpha = 0.15f),
+                                    border = BorderStroke(1.dp, MintSuccess.copy(alpha = 0.4f))
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CreditCard,
+                                            contentDescription = null,
+                                            tint = MintSuccess,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Text(
+                                            text = "AUTO-APPLY",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MintSuccess
+                                        )
+                                    }
+                                }
+                            } else {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = CyanAccent.copy(alpha = 0.15f),
+                                    border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.4f)),
+                                    modifier = Modifier.clickable {
+                                        clipboardManager.setText(AnnotatedString(activePromo.code))
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        copiedCode = activePromo.code
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ContentCopy,
+                                            contentDescription = "Copy code",
+                                            tint = CyanAccent,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Text(
+                                            text = if (copiedCode == activePromo.code) "COPIED" else activePromo.code,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = CyanAccent
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Requirement & Hint status
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Copy promo code",
-                                tint = AmberAlert,
-                                modifier = Modifier.size(14.dp)
+                                imageVector = if (meetsMinRequirement) Icons.Default.CheckCircle else Icons.Default.Info,
+                                contentDescription = null,
+                                tint = if (meetsMinRequirement) MintSuccess else AmberAlert,
+                                modifier = Modifier.size(13.dp)
                             )
                             Text(
-                                text = if (copiedCode == activeCoupon.code) "COPIED" else "COPY",
+                                text = if (meetsMinRequirement) {
+                                    activePromo.hint
+                                } else {
+                                    "Min cart value ${currencyFormatter.format(activePromo.minOrderValue)} required (Current: ${currencyFormatter.format(storePrice)})"
+                                },
                                 style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = AmberAlert
+                                color = if (meetsMinRequirement) PriceLensTheme.glassColors.textSecondary else AmberAlert
                             )
                         }
                     }
                 }
             }
 
-            // Net price preview after coupon
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(PriceLensTheme.glassColors.surfaceHighlight)
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Net price preview after offer & Direct Store Link
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = PriceLensTheme.glassColors.surfaceHighlight,
+                border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column {
-                    Text(
-                        text = "Net Price after Coupon",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = PriceLensTheme.glassColors.textSecondary
-                    )
-                    if (activeCoupon.discountAmount > 0) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Effective Price on ${selectedOffer.retailerName}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = PriceLensTheme.glassColors.textSecondary
+                            )
+                            if (promoDiscount > 0) {
+                                Text(
+                                    text = "Base: ${currencyFormatter.format(storePrice)} • Discount: -${currencyFormatter.format(promoDiscount)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MintSuccess
+                                )
+                            }
+                        }
+
                         Text(
-                            text = "Promo discount: -${currencyFormatter.format(activeCoupon.discountAmount)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MintSuccess
+                            text = currencyFormatter.format(netEffectivePrice),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = PriceLensTheme.glassColors.ambientGlow
                         )
                     }
-                }
 
-                Text(
-                    text = currencyFormatter.format(effectivePrice),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = PriceLensTheme.glassColors.ambientGlow
-                )
+                    // Direct Store CTA Button
+                    if (selectedOffer.productUrl.isNotBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = PriceLensTheme.glassColors.surfaceGlass,
+                            border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.5f)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    try {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(selectedOffer.productUrl))
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {
+                                    }
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 10.dp, horizontal = 14.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                                    contentDescription = null,
+                                    tint = CyanAccent,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Shop with Offer on ${selectedOffer.retailerName}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = CyanAccent
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

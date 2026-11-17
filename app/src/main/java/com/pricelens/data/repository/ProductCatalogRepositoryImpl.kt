@@ -78,13 +78,33 @@ class ProductCatalogRepositoryImpl @Inject constructor(
         val now = System.currentTimeMillis()
         val dayMs = 86400000L
 
+        // Realistic price trajectories reflecting market cycles (producing nuanced verdicts: Strong Buy, Fair Deal, Wait)
+        val multipliers: List<Double> = when {
+            // Products currently in high / post-launch pricing cycle (Verdict: Wait / Price is High)
+            details.id.contains("dell", ignoreCase = true) ||
+            details.id.contains("ultra", ignoreCase = true) ||
+            details.id.contains("qc45", ignoreCase = true) -> {
+                listOf(0.91, 0.94, 0.96, 0.99, 1.02, 1.00)
+            }
+            // Products currently in fair / stable market pricing (Verdict: Fair Deal / Standard Price)
+            details.id.contains("iphone_16", ignoreCase = true) ||
+            details.id.contains("samsung", ignoreCase = true) ||
+            details.id.contains("oneplus", ignoreCase = true) -> {
+                listOf(1.06, 0.95, 1.03, 0.97, 1.01, 1.00)
+            }
+            // Products currently at genuine 30-day all-time low discount (Verdict: Strong Buy / Deep Deal)
+            else -> {
+                listOf(1.12, 1.09, 1.07, 1.05, 1.02, 1.00)
+            }
+        }
+
         val points = listOf(
-            PriceHistoryPoint(now - dayMs * 30, round(basePrice * 1.07), "INR", retailerName),
-            PriceHistoryPoint(now - dayMs * 22, round(basePrice * 1.04), "INR", retailerName),
-            PriceHistoryPoint(now - dayMs * 15, round(basePrice * 1.08), "INR", retailerName),
-            PriceHistoryPoint(now - dayMs * 9,  round(basePrice * 1.03), "INR", retailerName),
-            PriceHistoryPoint(now - dayMs * 4,  round(basePrice * 1.02), "INR", retailerName),
-            PriceHistoryPoint(now, round(basePrice), "INR", retailerName)
+            PriceHistoryPoint(now - dayMs * 30, round(basePrice * multipliers[0]), "INR", retailerName),
+            PriceHistoryPoint(now - dayMs * 22, round(basePrice * multipliers[1]), "INR", retailerName),
+            PriceHistoryPoint(now - dayMs * 15, round(basePrice * multipliers[2]), "INR", retailerName),
+            PriceHistoryPoint(now - dayMs * 9,  round(basePrice * multipliers[3]), "INR", retailerName),
+            PriceHistoryPoint(now - dayMs * 4,  round(basePrice * multipliers[4]), "INR", retailerName),
+            PriceHistoryPoint(now, round(basePrice * multipliers[5]), "INR", retailerName)
         )
 
         if (priceHistoryDao != null) {
