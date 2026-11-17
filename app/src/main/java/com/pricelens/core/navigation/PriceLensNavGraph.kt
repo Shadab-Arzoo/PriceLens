@@ -35,9 +35,11 @@ import com.pricelens.presentation.comparison.ProductComparisonRoute
 import com.pricelens.presentation.comparison.ProductComparisonViewModel
 import com.pricelens.presentation.dashboard.DashboardRoute
 import com.pricelens.presentation.dashboard.DashboardViewModel
+import com.pricelens.presentation.deals.DealsRoute
 import com.pricelens.presentation.onboarding.OnboardingScreen
 import com.pricelens.presentation.search.SearchRoute
 import com.pricelens.presentation.search.SearchViewModel
+import com.pricelens.presentation.tools.ToolsRoute
 import com.pricelens.presentation.watchlist.WatchlistRoute
 import com.pricelens.presentation.watchlist.WatchlistViewModel
 import com.pricelens.presentation.webpicker.WebPricePickerScreen
@@ -448,6 +450,63 @@ fun PriceLensNavGraph(
             WebPricePickerScreen(
                 viewModel = viewModel,
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // 7. Deals Radar Screen (Live Price Drops & Flash Discounts)
+        composable(
+            route = PriceLensDestination.Deals.route,
+            enterTransition = {
+                fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> (fullHeight * 0.12f).toInt() },
+                    animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                )
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)) +
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> -(fullHeight * 0.08f).toInt() },
+                    animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)
+                )
+            }
+        ) {
+            DealsRoute(
+                onNavigateToComparison = { productId, productName ->
+                    navController.navigate(
+                        PriceLensDestination.ProductComparison.createRoute(productId, productName)
+                    )
+                }
+            )
+        }
+
+        // 8. Power Tools & Labs Screen
+        composable(
+            route = PriceLensDestination.Tools.route,
+            enterTransition = {
+                fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> (fullHeight * 0.12f).toInt() },
+                    animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                )
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)) +
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> -(fullHeight * 0.08f).toInt() },
+                    animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)
+                )
+            }
+        ) {
+            ToolsRoute(
+                onNavigateToWebPicker = { url, name ->
+                    navController.navigate(
+                        PriceLensDestination.WebPricePicker.createRoute(url, name)
+                    )
+                },
+                onNavigateToSearch = { query ->
+                    navController.navigate(PriceLensDestination.Search.createRoute(query))
+                }
             )
         }
     }

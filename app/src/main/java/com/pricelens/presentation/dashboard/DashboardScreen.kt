@@ -170,7 +170,7 @@ fun DashboardScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .navigationBarsPadding(),
-            contentPadding = PaddingValues(top = 14.dp, bottom = 28.dp),
+            contentPadding = PaddingValues(top = 14.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
 

@@ -408,6 +408,7 @@ private fun ComparisonDetailsContent(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 1. Product Header Card

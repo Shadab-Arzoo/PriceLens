@@ -13,11 +13,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.pricelens.core.designsystem.PriceLensTheme
+import com.pricelens.core.designsystem.components.DockTab
+import com.pricelens.core.designsystem.components.PriceLensBottomDock
+import com.pricelens.core.navigation.PriceLensDestination
 import com.pricelens.core.navigation.PriceLensNavGraph
 import com.pricelens.core.preferences.UserPreferencesRepository
+import com.pricelens.domain.repository.DashboardRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -26,6 +32,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var userPreferences: UserPreferencesRepository
+
+    @Inject
+    lateinit var dashboardRepository: DashboardRepository
 
     private var sharedUrl by mutableStateOf<String?>(null)
     private var sharedProductId by mutableStateOf<String?>(null)
@@ -51,6 +60,26 @@ class MainActivity : ComponentActivity() {
                 }
             ) {
                 val navController = rememberNavController()
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+
+                val watchlistItems by dashboardRepository.getWatchlistItems().collectAsState(initial = emptyList())
+                val watchlistCount = watchlistItems.size
+
+                val isDockVisible = currentRoute != null &&
+                    !currentRoute.startsWith(PriceLensDestination.Onboarding.route) &&
+                    !currentRoute.startsWith(PriceLensDestination.WebPricePicker.route.substringBefore("?"))
+
+                val selectedTab = when {
+                    currentRoute == null -> DockTab.EXPLORE
+                    currentRoute.startsWith(PriceLensDestination.Dashboard.route) -> DockTab.EXPLORE
+                    currentRoute.startsWith("search") -> DockTab.SEARCH
+                    currentRoute.startsWith(PriceLensDestination.Deals.route) -> DockTab.DEALS
+                    currentRoute.startsWith(PriceLensDestination.Watchlist.route) -> DockTab.WATCHLIST
+                    currentRoute.startsWith(PriceLensDestination.Tools.route) -> DockTab.TOOLS
+                    else -> null
+                }
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -60,6 +89,29 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         sharedUrl = sharedUrl,
                         sharedProductId = sharedProductId
+                    )
+
+                    PriceLensBottomDock(
+                        selectedTab = selectedTab,
+                        onTabSelected = { tab ->
+                            val targetRoute = when (tab) {
+                                DockTab.EXPLORE -> PriceLensDestination.Dashboard.route
+                                DockTab.SEARCH -> PriceLensDestination.Search.createRoute("")
+                                DockTab.DEALS -> PriceLensDestination.Deals.route
+                                DockTab.WATCHLIST -> PriceLensDestination.Watchlist.route
+                                DockTab.TOOLS -> PriceLensDestination.Tools.route
+                            }
+                            navController.navigate(targetRoute) {
+                                popUpTo(PriceLensDestination.Dashboard.route) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        watchlistCount = watchlistCount,
+                        isVisible = isDockVisible,
+                        modifier = Modifier.align(Alignment.BottomCenter)
                     )
                 }
             }
