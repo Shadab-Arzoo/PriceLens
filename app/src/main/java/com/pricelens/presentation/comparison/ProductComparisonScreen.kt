@@ -287,8 +287,8 @@ fun ProductComparisonScreen(
             ) {
                 uiState.userNotificationBanner?.let { bannerText ->
                     Surface(
-                        color = MintSuccess.copy(alpha = 0.15f),
-                        border = BorderStroke(1.dp, MintSuccess.copy(alpha = 0.35f)),
+                        color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f)),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -308,7 +308,7 @@ fun ProductComparisonScreen(
                                 Icon(
                                     imageVector = Icons.Default.CheckCircle,
                                     contentDescription = null,
-                                    tint = MintSuccess,
+                                    tint = PriceLensTheme.glassColors.ambientGlow,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -608,7 +608,7 @@ private fun ComparisonDetailsContent(
                 Icon(
                     imageVector = Icons.Default.Verified,
                     contentDescription = null,
-                    tint = MintSuccess,
+                    tint = PriceLensTheme.glassColors.ambientGlow,
                     modifier = Modifier.size(13.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
@@ -704,7 +704,7 @@ private fun TrackedAlertsSection(
                                     text = "Target Price: ${currencyFormatter.format(alert.targetPrice)}",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MintSuccess
+                                    color = PriceLensTheme.glassColors.ambientGlow
                                 )
                                 if (!alert.websiteUrl.isNullOrBlank()) {
                                     Text(
@@ -894,8 +894,8 @@ private fun TrackOutsidePriceDialog(
                             val savedPercent = ((savedRupees / currentPrice) * 100).toInt()
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = MintSuccess.copy(alpha = 0.12f),
-                                border = BorderStroke(1.dp, MintSuccess.copy(alpha = 0.35f)),
+                                color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.12f),
+                                border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f)),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
@@ -905,7 +905,7 @@ private fun TrackOutsidePriceDialog(
                                     Icon(
                                         imageVector = Icons.Default.CheckCircle,
                                         contentDescription = null,
-                                        tint = MintSuccess,
+                                        tint = PriceLensTheme.glassColors.ambientGlow,
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
@@ -913,7 +913,7 @@ private fun TrackOutsidePriceDialog(
                                         text = "Estimated drop savings: ₹${"%,.0f".format(savedRupees)} ($savedPercent% off today's deal)",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = MintSuccess
+                                        color = PriceLensTheme.glassColors.ambientGlow
                                     )
                                 }
                             }
@@ -1372,7 +1372,7 @@ private fun AlternativeProductCard(
 ) {
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        borderColor = if (alternative.isCheaper) MintSuccess.copy(alpha = 0.5f) else PriceLensTheme.glassColors.specularBorder
+        borderColor = if (alternative.isCheaper) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.5f) else PriceLensTheme.glassColors.specularBorder
     ) {
         Column(
             modifier = Modifier
@@ -1404,13 +1404,13 @@ private fun AlternativeProductCard(
                     val savings = kotlin.math.abs(alternative.priceDifference)
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = MintSuccess.copy(alpha = 0.15f)
+                        color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
                     ) {
                         Text(
                             text = "Save ${currencyFormatter.format(savings)}",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MintSuccess,
+                            color = PriceLensTheme.glassColors.ambientGlow,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
@@ -1467,7 +1467,7 @@ private fun AlternativeProductCard(
                         text = alternative.lowestPrice?.let { currencyFormatter.format(it) } ?: "Price Unavailable",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (alternative.isCheaper) MintSuccess else PriceLensTheme.glassColors.textPrimary
+                        color = if (alternative.isCheaper) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary
                     )
                 }
 
@@ -1617,7 +1617,7 @@ private fun BestOfferSpotlightCard(
 
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        borderColor = MintSuccess.copy(alpha = glowPulse),
+        borderColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = glowPulse),
         borderWidth = 1.5.dp
     ) {
         Column(
@@ -1632,7 +1632,7 @@ private fun BestOfferSpotlightCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MintSuccess.copy(alpha = 0.15f)
+                    color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -1642,14 +1642,14 @@ private fun BestOfferSpotlightCard(
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = MintSuccess,
+                            tint = PriceLensTheme.glassColors.ambientGlow,
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
                             text = stringResource(R.string.lowest_price_badge),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MintSuccess
+                            color = PriceLensTheme.glassColors.ambientGlow
                         )
                     }
                 }
@@ -1694,7 +1694,10 @@ private fun BestOfferSpotlightCard(
 
                 Button(
                     onClick = { onOpenOfferUrl(offer.productUrl) },
-                    colors = ButtonDefaults.buttonColors(containerColor = MintSuccess),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PriceLensTheme.glassColors.ambientGlow,
+                        contentColor = Color.Black
+                    ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
@@ -1822,13 +1825,13 @@ private fun RetailerOfferCard(
                     if (isLowest) {
                         Surface(
                             shape = CircleShape,
-                            color = MintSuccess.copy(alpha = 0.15f)
+                            color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
                         ) {
                             Text(
                                 text = "Lowest",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MintSuccess,
+                                color = PriceLensTheme.glassColors.ambientGlow,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -3602,8 +3605,8 @@ private fun CouponFinderCard(
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = if (isScanning) CyanAccent.copy(alpha = 0.2f) else MintSuccess.copy(alpha = 0.15f),
-                    border = BorderStroke(1.dp, if (isScanning) CyanAccent else MintSuccess.copy(alpha = 0.35f)),
+                    color = if (isScanning) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.2f) else PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, if (isScanning) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f)),
                     modifier = Modifier.clickable {
                         if (!isScanning) {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -3620,26 +3623,26 @@ private fun CouponFinderCard(
                             CircularProgressIndicator(
                                 modifier = Modifier.size(12.dp),
                                 strokeWidth = 2.dp,
-                                color = CyanAccent
+                                color = PriceLensTheme.glassColors.ambientGlow
                             )
                             Text(
                                 text = "SCANNING",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = CyanAccent
+                                color = PriceLensTheme.glassColors.ambientGlow
                             )
                         } else {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = "Check store offers",
-                                tint = MintSuccess,
+                                tint = PriceLensTheme.glassColors.ambientGlow,
                                 modifier = Modifier.size(12.dp)
                             )
                             Text(
                                 text = "VERIFY",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MintSuccess
+                                color = PriceLensTheme.glassColors.ambientGlow
                             )
                         }
                     }
@@ -3811,8 +3814,8 @@ private fun CouponFinderCard(
                             if (activePromo.isAutoApplied) {
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
-                                    color = MintSuccess.copy(alpha = 0.15f),
-                                    border = BorderStroke(1.dp, MintSuccess.copy(alpha = 0.4f))
+                                    color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f),
+                                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.4f))
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
@@ -3822,22 +3825,22 @@ private fun CouponFinderCard(
                                         Icon(
                                             imageVector = Icons.Default.CreditCard,
                                             contentDescription = null,
-                                            tint = MintSuccess,
+                                            tint = PriceLensTheme.glassColors.ambientGlow,
                                             modifier = Modifier.size(13.dp)
                                         )
                                         Text(
                                             text = "AUTO-APPLY",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
-                                            color = MintSuccess
+                                            color = PriceLensTheme.glassColors.ambientGlow
                                         )
                                     }
                                 }
                             } else {
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
-                                    color = CyanAccent.copy(alpha = 0.15f),
-                                    border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.4f)),
+                                    color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f),
+                                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.4f)),
                                     modifier = Modifier.clickable {
                                         clipboardManager.setText(AnnotatedString(activePromo.code))
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)

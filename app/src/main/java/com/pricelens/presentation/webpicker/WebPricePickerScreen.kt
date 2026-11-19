@@ -71,9 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.pricelens.core.designsystem.BrandMint
 import com.pricelens.core.designsystem.ElectricBlue
-import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
@@ -281,7 +279,7 @@ fun WebPricePickerScreen(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(9999.dp))
                                     .background(
-                                        if (!uiState.isInspectMode) (if (isDark) BrandMint.copy(alpha = 0.2f) else Color(0xFFE6F4EA))
+                                        if (!uiState.isInspectMode) glow.copy(alpha = 0.2f)
                                         else Color.Transparent
                                     )
                                     .clickable { viewModel.toggleInspectMode(false) }
@@ -347,7 +345,7 @@ fun WebPricePickerScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(
-                                if (uiState.isInspectMode) (if (isDark) BrandMint.copy(alpha = 0.12f) else Color(0xFFE6F4EA)) else ElectricBlue.copy(alpha = 0.08f)
+                                if (uiState.isInspectMode) glow.copy(alpha = 0.14f) else ElectricBlue.copy(alpha = 0.08f)
                             )
                             .padding(horizontal = 16.dp, vertical = 6.dp)
                     ) {

@@ -80,7 +80,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.pricelens.core.designsystem.BrandMint
 import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
@@ -102,8 +101,8 @@ fun PriceLensLabsBottomSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val isDark = PriceLensTheme.isDark
     val glow = PriceLensTheme.glassColors.ambientGlow
-    val iconBg = if (isDark) BrandMint.copy(alpha = 0.15f) else Color(0xFFE6F4EA)
-    val iconBorder = if (isDark) BrandMint.copy(alpha = 0.35f) else Color(0xFFCEEAD6)
+    val iconBg = if (isDark) glow.copy(alpha = 0.15f) else glow.copy(alpha = 0.12f)
+    val iconBorder = if (isDark) glow.copy(alpha = 0.35f) else glow.copy(alpha = 0.25f)
 
     var showImportDialog by remember { mutableStateOf(false) }
     var importJsonText by remember { mutableStateOf("") }

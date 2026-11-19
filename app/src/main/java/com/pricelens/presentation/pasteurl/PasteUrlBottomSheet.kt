@@ -59,10 +59,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pricelens.core.designsystem.AmberAlert
-import com.pricelens.core.designsystem.BrandMint
 import com.pricelens.core.designsystem.CoralError
 import com.pricelens.core.designsystem.ElectricBlue
-import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
@@ -100,8 +98,8 @@ fun PasteUrlBottomSheet(
 
     val isDark = PriceLensTheme.isDark
     val glow = PriceLensTheme.glassColors.ambientGlow
-    val iconBg = if (isDark) BrandMint.copy(alpha = 0.14f) else Color(0xFFE6F4EA)
-    val iconBorder = if (isDark) BrandMint.copy(alpha = 0.35f) else Color(0xFFCEEAD6)
+    val iconBg = if (isDark) glow.copy(alpha = 0.15f) else glow.copy(alpha = 0.12f)
+    val iconBorder = if (isDark) glow.copy(alpha = 0.35f) else glow.copy(alpha = 0.25f)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -202,7 +200,7 @@ fun PasteUrlBottomSheet(
                 Column {
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
-                        borderColor = if (isDark) BrandMint.copy(alpha = 0.4f) else Color(0xFFCEEAD6)
+                        borderColor = if (isDark) glow.copy(alpha = 0.4f) else glow.copy(alpha = 0.25f)
                     ) {
                         Row(
                             modifier = Modifier.padding(14.dp),
@@ -235,7 +233,7 @@ fun PasteUrlBottomSheet(
                     Column {
                         GlassCard(
                             modifier = Modifier.fillMaxWidth(),
-                            borderColor = if (isDark) BrandMint.copy(alpha = 0.6f) else Color(0xFFCEEAD6)
+                            borderColor = if (isDark) glow.copy(alpha = 0.5f) else glow.copy(alpha = 0.3f)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Row(
@@ -422,8 +420,8 @@ fun PasteUrlBottomSheet(
                     if (extractedMetadata == null && !isExtracting) {
                         GlassCard(
                             modifier = Modifier.fillMaxWidth(),
-                            backgroundColor = if (isDark) BrandMint.copy(alpha = 0.08f) else Color(0xFFE6F4EA).copy(alpha = 0.5f),
-                            borderColor = if (isDark) BrandMint.copy(alpha = 0.35f) else Color(0xFFCEEAD6)
+                            backgroundColor = if (isDark) glow.copy(alpha = 0.08f) else glow.copy(alpha = 0.06f),
+                            borderColor = if (isDark) glow.copy(alpha = 0.35f) else glow.copy(alpha = 0.25f)
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {

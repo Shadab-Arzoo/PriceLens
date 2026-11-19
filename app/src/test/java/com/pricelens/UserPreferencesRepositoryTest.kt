@@ -2,6 +2,7 @@ package com.pricelens
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.pricelens.core.designsystem.ThemeAccent
 import com.pricelens.core.preferences.UserPreferencesRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -96,14 +97,82 @@ class UserPreferencesRepositoryTest {
     }
 
     @Test
+    fun themeAccent_defaultIsEmeraldMint_andCanUpdate() {
+        assertEquals(ThemeAccent.EMERALD_MINT, preferencesRepository.getThemeAccent())
+
+        preferencesRepository.setThemeAccent(ThemeAccent.CYBER_CYAN)
+        assertEquals(ThemeAccent.CYBER_CYAN, preferencesRepository.getThemeAccent())
+
+        preferencesRepository.setThemeAccent(ThemeAccent.COSMIC_INDIGO)
+        assertEquals(ThemeAccent.COSMIC_INDIGO, preferencesRepository.getThemeAccent())
+
+        preferencesRepository.setThemeAccent(ThemeAccent.NEON_VIOLET)
+        assertEquals(ThemeAccent.NEON_VIOLET, preferencesRepository.getThemeAccent())
+
+        preferencesRepository.setThemeAccent(ThemeAccent.SUNSET_AMBER)
+        assertEquals(ThemeAccent.SUNSET_AMBER, preferencesRepository.getThemeAccent())
+
+        preferencesRepository.setThemeAccent(ThemeAccent.SOLAR_TANGERINE)
+        assertEquals(ThemeAccent.SOLAR_TANGERINE, preferencesRepository.getThemeAccent())
+
+        preferencesRepository.setThemeAccent(ThemeAccent.ROSE_CRIMSON)
+        assertEquals(ThemeAccent.ROSE_CRIMSON, preferencesRepository.getThemeAccent())
+
+        preferencesRepository.setThemeAccent(ThemeAccent.HYPER_LIME)
+        assertEquals(ThemeAccent.HYPER_LIME, preferencesRepository.getThemeAccent())
+
+        preferencesRepository.setThemeAccent(ThemeAccent.GLACIER_FROST)
+        assertEquals(ThemeAccent.GLACIER_FROST, preferencesRepository.getThemeAccent())
+
+        preferencesRepository.setThemeAccent(ThemeAccent.TITANIUM)
+        assertEquals(ThemeAccent.TITANIUM, preferencesRepository.getThemeAccent())
+
+        assertEquals(10, ThemeAccent.entries.size)
+    }
+
+    @Test
+    fun glowIntensity_defaultIsVivid_andCanUpdate() {
+        assertEquals(UserPreferencesRepository.GlowIntensity.VIVID, preferencesRepository.getGlowIntensity())
+        assertEquals(UserPreferencesRepository.GlowIntensity.VIVID, preferencesRepository.glowIntensityFlow.value)
+
+        preferencesRepository.setGlowIntensity(UserPreferencesRepository.GlowIntensity.SUBTLE)
+        assertEquals(UserPreferencesRepository.GlowIntensity.SUBTLE, preferencesRepository.getGlowIntensity())
+        assertEquals(UserPreferencesRepository.GlowIntensity.SUBTLE, preferencesRepository.glowIntensityFlow.value)
+
+        preferencesRepository.setGlowIntensity(UserPreferencesRepository.GlowIntensity.ULTRA)
+        assertEquals(UserPreferencesRepository.GlowIntensity.ULTRA, preferencesRepository.getGlowIntensity())
+        assertEquals(UserPreferencesRepository.GlowIntensity.ULTRA, preferencesRepository.glowIntensityFlow.value)
+    }
+
+    @Test
+    fun contrastStyle_defaultIsPitchBlack_andCanUpdate() {
+        assertEquals(UserPreferencesRepository.ContrastStyle.PITCH_BLACK, preferencesRepository.getContrastStyle())
+        assertEquals(UserPreferencesRepository.ContrastStyle.PITCH_BLACK, preferencesRepository.contrastStyleFlow.value)
+
+        preferencesRepository.setContrastStyle(UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT)
+        assertEquals(UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT, preferencesRepository.getContrastStyle())
+        assertEquals(UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT, preferencesRepository.contrastStyleFlow.value)
+
+        preferencesRepository.setContrastStyle(UserPreferencesRepository.ContrastStyle.PITCH_BLACK)
+        assertEquals(UserPreferencesRepository.ContrastStyle.PITCH_BLACK, preferencesRepository.getContrastStyle())
+        assertEquals(UserPreferencesRepository.ContrastStyle.PITCH_BLACK, preferencesRepository.contrastStyleFlow.value)
+    }
+
+    @Test
     fun resetAll_clearsAllPreferences() {
         preferencesRepository.hasCompletedOnboarding = true
         preferencesRepository.hasRequestedCameraPermission = true
+        preferencesRepository.setGlowIntensity(UserPreferencesRepository.GlowIntensity.ULTRA)
+        preferencesRepository.setContrastStyle(UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT)
+        preferencesRepository.setThemeAccent(ThemeAccent.GLACIER_FROST)
 
         preferencesRepository.resetAll()
 
         assertFalse(preferencesRepository.hasCompletedOnboarding)
         assertFalse(preferencesRepository.hasRequestedCameraPermission)
+        assertEquals(UserPreferencesRepository.GlowIntensity.VIVID, preferencesRepository.getGlowIntensity())
+        assertEquals(UserPreferencesRepository.ContrastStyle.PITCH_BLACK, preferencesRepository.getContrastStyle())
+        assertEquals(ThemeAccent.EMERALD_MINT, preferencesRepository.getThemeAccent())
     }
 
     @Test

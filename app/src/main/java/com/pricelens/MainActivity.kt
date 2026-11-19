@@ -46,6 +46,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val themeMode by userPreferences.themeModeFlow.collectAsState()
+            val themeAccent by userPreferences.themeAccentFlow.collectAsState()
+            val glowIntensity by userPreferences.glowIntensityFlow.collectAsState()
+            val contrastStyle by userPreferences.contrastStyleFlow.collectAsState()
             val systemDark = isSystemInDarkTheme()
             val isDark = when (themeMode) {
                 UserPreferencesRepository.ThemeMode.DARK -> true
@@ -55,6 +58,9 @@ class MainActivity : ComponentActivity() {
 
             PriceLensTheme(
                 darkTheme = isDark,
+                accent = themeAccent,
+                glowIntensity = glowIntensity,
+                contrastStyle = contrastStyle,
                 onToggleTheme = {
                     userPreferences.toggleTheme(isDark)
                 }

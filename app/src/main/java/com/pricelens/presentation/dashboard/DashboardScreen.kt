@@ -79,10 +79,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pricelens.R
-import com.pricelens.core.designsystem.BrandMint
-import com.pricelens.core.designsystem.CyanAccent
 import com.pricelens.core.designsystem.ElectricBlue
-import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.DashboardSkeleton
 import com.pricelens.core.designsystem.components.EmptyStateCard
@@ -502,14 +499,10 @@ private fun PasteLinkHeroCard(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.15f)
-                            else Color(0xFFE6F4EA)
-                        )
+                        .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (PriceLensTheme.isDark) 0.16f else 0.12f))
                         .border(
                             1.dp,
-                            if (PriceLensTheme.isDark) BrandMint.copy(alpha = 0.35f)
-                            else Color(0xFFCEEAD6),
+                            PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (PriceLensTheme.isDark) 0.38f else 0.28f),
                             RoundedCornerShape(12.dp)
                         ),
                     contentAlignment = Alignment.Center
@@ -642,9 +635,9 @@ private fun ClipboardDetectedBanner(
 ) {
     val isDark = PriceLensTheme.isDark
     val glow = PriceLensTheme.glassColors.ambientGlow
-    val iconBg = if (isDark) BrandMint.copy(alpha = 0.15f) else Color(0xFFE6F4EA)
-    val iconBorder = if (isDark) BrandMint.copy(alpha = 0.35f) else Color(0xFFCEEAD6)
-    val bannerBorder = if (isDark) BrandMint.copy(alpha = 0.4f) else Color(0xFFCEEAD6)
+    val iconBg = if (isDark) glow.copy(alpha = 0.15f) else glow.copy(alpha = 0.12f)
+    val iconBorder = if (isDark) glow.copy(alpha = 0.35f) else glow.copy(alpha = 0.25f)
+    val bannerBorder = if (isDark) glow.copy(alpha = 0.4f) else glow.copy(alpha = 0.25f)
 
     GlassCard(
         modifier = modifier
@@ -837,13 +830,13 @@ private fun TrendingSection(
             )
             Surface(
                 shape = RoundedCornerShape(6.dp),
-                color = MintSuccess.copy(alpha = 0.15f)
+                color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
             ) {
                 Text(
                     text = "LIVE STORE RATES",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                     fontWeight = FontWeight.Bold,
-                    color = MintSuccess,
+                    color = PriceLensTheme.glassColors.ambientGlow,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
@@ -875,6 +868,8 @@ private fun TrendingSection(
             }
         }
 
+        val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+
         // Horizontal Category Filter
         Row(
             modifier = Modifier
@@ -886,15 +881,18 @@ private fun TrendingSection(
                 val isSelected = selectedCategory == cat
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = if (isSelected) CyanAccent.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.5f),
-                    border = BorderStroke(1.dp, if (isSelected) CyanAccent else PriceLensTheme.glassColors.specularBorder),
-                    modifier = Modifier.clickable { selectedCategory = cat }
+                    color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.18f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder),
+                    modifier = Modifier.clickable {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        selectedCategory = cat
+                    }
                 ) {
                     Text(
                         text = cat,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) CyanAccent else PriceLensTheme.glassColors.textSecondary,
+                        color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     )
                 }
@@ -988,7 +986,7 @@ private fun TrendingSection(
                                             text = "Save ${currencyFormatter.format(savings)}",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
-                                            color = MintSuccess
+                                            color = PriceLensTheme.glassColors.ambientGlow
                                         )
                                     }
                                 }
@@ -1068,7 +1066,7 @@ private fun FlashDealsTicker(
                     modifier = Modifier
                         .size(8.dp)
                         .clip(CircleShape)
-                        .background(MintSuccess.copy(alpha = pulseAlpha))
+                        .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = pulseAlpha))
                 )
                 Text(
                     text = "Today's Flash Drops",
@@ -1080,14 +1078,14 @@ private fun FlashDealsTicker(
 
             Surface(
                 shape = RoundedCornerShape(9999.dp),
-                color = MintSuccess.copy(alpha = 0.12f),
-                border = BorderStroke(1.dp, MintSuccess.copy(alpha = 0.35f))
+                color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.12f),
+                border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.35f))
             ) {
                 Text(
                     text = "⚡ HOT DEALS",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MintSuccess,
+                    color = PriceLensTheme.glassColors.ambientGlow,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                 )
             }
@@ -1160,7 +1158,7 @@ private fun FlashDealsTicker(
                                 text = "-$dropPercent%",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MintSuccess
+                                color = PriceLensTheme.glassColors.ambientGlow
                             )
                         }
 
@@ -1213,7 +1211,7 @@ private fun FlashDealsTicker(
                             text = "Save ₹${"%,.0f".format(dropAmount)} today",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = MintSuccess
+                            color = PriceLensTheme.glassColors.ambientGlow
                         )
                     }
                 }

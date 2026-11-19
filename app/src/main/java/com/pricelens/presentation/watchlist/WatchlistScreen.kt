@@ -287,8 +287,8 @@ fun WatchlistScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isSavingsSort) MintSuccess.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
-                                    .border(1.dp, if (isSavingsSort) MintSuccess.copy(alpha = 0.6f) else PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
+                                    .background(if (isSavingsSort) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f))
+                                    .border(1.dp, if (isSavingsSort) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.6f) else PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(12.dp))
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         onEvent(WatchlistUiEvent.SortOrderChanged(if (isSavingsSort) WatchlistSortOrder.LATEST else WatchlistSortOrder.BIGGEST_SAVINGS))
@@ -299,7 +299,7 @@ fun WatchlistScreen(
                                     text = "Savings 🎯",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = if (isSavingsSort) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSavingsSort) MintSuccess else PriceLensTheme.glassColors.textSecondary
+                                    color = if (isSavingsSort) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary
                                 )
                             }
                         }
@@ -504,8 +504,8 @@ private fun WatchlistTopBar(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(9999.dp))
-                    .background(MintSuccess.copy(alpha = 0.12f))
-                    .border(1.dp, MintSuccess.copy(alpha = 0.3f), RoundedCornerShape(9999.dp))
+                    .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.12f))
+                    .border(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.3f), RoundedCornerShape(9999.dp))
                     .padding(horizontal = 10.dp, vertical = 5.dp)
             ) {
                 Row(
@@ -516,13 +516,13 @@ private fun WatchlistTopBar(
                         modifier = Modifier
                             .size(7.dp)
                             .clip(CircleShape)
-                            .background(MintSuccess)
+                            .background(PriceLensTheme.glassColors.ambientGlow)
                     )
                     Text(
                         text = "LIVE",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MintSuccess,
+                        color = PriceLensTheme.glassColors.ambientGlow,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -623,7 +623,7 @@ private fun WatchlistStatsCard(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.TrendingDown,
                             contentDescription = null,
-                            tint = MintSuccess,
+                            tint = PriceLensTheme.glassColors.ambientGlow,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(2.dp))
@@ -640,7 +640,7 @@ private fun WatchlistStatsCard(
                             text = count.toString(),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
-                            color = if (count > 0) MintSuccess else PriceLensTheme.glassColors.textPrimary
+                            color = if (count > 0) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary
                         )
                     }
                 }
@@ -648,7 +648,7 @@ private fun WatchlistStatsCard(
                     text = "Drops Active",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (dropsSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (priceDropCount > 0) MintSuccess else PriceLensTheme.glassColors.textSecondary
+                    color = if (priceDropCount > 0) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary
                 )
             }
 
@@ -679,7 +679,7 @@ private fun WatchlistStatsCard(
                         text = if (savings > 0) currencyFormatter.format(savings) else "₹0",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
-                        color = if (savings > 0) MintSuccess else PriceLensTheme.glassColors.textPrimary,
+                        color = if (savings > 0) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -688,7 +688,7 @@ private fun WatchlistStatsCard(
                     text = "Savings Caught",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Normal,
-                    color = if (totalSavings > 0) MintSuccess else PriceLensTheme.glassColors.textSecondary
+                    color = if (totalSavings > 0) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary
                 )
             }
         }
@@ -713,7 +713,7 @@ private fun WatchlistItemCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         onClick = onClick,
-        borderColor = if (isPriceDrop) MintSuccess.copy(alpha = 0.45f) else PriceLensTheme.glassColors.specularBorder
+        borderColor = if (isPriceDrop) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.45f) else PriceLensTheme.glassColors.specularBorder
     ) {
         Column(
             modifier = Modifier
@@ -847,7 +847,7 @@ private fun WatchlistItemCard(
                         text = if (current != null) currencyFormatter.format(current) else "Checking...",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
-                        color = if (isPriceDrop) MintSuccess else PriceLensTheme.glassColors.textPrimary
+                        color = if (isPriceDrop) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary
                     )
                 }
 
@@ -877,7 +877,7 @@ private fun WatchlistItemCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MintSuccess.copy(alpha = 0.15f))
+                        .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f))
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Row(
@@ -887,7 +887,7 @@ private fun WatchlistItemCard(
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = MintSuccess,
+                            tint = PriceLensTheme.glassColors.ambientGlow,
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
@@ -898,7 +898,7 @@ private fun WatchlistItemCard(
                             },
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
-                            color = MintSuccess
+                            color = PriceLensTheme.glassColors.ambientGlow
                         )
                     }
                 }

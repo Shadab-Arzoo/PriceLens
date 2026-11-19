@@ -53,6 +53,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,7 +63,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pricelens.R
 import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.LocalThemeToggle
-import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.EmptyStateCard
 import com.pricelens.core.designsystem.components.GlassCard
@@ -308,6 +309,8 @@ private fun SearchResultsList(
     onProductClick: (productId: String, productName: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -335,8 +338,9 @@ private fun SearchResultsList(
                     if (selectedStoreFilter != "All Stores" || selectedPriceRange != SearchPriceRange.ALL) {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = CyanAccent.copy(alpha = 0.15f),
+                            color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f),
                             modifier = Modifier.clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 onStoreFilterChange("All Stores")
                                 onPriceRangeChange(SearchPriceRange.ALL)
                             }
@@ -345,7 +349,7 @@ private fun SearchResultsList(
                                 text = "Reset Filters ✕",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = CyanAccent,
+                                color = PriceLensTheme.glassColors.ambientGlow,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                             )
                         }
@@ -360,13 +364,13 @@ private fun SearchResultsList(
                     items(SearchSortOrder.entries, key = { it.name }) { order ->
                         val isSelected = currentSortOrder == order
                         val chipBg by animateColorAsState(
-                            targetValue = if (isSelected) ElectricBlue.copy(alpha = 0.2f)
+                            targetValue = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.2f)
                             else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f),
                             animationSpec = tween(durationMillis = 200),
                             label = "sortChipBg"
                         )
                         val chipText by animateColorAsState(
-                            targetValue = if (isSelected) ElectricBlue else PriceLensTheme.glassColors.textSecondary,
+                            targetValue = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary,
                             animationSpec = tween(durationMillis = 200),
                             label = "sortChipText"
                         )
@@ -376,11 +380,14 @@ private fun SearchResultsList(
                                 .background(chipBg)
                                 .border(
                                     1.dp,
-                                    if (isSelected) ElectricBlue.copy(alpha = 0.6f)
+                                    if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.6f)
                                     else PriceLensTheme.glassColors.specularBorder,
                                     RoundedCornerShape(12.dp)
                                 )
-                                .clickable { onSortChange(order) }
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onSortChange(order)
+                                }
                                 .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Text(
@@ -403,15 +410,18 @@ private fun SearchResultsList(
                         val isSelected = selectedStoreFilter == store
                         Surface(
                             shape = RoundedCornerShape(10.dp),
-                            color = if (isSelected) CyanAccent.copy(alpha = 0.18f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.45f),
-                            border = BorderStroke(1.dp, if (isSelected) CyanAccent else PriceLensTheme.glassColors.specularBorder),
-                            modifier = Modifier.clickable { onStoreFilterChange(store) }
+                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.18f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.45f),
+                            border = BorderStroke(1.dp, if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder),
+                            modifier = Modifier.clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onStoreFilterChange(store)
+                            }
                         ) {
                             Text(
                                 text = store,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) CyanAccent else PriceLensTheme.glassColors.textSecondary,
+                                color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                             )
                         }
@@ -427,15 +437,18 @@ private fun SearchResultsList(
                         val isSelected = selectedPriceRange == range
                         Surface(
                             shape = RoundedCornerShape(10.dp),
-                            color = if (isSelected) MintSuccess.copy(alpha = 0.18f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.45f),
-                            border = BorderStroke(1.dp, if (isSelected) MintSuccess else PriceLensTheme.glassColors.specularBorder),
-                            modifier = Modifier.clickable { onPriceRangeChange(range) }
+                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.18f) else PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.45f),
+                            border = BorderStroke(1.dp, if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder),
+                            modifier = Modifier.clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onPriceRangeChange(range)
+                            }
                         ) {
                             Text(
                                 text = range.label,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) MintSuccess else PriceLensTheme.glassColors.textSecondary,
+                                color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                             )
                         }
@@ -533,13 +546,13 @@ private fun ProductSummaryCard(
                     if (product.lowestPriceRetailer != null) {
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = CyanAccent.copy(alpha = 0.15f)
+                            color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
                         ) {
                             Text(
                                 text = product.lowestPriceRetailer,
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 fontWeight = FontWeight.Bold,
-                                color = CyanAccent,
+                                color = PriceLensTheme.glassColors.ambientGlow,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -564,7 +577,7 @@ private fun ProductSummaryCard(
                             text = "• Save up to ${currencyFormatter.format(spreadSavings)}",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = MintSuccess
+                            color = PriceLensTheme.glassColors.ambientGlow
                         )
                     }
                 }

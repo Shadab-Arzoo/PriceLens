@@ -49,9 +49,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pricelens.core.designsystem.BrandMint
 import com.pricelens.core.designsystem.LocalThemeToggle
-import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 
 @Composable
@@ -86,7 +84,7 @@ fun PriceLensTopBar(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(MintSuccess)
+                            .background(PriceLensTheme.glassColors.ambientGlow)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -99,15 +97,15 @@ fun PriceLensTopBar(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(MintSuccess.copy(alpha = 0.12f))
-                            .border(1.dp, MintSuccess.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
+                            .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.12f))
+                            .border(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = "LIVE",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MintSuccess
+                            color = PriceLensTheme.glassColors.ambientGlow
                         )
                     }
                 }
@@ -237,7 +235,7 @@ fun PriceLensTopBar(
                             modifier = Modifier
                                 .offset(x = 3.dp, y = (-2).dp)
                                 .clip(CircleShape)
-                                .background(MintSuccess)
+                                .background(PriceLensTheme.glassColors.ambientGlow)
                                 .padding(horizontal = if (watchlistCount > 9) 4.dp else 0.dp)
                                 .size(if (watchlistCount > 9) 18.dp else 16.dp),
                             contentAlignment = Alignment.Center
@@ -304,7 +302,7 @@ fun ThemeToggleSwitch(
             Icon(
                 imageVector = if (dark) Icons.Default.LightMode else Icons.Default.DarkMode,
                 contentDescription = if (dark) "Switch to Light Mode" else "Switch to Dark Mode",
-                tint = if (dark) BrandMint else Color(0xFFF59E0B),
+                tint = if (dark) PriceLensTheme.glassColors.ambientGlow else Color(0xFFF59E0B),
                 modifier = Modifier.size(20.dp)
             )
         }

@@ -73,9 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.pricelens.R
-import com.pricelens.core.designsystem.BrandMint
 import com.pricelens.core.designsystem.LocalThemeToggle
-import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
@@ -638,7 +636,7 @@ private fun IntroFeatureRow(
 ) {
     val isDark = PriceLensTheme.isDark
     val glow = PriceLensTheme.glassColors.ambientGlow
-    val iconBg = if (isDark) BrandMint.copy(alpha = 0.15f) else Color(0xFFE6F4EA)
+    val iconBg = glow.copy(alpha = 0.15f)
 
     Row(
         modifier = Modifier
@@ -695,14 +693,14 @@ private fun PermissionCardItem(
 ) {
     val isDark = PriceLensTheme.isDark
     val glow = PriceLensTheme.glassColors.ambientGlow
-    val iconBg = if (isGranted) (if (isDark) BrandMint.copy(alpha = 0.15f) else Color(0xFFE6F4EA))
+    val iconBg = if (isGranted) glow.copy(alpha = 0.15f)
                  else PriceLensTheme.glassColors.surfaceHighlight
     val iconTint = if (isGranted) glow else PriceLensTheme.glassColors.textPrimary
 
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        borderColor = if (isGranted) (if (isDark) BrandMint.copy(alpha = 0.4f) else Color(0xFFCEEAD6))
+        borderColor = if (isGranted) (if (isDark) glow.copy(alpha = 0.4f) else glow.copy(alpha = 0.3f))
                       else PriceLensTheme.glassColors.specularBorder,
         onClick = if (!isGranted) onAction else null
     ) {
@@ -749,7 +747,7 @@ private fun PermissionCardItem(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isDark) BrandMint.copy(alpha = 0.15f) else Color(0xFFE6F4EA))
+                        .background(glow.copy(alpha = 0.15f))
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
@@ -763,7 +761,7 @@ private fun PermissionCardItem(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(if (isDark) BrandMint else Color(0xFF059669))
+                        .background(glow)
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(

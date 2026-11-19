@@ -2,6 +2,7 @@ package com.pricelens.presentation.tools
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -26,16 +27,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PriceCheck
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SettingsBrightness
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -58,6 +64,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -70,8 +77,8 @@ import com.pricelens.core.designsystem.AmberAlert
 import com.pricelens.core.designsystem.CyanAccent
 import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.LocalThemeToggle
-import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
+import com.pricelens.core.designsystem.ThemeAccent
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.preferences.UserPreferencesRepository
 import java.text.NumberFormat
@@ -240,6 +247,12 @@ fun ToolsScreen(
     // Cache purge state
     var cachePurged by remember { mutableStateOf(false) }
 
+    // Theme state
+    val currentThemeMode by userPreferences.themeModeFlow.collectAsState()
+    val currentThemeAccent by userPreferences.themeAccentFlow.collectAsState()
+    val currentGlowIntensity by userPreferences.glowIntensityFlow.collectAsState()
+    val currentContrastStyle by userPreferences.contrastStyleFlow.collectAsState()
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -260,7 +273,7 @@ fun ToolsScreen(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(CyanAccent)
+                            .background(PriceLensTheme.glassColors.ambientGlow)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -271,19 +284,652 @@ fun ToolsScreen(
                     )
                 }
                 Text(
-                    text = "Live Web Inspector, Store Diagnostics, EMI Planner & PriceLens Labs",
+                    text = "Theme Studio, Live Web Inspector, Store Diagnostics, EMI Planner & PriceLens Labs",
                     style = MaterialTheme.typography.labelSmall,
                     color = PriceLensTheme.glassColors.textSecondary
                 )
             }
         }
 
-        // 2. Tool 1: Universal In-App Web Price Picker
+        // 2. Tool 1: Theme & Appearance Studio
+        item {
+            GlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                borderColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.45f)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    // Header Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.16f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Palette,
+                                    contentDescription = null,
+                                    tint = PriceLensTheme.glassColors.ambientGlow,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "Theme & Appearance Studio",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PriceLensTheme.glassColors.textPrimary
+                                )
+                                Text(
+                                    text = "Personalize colors, mode & liquid glass glow",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = PriceLensTheme.glassColors.textSecondary
+                                )
+                            }
+                        }
+
+                        // Header actions (Shuffle & Current Accent Badge)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(99.dp),
+                                color = PriceLensTheme.glassColors.surfaceHighlight,
+                                border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(99.dp))
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        val otherAccents = ThemeAccent.entries.filter { it != currentThemeAccent }
+                                        userPreferences.setThemeAccent(otherAccents.random())
+                                    }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Shuffle,
+                                        contentDescription = "Shuffle Accent",
+                                        tint = PriceLensTheme.glassColors.ambientGlow,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Text(
+                                        text = "SHUFFLE",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.ambientGlow
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(99.dp),
+                                color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f),
+                                border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.4f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(7.dp)
+                                            .clip(CircleShape)
+                                            .background(PriceLensTheme.glassColors.ambientGlow)
+                                    )
+                                    Text(
+                                        text = currentThemeAccent.displayName.uppercase(),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = PriceLensTheme.glassColors.ambientGlow
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // A. Mode Selector (Dark / Light / System)
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "DISPLAY MODE",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textTertiary,
+                            letterSpacing = 0.8.sp
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val modes = listOf(
+                                Triple(UserPreferencesRepository.ThemeMode.DARK, "Dark", Icons.Default.DarkMode),
+                                Triple(UserPreferencesRepository.ThemeMode.LIGHT, "Light", Icons.Default.LightMode),
+                                Triple(UserPreferencesRepository.ThemeMode.SYSTEM, "System", Icons.Default.SettingsBrightness)
+                            )
+
+                            modes.forEach { (mode, label, icon) ->
+                                val isSelected = currentThemeMode == mode
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isSelected) {
+                                        PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.18f)
+                                    } else {
+                                        PriceLensTheme.glassColors.surfaceHighlight
+                                    },
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            userPreferences.setThemeMode(mode)
+                                        }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = icon,
+                                            contentDescription = null,
+                                            tint = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = label,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // B. Canvas Contrast Style (AMOLED Pitch vs Deep Obsidian)
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "CANVAS CONTRAST STYLE",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textTertiary,
+                            letterSpacing = 0.8.sp
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val contrastStyles = listOf(
+                                Triple(
+                                    UserPreferencesRepository.ContrastStyle.PITCH_BLACK,
+                                    "AMOLED Pitch",
+                                    "Pure #000000 canvas"
+                                ),
+                                Triple(
+                                    UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT,
+                                    "Deep Obsidian",
+                                    "Atmospheric aura glow"
+                                )
+                            )
+
+                            contrastStyles.forEach { (style, title, subtitle) ->
+                                val isSelected = currentContrastStyle == style
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isSelected) {
+                                        PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.16f)
+                                    } else {
+                                        PriceLensTheme.glassColors.surfaceHighlight
+                                    },
+                                    border = BorderStroke(
+                                        if (isSelected) 1.5.dp else 1.dp,
+                                        if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            userPreferences.setContrastStyle(style)
+                                        }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(18.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    if (style == UserPreferencesRepository.ContrastStyle.PITCH_BLACK) {
+                                                        Color.Black
+                                                    } else {
+                                                        Color(0xFF0D131F)
+                                                    }
+                                                )
+                                                .border(
+                                                    1.dp,
+                                                    if (isSelected) PriceLensTheme.glassColors.ambientGlow else Color.White.copy(alpha = 0.25f),
+                                                    CircleShape
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            if (isSelected) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(6.dp)
+                                                        .clip(CircleShape)
+                                                        .background(PriceLensTheme.glassColors.ambientGlow)
+                                                )
+                                            }
+                                        }
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = title,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary
+                                            )
+                                            Text(
+                                                text = subtitle,
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                                color = PriceLensTheme.glassColors.textSecondary,
+                                                maxLines = 1
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // C. Glow Radiance Intensity
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "GLOW RADIANCE INTENSITY",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textTertiary,
+                            letterSpacing = 0.8.sp
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            UserPreferencesRepository.GlowIntensity.entries.forEach { intensity ->
+                                val isSelected = currentGlowIntensity == intensity
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isSelected) {
+                                        PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.18f)
+                                    } else {
+                                        PriceLensTheme.glassColors.surfaceHighlight
+                                    },
+                                    border = BorderStroke(
+                                        if (isSelected) 1.5.dp else 1.dp,
+                                        if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            userPreferences.setGlowIntensity(intensity)
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Text(
+                                            text = intensity.displayName,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary,
+                                            maxLines = 1
+                                        )
+                                        Text(
+                                            text = "${(intensity.multiplier * 100).toInt()}% glow",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.8f) else PriceLensTheme.glassColors.textTertiary,
+                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // D. Accent Palette Swatches
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "ACCENT COLOR THEMES",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                fontWeight = FontWeight.Bold,
+                                color = PriceLensTheme.glassColors.textTertiary,
+                                letterSpacing = 0.8.sp
+                            )
+                            Text(
+                                text = "${ThemeAccent.entries.size} Curated Palettes",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                color = PriceLensTheme.glassColors.textSecondary
+                            )
+                        }
+
+                        // 2 rows of 5 theme cards
+                        val rows = ThemeAccent.entries.chunked(5)
+                        rows.forEach { rowAccents ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                rowAccents.forEach { accent ->
+                                    val isSelected = currentThemeAccent == accent
+                                    val accentColor = if (PriceLensTheme.isDark) accent.accentColor else accent.lightAccentColor
+
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = if (isSelected) {
+                                            accentColor.copy(alpha = if (PriceLensTheme.isDark) 0.18f else 0.12f)
+                                        } else {
+                                            PriceLensTheme.glassColors.surfaceHighlight
+                                        },
+                                        border = BorderStroke(
+                                            if (isSelected) 1.5.dp else 1.dp,
+                                            if (isSelected) accentColor else PriceLensTheme.glassColors.specularBorder
+                                        ),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .clickable {
+                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                userPreferences.setThemeAccent(accent)
+                                            }
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(vertical = 7.dp, horizontal = 2.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(20.dp)
+                                                        .clip(CircleShape)
+                                                        .background(
+                                                            Brush.linearGradient(accent.previewGradient)
+                                                        )
+                                                )
+                                                if (isSelected) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = null,
+                                                        tint = Color.Black,
+                                                        modifier = Modifier.size(11.dp)
+                                                    )
+                                                }
+                                            }
+
+                                            Text(
+                                                text = accent.displayName,
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = if (isSelected) accentColor else PriceLensTheme.glassColors.textPrimary,
+                                                maxLines = 1
+                                            )
+
+                                            Text(
+                                                text = accent.subtitle,
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.sp),
+                                                color = PriceLensTheme.glassColors.textTertiary,
+                                                maxLines = 1
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Theme Character Description Banner
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.08f),
+                            border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.25f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .background(PriceLensTheme.accentGradient),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${currentThemeAccent.displayName} Character",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.ambientGlow
+                                    )
+                                    Text(
+                                        text = currentThemeAccent.characterDescription,
+                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+                                        color = PriceLensTheme.glassColors.textSecondary,
+                                        lineHeight = 14.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // C. Live Theme Sandbox Preview
+                    var testPulseActive by remember { mutableStateOf(false) }
+
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f),
+                        border = BorderStroke(1.dp, if (testPulseActive) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = PriceLensTheme.glassColors.ambientGlow,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Text(
+                                        text = "LIVE THEME PREVIEW",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.textSecondary
+                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.2f),
+                                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.4f))
+                                ) {
+                                    Text(
+                                        text = "35% OFF DROP",
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = PriceLensTheme.glassColors.ambientGlow
+                                    )
+                                }
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                    Text(
+                                        text = "Sony WH-1000XM5 Wireless Headphones",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.textPrimary,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = "Lowest price across Amazon & Flipkart",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                        color = PriceLensTheme.glassColors.textSecondary
+                                    )
+                                }
+
+                                Text(
+                                    text = "₹24,990",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = PriceLensTheme.glassColors.ambientGlow
+                                )
+                            }
+
+                            // Dynamic Live Accent Bar
+                            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Drop Confidence Score",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                        color = PriceLensTheme.glassColors.textTertiary
+                                    )
+                                    Text(
+                                        text = "94% Verified Deal",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.ambientGlow
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(4.dp)
+                                        .clip(CircleShape)
+                                        .background(PriceLensTheme.glassColors.surfaceHighlight)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.94f)
+                                            .height(4.dp)
+                                            .clip(CircleShape)
+                                            .background(PriceLensTheme.accentGradient)
+                                    )
+                                }
+                            }
+
+                            // Interactive Glow Pulse Test Button
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (testPulseActive) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f),
+                                border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.45f)),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        testPulseActive = !testPulseActive
+                                    }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 7.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.TouchApp,
+                                        contentDescription = null,
+                                        tint = if (testPulseActive) Color.Black else PriceLensTheme.glassColors.ambientGlow,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = if (testPulseActive) "✓ Interactive Glow Active • Tap to Reset" else "Tap to Test Interactive Theme Pulse",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (testPulseActive) Color.Black else PriceLensTheme.glassColors.ambientGlow
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Tool 2: Universal In-App Web Price Picker
         item {
             GlassCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                borderColor = CyanAccent.copy(alpha = 0.4f)
+                borderColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.4f)
             ) {
                 Column(
                     modifier = Modifier
@@ -304,13 +950,13 @@ fun ToolsScreen(
                                 modifier = Modifier
                                     .size(34.dp)
                                     .clip(CircleShape)
-                                    .background(CyanAccent.copy(alpha = 0.15f)),
+                                    .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Language,
                                     contentDescription = null,
-                                    tint = CyanAccent,
+                                    tint = PriceLensTheme.glassColors.ambientGlow,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -331,13 +977,13 @@ fun ToolsScreen(
 
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = CyanAccent.copy(alpha = 0.15f)
+                            color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
                         ) {
                             Text(
                                 text = "LIVE BROWSER",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = CyanAccent,
+                                color = PriceLensTheme.glassColors.ambientGlow,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -381,7 +1027,7 @@ fun ToolsScreen(
                                     Icon(
                                         imageVector = Icons.Default.Storefront,
                                         contentDescription = null,
-                                        tint = CyanAccent,
+                                        tint = PriceLensTheme.glassColors.ambientGlow,
                                         modifier = Modifier.size(13.dp)
                                     )
                                     Text(
@@ -413,7 +1059,7 @@ fun ToolsScreen(
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = CyanAccent,
+                                focusedBorderColor = PriceLensTheme.glassColors.ambientGlow,
                                 unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
                                 focusedTextColor = PriceLensTheme.glassColors.textPrimary,
                                 unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
@@ -423,7 +1069,7 @@ fun ToolsScreen(
 
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = CyanAccent,
+                            color = PriceLensTheme.glassColors.ambientGlow,
                             modifier = Modifier.clickable {
                                 val target = if (customUrlInput.isNotBlank()) {
                                     if (!customUrlInput.startsWith("http")) "https://$customUrlInput" else customUrlInput
@@ -573,13 +1219,13 @@ fun ToolsScreen(
 
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = MintSuccess.copy(alpha = 0.15f)
+                                    color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
                                 ) {
                                     Text(
                                         text = "READY FOR COMPARISON",
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                         fontWeight = FontWeight.Bold,
-                                        color = MintSuccess,
+                                        color = PriceLensTheme.glassColors.ambientGlow,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )
                                 }
@@ -831,8 +1477,8 @@ fun ToolsScreen(
                             val isSelected = selectedTenorMonths == months
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) MintSuccess.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
-                                border = BorderStroke(1.dp, if (isSelected) MintSuccess else PriceLensTheme.glassColors.specularBorder),
+                                color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
+                                border = BorderStroke(1.dp, if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder),
                                 modifier = Modifier
                                     .weight(1f)
                                     .clickable {
@@ -848,7 +1494,7 @@ fun ToolsScreen(
                                         text = "$months Mos",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) MintSuccess else PriceLensTheme.glassColors.textPrimary
+                                        color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary
                                     )
                                 }
                             }
@@ -859,7 +1505,7 @@ fun ToolsScreen(
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = PriceLensTheme.glassColors.surfaceHighlight,
-                        border = BorderStroke(1.dp, MintSuccess.copy(alpha = 0.45f)),
+                        border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.45f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
@@ -883,7 +1529,7 @@ fun ToolsScreen(
                                         text = "Instant Discount: -${currencyFormatter.format(emiDiscount)}",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = MintSuccess
+                                        color = PriceLensTheme.glassColors.ambientGlow
                                     )
                                 }
 
@@ -892,7 +1538,7 @@ fun ToolsScreen(
                                         text = "${currencyFormatter.format(monthlyInstallment)}/mo",
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.ExtraBold,
-                                        color = MintSuccess
+                                        color = PriceLensTheme.glassColors.ambientGlow
                                     )
                                     Text(
                                         text = "for $selectedTenorMonths months",
@@ -949,13 +1595,13 @@ fun ToolsScreen(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(CircleShape)
-                                .background(MintSuccess.copy(alpha = 0.15f)),
+                                .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Calculate,
                                 contentDescription = null,
-                                tint = MintSuccess,
+                                tint = PriceLensTheme.glassColors.ambientGlow,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -990,8 +1636,8 @@ fun ToolsScreen(
                             val isSelected = calcPriceInput == price
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) MintSuccess.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
-                                border = BorderStroke(1.dp, if (isSelected) MintSuccess else PriceLensTheme.glassColors.specularBorder),
+                                color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
+                                border = BorderStroke(1.dp, if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder),
                                 modifier = Modifier
                                     .weight(1f)
                                     .clickable {
@@ -1007,7 +1653,7 @@ fun ToolsScreen(
                                         text = currencyFormatter.format(price),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) MintSuccess else PriceLensTheme.glassColors.textPrimary
+                                        color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary
                                     )
                                 }
                             }
@@ -1029,8 +1675,8 @@ fun ToolsScreen(
                             val isSelected = calcDiscountPercent == pct
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) CyanAccent.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
-                                border = BorderStroke(1.dp, if (isSelected) CyanAccent else PriceLensTheme.glassColors.specularBorder),
+                                color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
+                                border = BorderStroke(1.dp, if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder),
                                 modifier = Modifier
                                     .weight(1f)
                                     .clickable {
@@ -1046,7 +1692,7 @@ fun ToolsScreen(
                                         text = "$pct%",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) CyanAccent else PriceLensTheme.glassColors.textPrimary
+                                        color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary
                                     )
                                 }
                             }
@@ -1057,7 +1703,7 @@ fun ToolsScreen(
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = PriceLensTheme.glassColors.surfaceHighlight,
-                        border = BorderStroke(1.dp, MintSuccess.copy(alpha = 0.4f)),
+                        border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.4f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
@@ -1077,14 +1723,14 @@ fun ToolsScreen(
                                     text = "Cash Savings: ${currencyFormatter.format(calculatedSavings)}",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MintSuccess
+                                    color = PriceLensTheme.glassColors.ambientGlow
                                 )
                             }
                             Text(
                                 text = currencyFormatter.format(calculatedTarget),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MintSuccess
+                                color = PriceLensTheme.glassColors.ambientGlow
                             )
                         }
                     }
@@ -1141,13 +1787,13 @@ fun ToolsScreen(
                             }
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = MintSuccess.copy(alpha = 0.15f)
+                                color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
                             ) {
                                 Text(
                                     text = status,
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                     fontWeight = FontWeight.Bold,
-                                    color = MintSuccess,
+                                    color = PriceLensTheme.glassColors.ambientGlow,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
@@ -1191,13 +1837,13 @@ fun ToolsScreen(
 
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = MintSuccess.copy(alpha = 0.15f)
+                            color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
                         ) {
                             Text(
                                 text = if (cachePurged) "PURGED & CLEAN" else "OPTIMAL",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                 fontWeight = FontWeight.Bold,
-                                color = MintSuccess,
+                                color = PriceLensTheme.glassColors.ambientGlow,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -1250,8 +1896,8 @@ fun ToolsScreen(
 
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = if (cachePurged) MintSuccess.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
-                        border = BorderStroke(1.dp, if (cachePurged) MintSuccess else PriceLensTheme.glassColors.specularBorder),
+                        color = if (cachePurged) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
+                        border = BorderStroke(1.dp, if (cachePurged) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
@@ -1269,7 +1915,7 @@ fun ToolsScreen(
                             Icon(
                                 imageVector = if (cachePurged) Icons.Default.CheckCircle else Icons.Default.Refresh,
                                 contentDescription = null,
-                                tint = if (cachePurged) MintSuccess else ElectricBlue,
+                                tint = if (cachePurged) PriceLensTheme.glassColors.ambientGlow else ElectricBlue,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -1277,7 +1923,7 @@ fun ToolsScreen(
                                 text = if (cachePurged) "Cache Cleaned • Feeds Re-Synchronizing" else "Purge Stale Cache & Re-Sync Stores",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (cachePurged) MintSuccess else ElectricBlue
+                                color = if (cachePurged) PriceLensTheme.glassColors.ambientGlow else ElectricBlue
                             )
                         }
                     }
@@ -1302,7 +1948,7 @@ fun ToolsScreen(
                         Icon(
                             imageVector = Icons.Default.Tune,
                             contentDescription = null,
-                            tint = CyanAccent,
+                            tint = PriceLensTheme.glassColors.ambientGlow,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -1338,7 +1984,7 @@ fun ToolsScreen(
                             onCheckedChange = { userPreferences.setExperimentalFlag(UserPreferencesRepository.KEY_EXP_PRICE_DROP_FORECAST, it) },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.Black,
-                                checkedTrackColor = CyanAccent
+                                checkedTrackColor = PriceLensTheme.glassColors.ambientGlow
                             )
                         )
                     }
@@ -1367,7 +2013,7 @@ fun ToolsScreen(
                             onCheckedChange = { userPreferences.setExperimentalFlag(UserPreferencesRepository.KEY_EXP_COUPON_FINDER, it) },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.Black,
-                                checkedTrackColor = CyanAccent
+                                checkedTrackColor = PriceLensTheme.glassColors.ambientGlow
                             )
                         )
                     }
@@ -1380,13 +2026,13 @@ fun ToolsScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                             Text(
-                                text = "Theme Mode",
+                                text = "Theme Mode & Palette",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Bold,
                                 color = PriceLensTheme.glassColors.textPrimary
                             )
                             Text(
-                                text = if (PriceLensTheme.isDark) "Dark Liquid Glass Theme" else "Light Frosted Theme",
+                                text = "${currentThemeAccent.displayName} • ${if (PriceLensTheme.isDark) "Dark Liquid Glass" else "Light Frosted"}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = PriceLensTheme.glassColors.textSecondary
                             )
@@ -1407,14 +2053,14 @@ fun ToolsScreen(
                                 Icon(
                                     imageVector = if (PriceLensTheme.isDark) Icons.Default.DarkMode else Icons.Default.LightMode,
                                     contentDescription = null,
-                                    tint = CyanAccent,
+                                    tint = PriceLensTheme.glassColors.ambientGlow,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Text(
                                     text = if (PriceLensTheme.isDark) "DARK" else "LIGHT",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = CyanAccent
+                                    color = PriceLensTheme.glassColors.ambientGlow
                                 )
                             }
                         }

@@ -1,6 +1,7 @@
 package com.pricelens.core.preferences
 
 import android.content.Context
+import com.pricelens.core.designsystem.ThemeAccent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +10,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Manages user preference state such as theme mode and onboarding status.
+ * Manages user preference state such as theme mode, theme accents, and onboarding status.
  */
 @Singleton
 class UserPreferencesRepository @Inject constructor(
@@ -17,6 +18,29 @@ class UserPreferencesRepository @Inject constructor(
 ) {
     enum class ThemeMode {
         SYSTEM, LIGHT, DARK
+    }
+
+    enum class GlowIntensity(val displayName: String, val subtitle: String, val multiplier: Float) {
+        SUBTLE("Subtle Pro", "Minimalist sleek glow", 0.65f),
+        VIVID("Vivid Neon", "Dynamic signature glow", 1.0f),
+        ULTRA("Ultra Radiant", "High-contrast glowing aura", 1.4f);
+
+        companion object {
+            fun fromName(name: String?): GlowIntensity {
+                return entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: VIVID
+            }
+        }
+    }
+
+    enum class ContrastStyle(val displayName: String, val subtitle: String) {
+        PITCH_BLACK("AMOLED Pitch", "Pure #000000 canvas"),
+        OBSIDIAN_TINT("Deep Obsidian", "Tinted ambient aura canvas");
+
+        companion object {
+            fun fromName(name: String?): ContrastStyle {
+                return entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: PITCH_BLACK
+            }
+        }
     }
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -34,6 +58,15 @@ class UserPreferencesRepository @Inject constructor(
 
     private val _themeModeFlow = MutableStateFlow(getThemeMode())
     val themeModeFlow: StateFlow<ThemeMode> = _themeModeFlow.asStateFlow()
+
+    private val _themeAccentFlow = MutableStateFlow(getThemeAccent())
+    val themeAccentFlow: StateFlow<ThemeAccent> = _themeAccentFlow.asStateFlow()
+
+    private val _glowIntensityFlow = MutableStateFlow(getGlowIntensity())
+    val glowIntensityFlow: StateFlow<GlowIntensity> = _glowIntensityFlow.asStateFlow()
+
+    private val _contrastStyleFlow = MutableStateFlow(getContrastStyle())
+    val contrastStyleFlow: StateFlow<ContrastStyle> = _contrastStyleFlow.asStateFlow()
 
     private val _experimentalFlagsFlow = MutableStateFlow(getExperimentalFlags())
     val experimentalFlagsFlow: StateFlow<ExperimentalFlags> = _experimentalFlagsFlow.asStateFlow()
@@ -87,6 +120,40 @@ class UserPreferencesRepository @Inject constructor(
         _themeModeFlow.value = mode
     }
 
+    fun getThemeAccent(): ThemeAccent {
+        val name = prefs.getString(KEY_THEME_ACCENT, ThemeAccent.EMERALD_MINT.name) ?: ThemeAccent.EMERALD_MINT.name
+        return try {
+            ThemeAccent.valueOf(name)
+        } catch (_: Exception) {
+            ThemeAccent.EMERALD_MINT
+        }
+    }
+
+    fun setThemeAccent(accent: ThemeAccent) {
+        prefs.edit().putString(KEY_THEME_ACCENT, accent.name).apply()
+        _themeAccentFlow.value = accent
+    }
+
+    fun getGlowIntensity(): GlowIntensity {
+        val name = prefs.getString(KEY_THEME_GLOW_INTENSITY, GlowIntensity.VIVID.name) ?: GlowIntensity.VIVID.name
+        return GlowIntensity.fromName(name)
+    }
+
+    fun setGlowIntensity(intensity: GlowIntensity) {
+        prefs.edit().putString(KEY_THEME_GLOW_INTENSITY, intensity.name).apply()
+        _glowIntensityFlow.value = intensity
+    }
+
+    fun getContrastStyle(): ContrastStyle {
+        val name = prefs.getString(KEY_THEME_CONTRAST_STYLE, ContrastStyle.PITCH_BLACK.name) ?: ContrastStyle.PITCH_BLACK.name
+        return ContrastStyle.fromName(name)
+    }
+
+    fun setContrastStyle(style: ContrastStyle) {
+        prefs.edit().putString(KEY_THEME_CONTRAST_STYLE, style.name).apply()
+        _contrastStyleFlow.value = style
+    }
+
     fun toggleTheme(currentIsDark: Boolean) {
         val next = if (currentIsDark) ThemeMode.LIGHT else ThemeMode.DARK
         setThemeMode(next)
@@ -95,6 +162,9 @@ class UserPreferencesRepository @Inject constructor(
     fun resetAll() {
         prefs.edit().clear().apply()
         _themeModeFlow.value = ThemeMode.DARK
+        _themeAccentFlow.value = ThemeAccent.EMERALD_MINT
+        _glowIntensityFlow.value = GlowIntensity.VIVID
+        _contrastStyleFlow.value = ContrastStyle.PITCH_BLACK
     }
 
     companion object {
@@ -103,6 +173,9 @@ class UserPreferencesRepository @Inject constructor(
         private const val KEY_REQUESTED_CAMERA = "key_requested_camera"
         private const val KEY_REQUESTED_NOTIFICATIONS = "key_requested_notifications"
         private const val KEY_THEME_MODE = "key_theme_mode"
+        private const val KEY_THEME_ACCENT = "key_theme_accent"
+        const val KEY_THEME_GLOW_INTENSITY = "key_theme_glow_intensity"
+        const val KEY_THEME_CONTRAST_STYLE = "key_theme_contrast_style"
 
         const val KEY_EXP_MASTER = "key_exp_master"
         const val KEY_EXP_DEAL_AUTHENTICITY = "key_exp_deal_authenticity"

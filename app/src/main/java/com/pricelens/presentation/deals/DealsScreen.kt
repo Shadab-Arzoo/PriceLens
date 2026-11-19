@@ -67,7 +67,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pricelens.core.designsystem.AmberAlert
 import com.pricelens.core.designsystem.CyanAccent
-import com.pricelens.core.designsystem.MintSuccess
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
 import kotlinx.coroutines.delay
@@ -179,14 +178,14 @@ fun DealsScreen(
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh deals",
-                            tint = CyanAccent,
+                            tint = PriceLensTheme.glassColors.ambientGlow,
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
                             text = "SYNC",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = CyanAccent
+                            color = PriceLensTheme.glassColors.ambientGlow
                         )
                     }
                 }
@@ -208,7 +207,7 @@ fun DealsScreen(
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = null,
-                            tint = CyanAccent,
+                            tint = PriceLensTheme.glassColors.ambientGlow,
                             modifier = Modifier.size(16.dp)
                         )
                     },
@@ -312,10 +311,10 @@ fun DealsScreen(
                     val isSelected = uiState.selectedBudget == budget
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = if (isSelected) CyanAccent.copy(alpha = 0.16f) else Color.Transparent,
+                        color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.16f) else Color.Transparent,
                         border = BorderStroke(
                             1.dp,
-                            if (isSelected) CyanAccent else PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.5f)
+                            if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.5f)
                         ),
                         modifier = Modifier.clickable {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -326,7 +325,7 @@ fun DealsScreen(
                             text = budget.label,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) CyanAccent else PriceLensTheme.glassColors.textSecondary,
+                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                         )
                     }
@@ -342,7 +341,7 @@ fun DealsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
-                        color = CyanAccent,
+                        color = PriceLensTheme.glassColors.ambientGlow,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -382,7 +381,7 @@ fun DealsScreen(
                             Text(
                                 text = "Live Verified",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MintSuccess,
+                                color = PriceLensTheme.glassColors.ambientGlow,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -426,7 +425,7 @@ fun DealsScreen(
         ) {
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = MintSuccess.copy(alpha = 0.95f),
+                color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.95f),
                 shadowElevation = 8.dp
             ) {
                 Row(
@@ -515,13 +514,13 @@ private fun SpotlightDealCard(
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MintSuccess.copy(alpha = 0.15f)
+                    color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
                 ) {
                     Text(
                         text = "-${deal.discountPercent}% OFF",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MintSuccess,
+                        color = PriceLensTheme.glassColors.ambientGlow,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
@@ -571,7 +570,7 @@ private fun SpotlightDealCard(
                         text = currencyFormatter.format(deal.currentPrice),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MintSuccess
+                        color = PriceLensTheme.glassColors.ambientGlow
                     )
                 }
 
@@ -647,26 +646,26 @@ private fun DealCard(
                     Icon(
                         imageVector = Icons.Default.Storefront,
                         contentDescription = null,
-                        tint = CyanAccent,
+                        tint = PriceLensTheme.glassColors.ambientGlow,
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
                         text = deal.lowestRetailer,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = CyanAccent
+                        color = PriceLensTheme.glassColors.ambientGlow
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = MintSuccess.copy(alpha = 0.15f)
+                    color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)
                 ) {
                     Text(
                         text = "${deal.dealBadge} • -${deal.discountPercent}%",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                         fontWeight = FontWeight.Bold,
-                        color = MintSuccess,
+                        color = PriceLensTheme.glassColors.ambientGlow,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
@@ -710,7 +709,7 @@ private fun DealCard(
                         text = "Save ${currencyFormatter.format(deal.savingsAmount)} on this deal",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = MintSuccess
+                        color = PriceLensTheme.glassColors.ambientGlow
                     )
                 }
 
@@ -755,8 +754,8 @@ private fun DealCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = CyanAccent.copy(alpha = 0.15f),
-                    border = BorderStroke(1.dp, CyanAccent.copy(alpha = 0.4f)),
+                    color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.4f)),
                     modifier = Modifier
                         .weight(1f)
                         .clickable {
@@ -773,7 +772,7 @@ private fun DealCard(
                             text = "Compare Stores",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = CyanAccent
+                            color = PriceLensTheme.glassColors.ambientGlow
                         )
                     }
                 }
