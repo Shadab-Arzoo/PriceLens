@@ -145,9 +145,7 @@ fun DashboardScreen(
     }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(brush = PriceLensTheme.glassColors.backgroundBrush)
+        modifier = modifier.fillMaxSize()
     ) {
         // 1. Pinned Top Bar with status bar protection
         Surface(

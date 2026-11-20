@@ -193,9 +193,7 @@ fun ProductComparisonScreen(
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(brush = PriceLensTheme.glassColors.backgroundBrush)
+        modifier = modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier
@@ -1610,20 +1608,9 @@ private fun BestOfferSpotlightCard(
     onOpenOfferUrl: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "spotlightPulse")
-    val glowPulse by infiniteTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 0.85f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glowPulse"
-    )
-
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        borderColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = glowPulse),
+        borderColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.65f),
         borderWidth = 1.5.dp
     ) {
         Column(
@@ -2261,22 +2248,11 @@ private fun BuyNowVerdictCard(
         label = "priceGaugePosition"
     )
 
-    val infiniteTransition = rememberInfiniteTransition(label = "verdictGlow")
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 0.75f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glowAlpha"
-    )
-
     GlassCard(
         modifier = modifier
             .fillMaxWidth()
             .animateContentSize(),
-        borderColor = verdict.badgeColor.copy(alpha = glowAlpha)
+        borderColor = verdict.badgeColor.copy(alpha = 0.55f)
     ) {
         Column(
             modifier = Modifier

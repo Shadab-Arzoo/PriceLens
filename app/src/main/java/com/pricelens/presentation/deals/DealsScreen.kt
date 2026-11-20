@@ -125,9 +125,7 @@ fun DealsScreen(
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(brush = PriceLensTheme.glassColors.backgroundBrush)
+        modifier = modifier.fillMaxSize()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
@@ -356,7 +354,7 @@ fun DealsScreen(
                 ) {
                     // Deal Spotlight Card
                     if (uiState.spotlightDeal != null && uiState.selectedCategory == DealCategory.ALL) {
-                        item {
+                        item(key = "spotlight_deal_card") {
                             SpotlightDealCard(
                                 deal = uiState.spotlightDeal,
                                 currencyFormatter = currencyFormatter,
@@ -366,7 +364,7 @@ fun DealsScreen(
                     }
 
                     // Section Title
-                    item {
+                    item(key = "active_deals_section_title") {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,

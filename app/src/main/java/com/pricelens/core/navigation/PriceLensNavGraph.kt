@@ -65,9 +65,7 @@ fun PriceLensNavGraph(
     NavHost(
         navController = navController,
         startDestination = resolvedStartDestination,
-        modifier = modifier
-            .fillMaxSize()
-            .background(brush = PriceLensTheme.glassColors.backgroundBrush),
+        modifier = modifier.fillMaxSize(),
         enterTransition = {
             slideInHorizontally(
                 initialOffsetX = { fullWidth -> (fullWidth * 0.16f).toInt() },

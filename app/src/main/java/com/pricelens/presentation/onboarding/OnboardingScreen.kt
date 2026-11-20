@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -268,7 +269,7 @@ private fun OnboardingSlide1() {
         // Hero Image Illustration Card
         Box(
             modifier = Modifier
-                .offset(y = offsetY.dp)
+                .graphicsLayer { translationY = offsetY * density }
                 .fillMaxWidth()
                 .height(200.dp)
                 .clip(RoundedCornerShape(20.dp))
@@ -375,7 +376,7 @@ private fun OnboardingSlide2() {
         // Hero Image Illustration Card
         Box(
             modifier = Modifier
-                .offset(y = offsetY.dp)
+                .graphicsLayer { translationY = offsetY * density }
                 .fillMaxWidth()
                 .height(200.dp)
                 .clip(RoundedCornerShape(20.dp))
@@ -461,7 +462,7 @@ private fun OnboardingSlide3() {
         // Hero Image Illustration Card
         Box(
             modifier = Modifier
-                .offset(y = offsetY.dp)
+                .graphicsLayer { translationY = offsetY * density }
                 .fillMaxWidth()
                 .height(200.dp)
                 .clip(RoundedCornerShape(20.dp))
@@ -550,7 +551,7 @@ private fun OnboardingSlide4(
         // Hero Image Illustration Card
         Box(
             modifier = Modifier
-                .offset(y = offsetY.dp)
+                .graphicsLayer { translationY = offsetY * density }
                 .fillMaxWidth()
                 .height(190.dp)
                 .clip(RoundedCornerShape(20.dp))

@@ -131,11 +131,12 @@ fun WatchlistScreen(
             maximumFractionDigits = 0
         }
     }
+    val filteredItems = remember(uiState.items, uiState.activeFilter, uiState.searchQuery, uiState.sortOrder) {
+        uiState.filteredItems
+    }
 
     Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .background(PriceLensTheme.glassColors.backgroundBrush),
+        modifier = modifier.fillMaxSize(),
         containerColor = Color.Transparent,
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) { data ->
@@ -351,7 +352,7 @@ fun WatchlistScreen(
                     }
 
                     // Empty filter state
-                    if (uiState.filteredItems.isEmpty()) {
+                    if (filteredItems.isEmpty()) {
                         item(key = "empty_filter_state") {
                             GlassCard(
                                 modifier = Modifier
@@ -392,7 +393,7 @@ fun WatchlistScreen(
 
                     // Watchlist items
                     items(
-                        items = uiState.filteredItems,
+                        items = filteredItems,
                         key = { it.productId }
                     ) { item ->
                         WatchlistItemCard(

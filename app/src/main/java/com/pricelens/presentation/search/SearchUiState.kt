@@ -1,5 +1,6 @@
 package com.pricelens.presentation.search
 
+import androidx.compose.runtime.Immutable
 import com.pricelens.domain.model.ProductSummary
 
 enum class SearchSortOrder(val label: String) {
@@ -17,6 +18,7 @@ enum class SearchPriceRange(val label: String) {
     ABOVE_70K("₹70k+")
 }
 
+@Immutable
 data class SearchUiState(
     val query: String = "",
     val isLoading: Boolean = false,

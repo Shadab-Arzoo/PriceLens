@@ -1,5 +1,8 @@
 package com.pricelens.domain.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class ProductSummary(
     val id: String,
     val name: String,

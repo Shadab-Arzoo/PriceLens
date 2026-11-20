@@ -1,5 +1,6 @@
 package com.pricelens.presentation.watchlist
 
+import androidx.compose.runtime.Immutable
 import com.pricelens.domain.model.WatchlistItem
 
 enum class WatchlistFilter {
@@ -14,6 +15,7 @@ enum class WatchlistSortOrder {
     BIGGEST_SAVINGS
 }
 
+@Immutable
 data class WatchlistUiState(
     val isLoading: Boolean = false,
     val items: List<WatchlistItem> = emptyList(),

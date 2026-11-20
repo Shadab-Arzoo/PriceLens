@@ -1,11 +1,13 @@
 package com.pricelens.presentation.dashboard
 
+import androidx.compose.runtime.Immutable
 import com.pricelens.domain.model.ConfirmedProductIdentity
 import com.pricelens.domain.model.ProductSummary
 import com.pricelens.domain.model.RecentSearch
 import com.pricelens.domain.model.WatchlistItem
 import com.pricelens.domain.usecase.UrlValidationResult
 
+@Immutable
 data class DashboardUiState(
     val isLoading: Boolean = true,
     val searchQuery: String = "",

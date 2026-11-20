@@ -1,9 +1,11 @@
 package com.pricelens.presentation.comparison
 
+import androidx.compose.runtime.Immutable
 import com.pricelens.core.preferences.UserPreferencesRepository
 import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.TargetPriceAlert
 
+@Immutable
 data class ProductComparisonUiState(
     val productId: String = "",
     val productName: String = "",

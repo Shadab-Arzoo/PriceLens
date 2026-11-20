@@ -111,9 +111,7 @@ fun SearchScreen(
     val isResultsEmpty = uiState.isSubmitted && !uiState.isLoading && uiState.errorMessage == null && sortedProducts.isEmpty()
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(brush = PriceLensTheme.glassColors.backgroundBrush)
+        modifier = modifier.fillMaxSize()
     ) {
         Column(
             modifier = Modifier

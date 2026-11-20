@@ -1,5 +1,7 @@
 package com.pricelens.presentation.deals
 
+import androidx.compose.runtime.Immutable
+
 enum class DealCategory(val title: String) {
     ALL("All Deals"),
     SMARTPHONES("Smartphones"),
@@ -21,6 +23,7 @@ enum class BudgetFilter(val label: String) {
     FLAGSHIPS("Flagships (₹50k+)")
 }
 
+@Immutable
 data class DealItem(
     val productId: String,
     val title: String,
@@ -38,6 +41,7 @@ data class DealItem(
     val highlightPromo: String
 )
 
+@Immutable
 data class DealsUiState(
     val isLoading: Boolean = true,
     val deals: List<DealItem> = emptyList(),

@@ -1,8 +1,11 @@
 package com.pricelens.domain.model
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Domain model representing comprehensive comparison details for a product across Indian retailers.
  */
+@Immutable
 data class ProductComparisonDetails(
     val id: String,
     val name: String,
