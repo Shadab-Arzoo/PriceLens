@@ -5,7 +5,12 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.pricelens.domain.model.WatchlistItem
 
-@Entity(tableName = "watchlist_items")
+@Entity(
+    tableName = "watchlist_items",
+    indices = [
+        androidx.room.Index(value = ["added_at"])
+    ]
+)
 data class WatchlistEntity(
     @PrimaryKey
     @ColumnInfo(name = "product_id")

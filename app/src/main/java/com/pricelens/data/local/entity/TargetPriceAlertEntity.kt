@@ -5,7 +5,13 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.pricelens.domain.model.TargetPriceAlert
 
-@Entity(tableName = "target_price_alerts")
+@Entity(
+    tableName = "target_price_alerts",
+    indices = [
+        androidx.room.Index(value = ["product_id"]),
+        androidx.room.Index(value = ["product_id", "is_active"])
+    ]
+)
 data class TargetPriceAlertEntity(
     @PrimaryKey val id: String,
     @ColumnInfo(name = "product_id") val productId: String,

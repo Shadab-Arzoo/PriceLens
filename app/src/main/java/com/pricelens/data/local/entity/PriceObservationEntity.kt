@@ -8,7 +8,8 @@ import com.pricelens.domain.model.PriceObservation
 @Entity(
     tableName = "price_observations",
     indices = [
-        androidx.room.Index(value = ["product_id", "retailer_id", "observed_at"])
+        androidx.room.Index(value = ["product_id", "retailer_id", "observed_at"]),
+        androidx.room.Index(value = ["product_id", "observed_at"])
     ]
 )
 data class PriceObservationEntity(

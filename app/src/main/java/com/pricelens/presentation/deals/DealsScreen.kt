@@ -69,6 +69,7 @@ import com.pricelens.core.designsystem.AmberAlert
 import com.pricelens.core.designsystem.CyanAccent
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
+import com.pricelens.core.util.rememberInrCurrencyFormatter
 import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import java.util.Locale
@@ -112,7 +113,7 @@ fun DealsScreen(
     onNavigateToComparison: (productId: String, productName: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+    val currencyFormatter = rememberInrCurrencyFormatter()
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
 

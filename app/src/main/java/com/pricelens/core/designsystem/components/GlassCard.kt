@@ -33,7 +33,8 @@ import com.pricelens.core.designsystem.PriceLensTheme
 
 /**
  * Clean modern surface card with 16dp rounded corners, crisp hairline perimeter,
- * subtle elevation, and responsive spring physics.
+ * subtle elevation, and responsive spring physics when clickable.
+ * Optimized to bypass animation and state allocation overhead for non-clickable cards.
  */
 @Composable
 fun GlassCard(
@@ -48,62 +49,75 @@ fun GlassCard(
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed && onClick != null) 0.96f else 1f,
-        animationSpec = spring(
-            dampingRatio = 0.72f,
-            stiffness = 450f
-        ),
-        label = "surfaceCardSpring"
-    )
-
-    val currentElevation by animateDpAsState(
-        targetValue = if (isPressed && onClick != null) 0.dp else elevation,
-        animationSpec = spring(
-            dampingRatio = 0.72f,
-            stiffness = 450f
-        ),
-        label = "surfaceCardElevation"
-    )
-
     val effectiveBorderStroke = when {
         borderBrush != null -> BorderStroke(borderWidth, borderBrush)
         borderColor != null -> BorderStroke(borderWidth, borderColor)
         else -> BorderStroke(borderWidth, PriceLensTheme.glassColors.specularBorderBrush)
     }
 
-    val clickableModifier = if (onClick != null) {
-        Modifier.clickable(
-            interactionSource = interactionSource,
-            indication = ripple(color = PriceLensTheme.glassColors.textPrimary),
-            onClick = onClick
-        )
-    } else {
-        Modifier
-    }
+    if (onClick != null) {
+        val interactionSource = remember { MutableInteractionSource() }
+        val isPressed by interactionSource.collectIsPressedAsState()
 
-    Surface(
-        modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
-            .shadow(
-                elevation = currentElevation,
-                shape = shape,
-                ambientColor = Color.Black.copy(alpha = 0.08f),
-                spotColor = Color.Black.copy(alpha = 0.12f),
-                clip = false
-            )
-            .clip(shape)
-            .then(clickableModifier),
-        shape = shape,
-        color = backgroundColor,
-        border = effectiveBorderStroke
-    ) {
-        Box(contentAlignment = Alignment.TopStart, content = content)
+        val scale by animateFloatAsState(
+            targetValue = if (isPressed) 0.96f else 1f,
+            animationSpec = spring(
+                dampingRatio = 0.72f,
+                stiffness = 450f
+            ),
+            label = "surfaceCardSpring"
+        )
+
+        val currentElevation by animateDpAsState(
+            targetValue = if (isPressed) 0.dp else elevation,
+            animationSpec = spring(
+                dampingRatio = 0.72f,
+                stiffness = 450f
+            ),
+            label = "surfaceCardElevation"
+        )
+
+        Surface(
+            modifier = modifier
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .shadow(
+                    elevation = currentElevation,
+                    shape = shape,
+                    ambientColor = Color.Black.copy(alpha = 0.08f),
+                    spotColor = Color.Black.copy(alpha = 0.12f),
+                    clip = false
+                )
+                .clip(shape)
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = ripple(color = PriceLensTheme.glassColors.textPrimary),
+                    onClick = onClick
+                ),
+            shape = shape,
+            color = backgroundColor,
+            border = effectiveBorderStroke
+        ) {
+            Box(content = content)
+        }
+    } else {
+        Surface(
+            modifier = modifier
+                .shadow(
+                    elevation = elevation,
+                    shape = shape,
+                    ambientColor = Color.Black.copy(alpha = 0.08f),
+                    spotColor = Color.Black.copy(alpha = 0.12f),
+                    clip = false
+                )
+                .clip(shape),
+            shape = shape,
+            color = backgroundColor,
+            border = effectiveBorderStroke
+        ) {
+            Box(content = content)
+        }
     }
 }

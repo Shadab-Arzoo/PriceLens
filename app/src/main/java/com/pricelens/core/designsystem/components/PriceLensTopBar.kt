@@ -159,7 +159,10 @@ fun PriceLensTopBar(
                             interactionSource = labsInteractionSource,
                             modifier = Modifier
                                 .size(42.dp)
-                                .graphicsLayer(scaleX = labsScale, scaleY = labsScale)
+                                .graphicsLayer {
+                                    scaleX = labsScale
+                                    scaleY = labsScale
+                                }
                                 .clip(CircleShape)
                                 .background(PriceLensTheme.glassColors.surfaceGlass)
                                 .border(
@@ -182,7 +185,11 @@ fun PriceLensTopBar(
                                 modifier = Modifier
                                     .offset(x = 2.dp, y = (-2).dp)
                                     .size(8.dp)
-                                    .graphicsLayer(scaleX = dotScale, scaleY = dotScale, alpha = dotAlpha)
+                                    .graphicsLayer {
+                                        scaleX = dotScale
+                                        scaleY = dotScale
+                                        alpha = dotAlpha
+                                    }
                                     .clip(CircleShape)
                                     .background(PriceLensTheme.glassColors.ambientGlow)
                             )

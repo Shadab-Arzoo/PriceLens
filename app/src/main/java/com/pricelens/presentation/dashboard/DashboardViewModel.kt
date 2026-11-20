@@ -22,6 +22,7 @@ import com.pricelens.domain.usecase.ValidateProductUrlUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -136,6 +137,7 @@ class DashboardViewModel @Inject constructor(
                 extractJob?.cancel()
                 if (event.url.isNotBlank() && (event.url.contains("http") || event.url.contains("."))) {
                     extractJob = viewModelScope.launch {
+                        delay(300)
                         val meta = universalProductExtractor.extractMetadata(event.url)
                         _uiState.update {
                             it.copy(

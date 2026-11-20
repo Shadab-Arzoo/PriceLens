@@ -98,7 +98,7 @@ class ProductCatalogRemoteDataSourceImpl @Inject constructor(
                     )
                 } else {
                     val baseDetails = dto.toDomain()
-                    val alternativesResult = getProductAlternatives(productId)
+                    val alternativesResult = getProductAlternativesInternal(dto)
                     val alternatives = alternativesResult.getOrDefault(emptyList())
                     Result.success(baseDetails.copy(alternatives = alternatives))
                 }
@@ -143,8 +143,11 @@ class ProductCatalogRemoteDataSourceImpl @Inject constructor(
         if (targetResult !is AdapterResult.Success) {
             return Result.success(emptyList())
         }
-        val targetDto = targetResult.data
-        val altResult = pricingAdapter.getProductAlternatives(productId)
+        return getProductAlternativesInternal(targetResult.data)
+    }
+
+    private suspend fun getProductAlternativesInternal(targetDto: ProductOffersDto): Result<List<ProductAlternative>> {
+        val altResult = pricingAdapter.getProductAlternatives(targetDto.productId)
         val candidateDtos = if (altResult is AdapterResult.Success) altResult.data else emptyList()
 
         val lowestOffer = targetDto.offers.filter { it.isAvailable && it.price != null }.minByOrNull { it.price!! }

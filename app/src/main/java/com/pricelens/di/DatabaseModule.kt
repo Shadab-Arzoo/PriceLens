@@ -76,6 +76,31 @@ object DatabaseModule {
         }
     }
 
+    private val performanceIndexMigration = object : Migration(4, 5) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_price_observations_product_id_observed_at " +
+                    "ON price_observations(product_id, observed_at)"
+            )
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_target_price_alerts_product_id " +
+                    "ON target_price_alerts(product_id)"
+            )
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_target_price_alerts_product_id_is_active " +
+                    "ON target_price_alerts(product_id, is_active)"
+            )
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_watchlist_items_added_at " +
+                    "ON watchlist_items(added_at)"
+            )
+            database.execSQL(
+                "CREATE INDEX IF NOT EXISTS index_recent_searches_timestamp " +
+                    "ON recent_searches(timestamp)"
+            )
+        }
+    }
+
     @Provides
     @Singleton
     fun providePriceLensDatabase(
@@ -88,7 +113,8 @@ object DatabaseModule {
         ).addMigrations(
             priceHistoryMigration,
             alertWebsiteTrackingMigration,
-            universalTrackingMigration
+            universalTrackingMigration,
+            performanceIndexMigration
         ).build()
     }
 

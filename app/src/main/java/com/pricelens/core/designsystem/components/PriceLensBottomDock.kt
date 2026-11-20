@@ -72,16 +72,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pricelens.core.designsystem.AmberAlert
@@ -264,11 +265,10 @@ fun PriceLensBottomDock(
                         val totalWidth = maxWidth
                         val tabCount = DockTab.entries.size
                         val tabWidth = totalWidth / tabCount
+                        val tabWidthPx = with(density) { tabWidth.toPx() }
 
                         // 1. Fluid Sliding Indicator Pill with Hold-and-Slide support
                         if (selectedIndex >= 0) {
-                            val currentPillIndex = if (isSliding) dragDisplayIndex else pillAnimatable.value
-
                             val pillScale by animateFloatAsState(
                                 targetValue = when {
                                     isSliding -> 1.05f
@@ -294,10 +294,16 @@ fun PriceLensBottomDock(
 
                             Box(
                                 modifier = Modifier
-                                    .offset(x = tabWidth * currentPillIndex)
+                                    .offset {
+                                        val currentPillIndex = if (isSliding) dragDisplayIndex else pillAnimatable.value
+                                        IntOffset((tabWidthPx * currentPillIndex).roundToInt(), 0)
+                                    }
                                     .width(tabWidth)
                                     .height(58.dp)
-                                    .scale(pillScale)
+                                    .graphicsLayer {
+                                        scaleX = pillScale
+                                        scaleY = pillScale
+                                    }
                                     .padding(horizontal = 3.dp, vertical = 2.dp)
                                     .clip(RoundedCornerShape(22.dp))
                                     .background(
@@ -368,7 +374,10 @@ fun PriceLensBottomDock(
                                 val tabModifier = if (isSelected) {
                                     Modifier
                                         .weight(1f)
-                                        .scale(pressScale)
+                                        .graphicsLayer {
+                                            scaleX = pressScale
+                                            scaleY = pressScale
+                                        }
                                         .clip(RoundedCornerShape(20.dp))
                                         .pointerInput(selectedTab, tabWidth) {
                                             val tabWidthPx = if (size.width > 0) size.width.toFloat() else with(density) { tabWidth.toPx() }
@@ -475,7 +484,10 @@ fun PriceLensBottomDock(
                                 } else {
                                     Modifier
                                         .weight(1f)
-                                        .scale(pressScale)
+                                        .graphicsLayer {
+                                            scaleX = pressScale
+                                            scaleY = pressScale
+                                        }
                                         .clip(RoundedCornerShape(20.dp))
                                         .combinedClickable(
                                             interactionSource = interactionSource,
@@ -507,7 +519,10 @@ fun PriceLensBottomDock(
                                                 tint = tabColor,
                                                 modifier = Modifier
                                                     .size(22.dp)
-                                                    .scale(iconScale)
+                                                    .graphicsLayer {
+                                                        scaleX = iconScale
+                                                        scaleY = iconScale
+                                                    }
                                             )
 
                                             // Badges
@@ -541,7 +556,10 @@ fun PriceLensBottomDock(
                                                 Box(
                                                     modifier = Modifier
                                                         .offset(x = 10.dp, y = (-4).dp)
-                                                        .scale(pulseScale)
+                                                        .graphicsLayer {
+                                                            scaleX = pulseScale
+                                                            scaleY = pulseScale
+                                                        }
                                                         .clip(RoundedCornerShape(6.dp))
                                                         .background(AmberAlert)
                                                         .padding(horizontal = 3.dp, vertical = 1.dp)

@@ -136,6 +136,8 @@ import com.pricelens.core.designsystem.components.LiquidGlassSecondaryButton
 import com.pricelens.core.designsystem.components.SkeletonBox
 import com.pricelens.core.designsystem.components.ThemeToggleSwitch
 import com.pricelens.core.preferences.UserPreferencesRepository
+import com.pricelens.core.util.PriceLensFormatters
+import com.pricelens.core.util.rememberInrCurrencyFormatter
 import com.pricelens.domain.model.ProductAlternative
 import com.pricelens.domain.model.ProductComparisonDetails
 import com.pricelens.domain.model.RetailerOffer
@@ -402,7 +404,7 @@ private fun ComparisonDetailsContent(
     onDeleteAlert: (alertId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+    val currencyFormatter = rememberInrCurrencyFormatter()
 
     LazyColumn(
         modifier = modifier
@@ -412,13 +414,13 @@ private fun ComparisonDetailsContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 1. Product Header Card
-        item {
+        item(key = "comparison_product_header") {
             ProductHeaderCard(details = details)
         }
 
         // 2. Best Offer Spotlight Card
         if (details.lowestPriceOffer != null) {
-            item {
+            item(key = "comparison_best_offer_spotlight") {
                 BestOfferSpotlightCard(
                     offer = details.lowestPriceOffer,
                     currencyFormatter = currencyFormatter,
@@ -429,7 +431,7 @@ private fun ComparisonDetailsContent(
 
         // 2b. Experimental: "Should I Buy Now?" Recommendation Verdict Badge
         if (flags.isMasterEnabled && flags.enableBuyNowVerdict && details.lowestPriceOffer?.price != null) {
-            item {
+            item(key = "comparison_buy_now_verdict") {
                 BuyNowVerdictCard(
                     lowestPrice = details.lowestPriceOffer.price,
                     history = details.priceHistory,
@@ -442,7 +444,7 @@ private fun ComparisonDetailsContent(
         // 2c. Experimental: Deal Authenticity & Fake Discount Detector
         if (flags.isMasterEnabled && flags.enableDealAuthenticity && details.lowestPriceOffer?.price != null) {
             val highestOfferPrice = details.offers.mapNotNull { it.price }.maxOrNull()
-            item {
+            item(key = "comparison_deal_authenticity") {
                 DealAuthenticityCard(
                     lowestPrice = details.lowestPriceOffer.price,
                     highestPrice = highestOfferPrice,
@@ -454,7 +456,7 @@ private fun ComparisonDetailsContent(
 
         // 2d. Experimental: Bank Card & Cashback Simulator
         if (flags.isMasterEnabled && flags.enableBankCardCalculator && details.lowestPriceOffer?.price != null) {
-            item {
+            item(key = "comparison_bank_offer_simulator") {
                 BankOfferSimulatorCard(
                     basePrice = details.lowestPriceOffer.price,
                     currencyFormatter = currencyFormatter
@@ -464,7 +466,7 @@ private fun ComparisonDetailsContent(
 
         // 2e. Experimental: AI Price Drop Forecast & Timing Advisor
         if (flags.isMasterEnabled && flags.enablePriceDropForecast && details.lowestPriceOffer?.price != null && details.priceHistory.size >= 2) {
-            item {
+            item(key = "comparison_price_drop_forecast") {
                 PriceDropForecastCard(
                     details = details,
                     currencyFormatter = currencyFormatter,
@@ -475,7 +477,7 @@ private fun ComparisonDetailsContent(
 
         // 2f. Experimental: Smart Coupon & Promo Code Finder
         if (flags.isMasterEnabled && flags.enableCouponFinder && details.lowestPriceOffer?.price != null) {
-            item {
+            item(key = "comparison_coupon_finder") {
                 CouponFinderCard(
                     details = details,
                     currencyFormatter = currencyFormatter
@@ -484,7 +486,7 @@ private fun ComparisonDetailsContent(
         }
 
         // 3. Track Outside Website & Price Drop Section
-        item {
+        item(key = "comparison_tracked_alerts_section") {
             TrackedAlertsSection(
                 activeAlerts = activeAlerts,
                 currencyFormatter = currencyFormatter,
@@ -494,13 +496,13 @@ private fun ComparisonDetailsContent(
         }
 
         // 4. Price History Card
-        item {
+        item(key = "comparison_price_history_card") {
             PriceHistoryCard(history = details.priceHistory)
         }
 
         // 5. Retailer Offers Section
         if (details.offers.isNotEmpty()) {
-            item {
+            item(key = "comparison_retailer_offers_title") {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1101,11 +1103,15 @@ private fun PriceHistoryCard(history: List<com.pricelens.domain.model.PriceHisto
                     color = PriceLensTheme.glassColors.textSecondary
                 )
             } else {
-                val prices = filteredHistory.map { it.price }
-                val low = prices.minOrNull() ?: 0.0
-                val high = prices.maxOrNull() ?: 0.0
-                val average = prices.average()
-                val current = filteredHistory.last().price
+                val (low, high, average, current) = remember(filteredHistory) {
+                    val prices = filteredHistory.map { it.price }
+                    listOf(
+                        prices.minOrNull() ?: 0.0,
+                        prices.maxOrNull() ?: 0.0,
+                        prices.average(),
+                        filteredHistory.last().price
+                    )
+                }
 
                 AnimatedVisibility(
                     visible = selectedPoint != null,

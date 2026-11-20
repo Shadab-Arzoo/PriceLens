@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -70,9 +69,10 @@ fun SkeletonBox(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(8.dp),
     height: Dp = 16.dp,
-    width: Dp? = null
+    width: Dp? = null,
+    brush: Brush? = null
 ) {
-    val brush = shimmerBrush()
+    val effectiveBrush = brush ?: shimmerBrush()
     val boxModifier = if (width != null) {
         modifier.size(width = width, height = height)
     } else {
@@ -82,17 +82,20 @@ fun SkeletonBox(
     Box(
         modifier = boxModifier
             .clip(shape)
-            .background(brush)
+            .background(effectiveBrush)
     )
 }
 
 /**
  * Dashboard Skeleton loader displayed smoothly during data fetching.
+ * Uses a single unified shimmer transition across all skeleton nodes for optimal performance.
  */
 @Composable
 fun DashboardSkeleton(
     modifier: Modifier = Modifier
 ) {
+    val sharedShimmer = shimmerBrush()
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -110,22 +113,23 @@ fun DashboardSkeleton(
                         modifier = Modifier.size(42.dp),
                         shape = CircleShape,
                         height = 42.dp,
-                        width = 42.dp
+                        width = 42.dp,
+                        brush = sharedShimmer
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        SkeletonBox(height = 16.dp, width = 160.dp)
+                        SkeletonBox(height = 16.dp, width = 160.dp, brush = sharedShimmer)
                         Spacer(modifier = Modifier.height(6.dp))
-                        SkeletonBox(height = 12.dp, width = 220.dp)
+                        SkeletonBox(height = 12.dp, width = 220.dp, brush = sharedShimmer)
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                SkeletonBox(height = 44.dp, shape = RoundedCornerShape(12.dp))
+                SkeletonBox(height = 44.dp, shape = RoundedCornerShape(12.dp), brush = sharedShimmer)
             }
         }
 
         // Section Title Skeleton
-        SkeletonBox(height = 18.dp, width = 140.dp)
+        SkeletonBox(height = 18.dp, width = 140.dp, brush = sharedShimmer)
 
         // Cards Skeleton
         repeat(3) {
@@ -141,11 +145,11 @@ fun DashboardSkeleton(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        SkeletonBox(height = 16.dp, width = 180.dp)
+                        SkeletonBox(height = 16.dp, width = 180.dp, brush = sharedShimmer)
                         Spacer(modifier = Modifier.height(6.dp))
-                        SkeletonBox(height = 12.dp, width = 120.dp)
+                        SkeletonBox(height = 12.dp, width = 120.dp, brush = sharedShimmer)
                     }
-                    SkeletonBox(height = 20.dp, width = 70.dp, shape = RoundedCornerShape(6.dp))
+                    SkeletonBox(height = 20.dp, width = 70.dp, shape = RoundedCornerShape(6.dp), brush = sharedShimmer)
                 }
             }
         }

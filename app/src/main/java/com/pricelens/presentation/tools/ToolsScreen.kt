@@ -81,6 +81,7 @@ import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.ThemeAccent
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.preferences.UserPreferencesRepository
+import com.pricelens.core.util.rememberInrCurrencyFormatter
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.min
@@ -202,9 +203,7 @@ fun ToolsScreen(
     onNavigateToSearch: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
-        maximumFractionDigits = 0
-    }
+    val currencyFormatter = rememberInrCurrencyFormatter()
     val haptic = LocalHapticFeedback.current
     val flags by userPreferences.experimentalFlagsFlow.collectAsState()
     val themeToggle = LocalThemeToggle.current

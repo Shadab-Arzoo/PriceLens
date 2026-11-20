@@ -175,7 +175,7 @@ fun DashboardScreen(
         ) {
 
             // 2. Search Input Bar
-            item {
+            item(key = "dashboard_search_bar") {
                 PriceLensSearchBar(
                     query = uiState.searchQuery,
                     onQueryChange = { onEvent(DashboardUiEvent.SearchQueryChanged(it)) },
@@ -203,14 +203,14 @@ fun DashboardScreen(
             }
 
             // 3. Hero Action: Compare by Store Link (Direct Link-First Experience)
-            item {
+            item(key = "dashboard_hero_card") {
                 PasteLinkHeroCard(
                     onOpenPasteSheet = { onEvent(DashboardUiEvent.OpenPasteUrlSheet) }
                 )
             }
 
             // 3b. PriceLens Labs Banner
-            item {
+            item(key = "dashboard_labs_banner") {
                 PriceLensLabsBanner(
                     isMasterEnabled = uiState.experimentalFlags.isMasterEnabled,
                     onClick = { onEvent(DashboardUiEvent.OpenLabsSheet) }
@@ -218,7 +218,7 @@ fun DashboardScreen(
             }
 
             // 3c. Live Market Flash Drops Ticker
-            item {
+            item(key = "dashboard_flash_deals_ticker") {
                 FlashDealsTicker(
                     onProductClick = onNavigateToComparison
                 )
@@ -226,14 +226,14 @@ fun DashboardScreen(
 
             // 4. Loading State with Fluid Skeleton
             if (uiState.isLoading) {
-                item {
+                item(key = "dashboard_skeleton_loader") {
                     DashboardSkeleton()
                 }
             }
 
             // 5. Error State
             if (uiState.errorMessage != null && !uiState.isLoading) {
-                item {
+                item(key = "dashboard_error_state") {
                     DashboardErrorState(
                         errorMessage = uiState.errorMessage,
                         onRetry = { onEvent(DashboardUiEvent.RetryLoad) }
@@ -244,7 +244,7 @@ fun DashboardScreen(
             // 6. Main Content Sections
             if (!uiState.isLoading && uiState.errorMessage == null) {
                 // Section: Recent Searches
-                item {
+                item(key = "dashboard_recent_searches") {
                     RecentSearchesSection(
                         recentSearches = uiState.recentSearches,
                         onSelectSearch = { query ->
@@ -256,7 +256,7 @@ fun DashboardScreen(
                 }
 
                 // Section: Watchlist / Tracked Price Alerts
-                item {
+                item(key = "dashboard_watchlist_section") {
                     WatchlistSection(
                         watchlistItems = uiState.watchlistItems,
                         onViewWatchlist = onNavigateToWatchlist,
@@ -265,14 +265,14 @@ fun DashboardScreen(
                 }
 
                 // Section: Trending Comparisons
-                item {
+                item(key = "dashboard_trending_section") {
                     TrendingSection(
                         trendingProducts = uiState.trendingProducts,
                         onProductClick = onNavigateToComparison
                     )
                 }
 
-                item {
+                item(key = "dashboard_bottom_spacer") {
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
@@ -394,7 +394,10 @@ private fun PriceLensLabsBanner(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
-            .graphicsLayer(scaleX = scale, scaleY = scale),
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
         borderColor = if (isMasterEnabled) glow.copy(alpha = borderAlpha) else PriceLensTheme.glassColors.specularBorder
     ) {
         Row(
@@ -1065,8 +1068,9 @@ private fun FlashDealsTicker(
                 Box(
                     modifier = Modifier
                         .size(8.dp)
+                        .graphicsLayer { alpha = pulseAlpha }
                         .clip(CircleShape)
-                        .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = pulseAlpha))
+                        .background(PriceLensTheme.glassColors.ambientGlow)
                 )
                 Text(
                     text = "Today's Flash Drops",

@@ -69,6 +69,7 @@ import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.PriceLensSearchBar
 import com.pricelens.core.designsystem.components.SkeletonBox
 import com.pricelens.core.designsystem.components.ThemeToggleSwitch
+import com.pricelens.core.util.PriceLensFormatters
 import com.pricelens.domain.model.ProductSummary
 import java.text.NumberFormat
 import java.util.Locale
@@ -99,6 +100,16 @@ fun SearchScreen(
     onProductClick: (productId: String, productName: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val sortedProducts = androidx.compose.runtime.remember(
+        uiState.products,
+        uiState.selectedStoreFilter,
+        uiState.selectedPriceRange,
+        uiState.sortOrder
+    ) {
+        uiState.sortedProducts
+    }
+    val isResultsEmpty = uiState.isSubmitted && !uiState.isLoading && uiState.errorMessage == null && sortedProducts.isEmpty()
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -162,7 +173,7 @@ fun SearchScreen(
                             onRetry = { onEvent(SearchUiEvent.RetrySearch) }
                         )
                     }
-                    uiState.isEmpty -> {
+                    isResultsEmpty -> {
                         SearchEmptyState(query = uiState.query)
                     }
                     !uiState.isSubmitted && uiState.products.isEmpty() -> {
@@ -175,8 +186,8 @@ fun SearchScreen(
                     }
                     else -> {
                         SearchResultsList(
-                            products = uiState.sortedProducts,
-                            totalCount = uiState.sortedProducts.size,
+                            products = sortedProducts,
+                            totalCount = sortedProducts.size,
                             currentSortOrder = uiState.sortOrder,
                             onSortChange = { onEvent(SearchUiEvent.SortOrderChanged(it)) },
                             selectedStoreFilter = uiState.selectedStoreFilter,
@@ -406,7 +417,7 @@ private fun SearchResultsList(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     val storeList = listOf("All Stores", "Amazon India", "Flipkart", "Croma", "Reliance Digital", "Vijay Sales")
-                    items(storeList) { store ->
+                    items(storeList, key = { it }) { store ->
                         val isSelected = selectedStoreFilter == store
                         Surface(
                             shape = RoundedCornerShape(10.dp),
@@ -433,7 +444,7 @@ private fun SearchResultsList(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(SearchPriceRange.entries) { range ->
+                    items(SearchPriceRange.entries, key = { it.name }) { range ->
                         val isSelected = selectedPriceRange == range
                         Surface(
                             shape = RoundedCornerShape(10.dp),
@@ -479,7 +490,6 @@ private fun ProductSummaryCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
     val spreadSavings = if (product.highestPrice != null && product.lowestPrice != null && product.highestPrice > product.lowestPrice) {
         product.highestPrice - product.lowestPrice
     } else 0.0
@@ -536,7 +546,7 @@ private fun ProductSummaryCard(
                 ) {
                     if (product.lowestPrice != null) {
                         Text(
-                            text = currencyFormatter.format(product.lowestPrice),
+                            text = PriceLensFormatters.formatInr(product.lowestPrice),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
                             color = PriceLensTheme.glassColors.ambientGlow
@@ -574,7 +584,7 @@ private fun ProductSummaryCard(
 
                     if (spreadSavings > 0) {
                         Text(
-                            text = "• Save up to ${currencyFormatter.format(spreadSavings)}",
+                            text = "• Save up to ${PriceLensFormatters.formatInr(spreadSavings)}",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = PriceLensTheme.glassColors.ambientGlow

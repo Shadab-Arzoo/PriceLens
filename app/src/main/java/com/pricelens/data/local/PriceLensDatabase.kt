@@ -20,7 +20,7 @@ import com.pricelens.data.local.entity.WatchlistEntity
         TargetPriceAlertEntity::class,
         NotificationRecordEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class PriceLensDatabase : RoomDatabase() {
