@@ -90,19 +90,23 @@ import kotlin.math.min
 fun ToolsRoute(
     onNavigateToWebPicker: (url: String, name: String) -> Unit,
     onNavigateToSearch: (String) -> Unit,
+    userPreferences: UserPreferencesRepository? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val userPreferences = remember { UserPreferencesRepository(context.applicationContext) }
+    val effectivePreferences = userPreferences
+        ?: com.pricelens.core.designsystem.LocalUserPreferences.current
+        ?: remember { UserPreferencesRepository(context.applicationContext) }
 
     ToolsScreen(
-        userPreferences = userPreferences,
+        userPreferences = effectivePreferences,
         onNavigateToWebPicker = onNavigateToWebPicker,
         onNavigateToSearch = onNavigateToSearch,
         modifier = modifier
     )
 }
 
+@androidx.compose.runtime.Immutable
 data class UrlDiagnosticInfo(
     val storeName: String,
     val storeColor: Color,
@@ -111,6 +115,11 @@ data class UrlDiagnosticInfo(
     val isSupported: Boolean,
     val diagnosticMessage: String
 )
+
+private val AsinRegex = Regex("""(?:/dp/|/gp/product/|/d/)([A-Z0-9]{10})""", RegexOption.IGNORE_CASE)
+private val PidRegex = Regex("""pid=([A-Za-z0-9]{16})""", RegexOption.IGNORE_CASE)
+private val CromaSkuRegex = Regex("""/p/(\d+)""")
+private val RdSkuRegex = Regex("""/p/(\d+)""")
 
 private fun diagnoseStoreUrl(url: String): UrlDiagnosticInfo {
     val cleanUrl = url.trim()
@@ -128,8 +137,7 @@ private fun diagnoseStoreUrl(url: String): UrlDiagnosticInfo {
     val lower = cleanUrl.lowercase()
     return when {
         lower.contains("amazon.in") || lower.contains("amzn.in") || lower.contains("amzn.to") -> {
-            val asinRegex = Regex("""(?:/dp/|/gp/product/|/d/)([A-Z0-9]{10})""", RegexOption.IGNORE_CASE)
-            val asin = asinRegex.find(cleanUrl)?.groupValues?.get(1)
+            val asin = AsinRegex.find(cleanUrl)?.groupValues?.get(1)
             UrlDiagnosticInfo(
                 storeName = "Amazon India",
                 storeColor = Color(0xFFFF9900),
@@ -140,8 +148,7 @@ private fun diagnoseStoreUrl(url: String): UrlDiagnosticInfo {
             )
         }
         lower.contains("flipkart.com") || lower.contains("fkrt.it") -> {
-            val pidRegex = Regex("""pid=([A-Za-z0-9]{16})""", RegexOption.IGNORE_CASE)
-            val pid = pidRegex.find(cleanUrl)?.groupValues?.get(1)
+            val pid = PidRegex.find(cleanUrl)?.groupValues?.get(1)
             UrlDiagnosticInfo(
                 storeName = "Flipkart",
                 storeColor = Color(0xFF2874F0),
@@ -152,7 +159,7 @@ private fun diagnoseStoreUrl(url: String): UrlDiagnosticInfo {
             )
         }
         lower.contains("croma.com") -> {
-            val cromaSku = Regex("""/p/(\d+)""").find(cleanUrl)?.groupValues?.get(1)
+            val cromaSku = CromaSkuRegex.find(cleanUrl)?.groupValues?.get(1)
             UrlDiagnosticInfo(
                 storeName = "Croma",
                 storeColor = Color(0xFF00E676),
@@ -163,7 +170,7 @@ private fun diagnoseStoreUrl(url: String): UrlDiagnosticInfo {
             )
         }
         lower.contains("reliancedigital.in") -> {
-            val rdSku = Regex("""/p/(\d+)""").find(cleanUrl)?.groupValues?.get(1)
+            val rdSku = RdSkuRegex.find(cleanUrl)?.groupValues?.get(1)
             UrlDiagnosticInfo(
                 storeName = "Reliance Digital",
                 storeColor = Color(0xFFE53935),

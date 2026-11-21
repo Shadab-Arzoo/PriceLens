@@ -48,15 +48,18 @@ import com.pricelens.presentation.webpicker.WebPricePickerViewModel
 @Composable
 fun PriceLensNavGraph(
     navController: NavHostController,
+    userPreferences: UserPreferencesRepository? = null,
     modifier: Modifier = Modifier,
     startDestination: String? = null,
     sharedUrl: String? = null,
     sharedProductId: String? = null
 ) {
     val context = LocalContext.current
-    val userPreferences = remember { UserPreferencesRepository(context.applicationContext) }
+    val effectivePreferences = userPreferences
+        ?: com.pricelens.core.designsystem.LocalUserPreferences.current
+        ?: remember { UserPreferencesRepository(context.applicationContext) }
 
-    val resolvedStartDestination = startDestination ?: if (userPreferences.hasCompletedOnboarding) {
+    val resolvedStartDestination = startDestination ?: if (effectivePreferences.hasCompletedOnboarding) {
         PriceLensDestination.Dashboard.route
     } else {
         PriceLensDestination.Onboarding.route
@@ -111,7 +114,7 @@ fun PriceLensNavGraph(
         composable(PriceLensDestination.Onboarding.route) {
             OnboardingScreen(
                 onFinishOnboarding = {
-                    userPreferences.hasCompletedOnboarding = true
+                    effectivePreferences.hasCompletedOnboarding = true
                     navController.navigate(PriceLensDestination.Dashboard.route) {
                         popUpTo(PriceLensDestination.Onboarding.route) {
                             inclusive = true
@@ -504,7 +507,8 @@ fun PriceLensNavGraph(
                 },
                 onNavigateToSearch = { query ->
                     navController.navigate(PriceLensDestination.Search.createRoute(query))
-                }
+                },
+                userPreferences = effectivePreferences
             )
         }
     }

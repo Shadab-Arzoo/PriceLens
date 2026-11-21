@@ -441,8 +441,8 @@ private fun ComparisonDetailsContent(
 
         // 2c. Experimental: Deal Authenticity & Fake Discount Detector
         if (flags.isMasterEnabled && flags.enableDealAuthenticity && details.lowestPriceOffer?.price != null) {
-            val highestOfferPrice = details.offers.mapNotNull { it.price }.maxOrNull()
             item(key = "comparison_deal_authenticity") {
+                val highestOfferPrice = remember(details.offers) { details.offers.mapNotNull { it.price }.maxOrNull() }
                 DealAuthenticityCard(
                     lowestPrice = details.lowestPriceOffer.price,
                     highestPrice = highestOfferPrice,
@@ -965,7 +965,10 @@ private fun androidx.compose.foundation.layout.RowScope.PresetChip(
         border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (isPressed) 0.6f else 0.35f)),
         modifier = Modifier
             .weight(1f)
-            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -1241,17 +1244,30 @@ private fun PriceSparkline(
         Modifier
     }
 
+    val (minPrice, maxPrice, priceRange) = androidx.compose.runtime.remember(points) {
+        if (points.isNotEmpty()) {
+            val min = points.minOf { it.price }
+            val max = points.maxOf { it.price }
+            val range = if (max - min > 0) (max - min) else 1.0
+            Triple(min, max, range)
+        } else {
+            Triple(0.0, 0.0, 1.0)
+        }
+    }
+
+    val fullStrokePath = androidx.compose.runtime.remember { androidx.compose.ui.graphics.Path() }
+    val animatedPath = androidx.compose.runtime.remember { androidx.compose.ui.graphics.Path() }
+    val fillPath = androidx.compose.runtime.remember { androidx.compose.ui.graphics.Path() }
+    val pathMeasure = androidx.compose.runtime.remember { androidx.compose.ui.graphics.PathMeasure() }
+
     androidx.compose.foundation.Canvas(modifier = modifier.then(scrubModifier)) {
         val progress = animatedProgress.value
         if (points.size < 2 || progress <= 0.01f) return@Canvas
         val width = size.width
         val height = size.height
-        val minPrice = points.minOf { it.price }
-        val maxPrice = points.maxOf { it.price }
-        val priceRange = if (maxPrice - minPrice > 0) (maxPrice - minPrice) else 1.0
 
         val stepX = width / (points.size - 1)
-        val fullStrokePath = androidx.compose.ui.graphics.Path()
+        fullStrokePath.reset()
 
         points.forEachIndexed { index, point ->
             val x = index * stepX
@@ -1265,17 +1281,16 @@ private fun PriceSparkline(
             }
         }
 
-        val pathMeasure = androidx.compose.ui.graphics.PathMeasure()
         pathMeasure.setPath(fullStrokePath, forceClosed = false)
         val pathLength = pathMeasure.length
-        val animatedPath = androidx.compose.ui.graphics.Path()
+        animatedPath.reset()
         val currentLength = pathLength * progress
         pathMeasure.getSegment(0f, currentLength, animatedPath, startWithMoveTo = true)
 
         val currentPosition = pathMeasure.getPosition(currentLength)
 
         // Draw animated fill under the drawn portion
-        val fillPath = androidx.compose.ui.graphics.Path()
+        fillPath.reset()
         fillPath.addPath(animatedPath)
         fillPath.lineTo(currentPosition.x, height)
         fillPath.lineTo(0f, height)
@@ -2164,6 +2179,7 @@ private fun ComparisonErrorState(
     }
 }
 
+@androidx.compose.runtime.Immutable
 private data class VerdictInfo(
     val badgeText: String,
     val badgeColor: Color,
@@ -2812,7 +2828,10 @@ private fun BankOfferSimulatorCard(
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .graphicsLayer(scaleX = chipScale, scaleY = chipScale)
+                            .graphicsLayer {
+                                scaleX = chipScale
+                                scaleY = chipScale
+                            }
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 selectedOfferIndex = idx
@@ -3181,6 +3200,7 @@ private fun PriceDropForecastCard(
     }
 }
 
+@androidx.compose.runtime.Immutable
 private data class ForecastData(
     val probability: Int,
     val title: String,
@@ -3197,6 +3217,7 @@ private enum class PromoCategory {
     LOYALTY
 }
 
+@androidx.compose.runtime.Immutable
 private data class StorePromo(
     val id: String,
     val title: String,

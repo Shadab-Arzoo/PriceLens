@@ -51,6 +51,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -116,6 +117,15 @@ fun DealsScreen(
     val currencyFormatter = rememberInrCurrencyFormatter()
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
+    val onOpenStoreUrl: (String) -> Unit = remember(context) {
+        { url ->
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                context.startActivity(intent)
+            } catch (_: Exception) {
+            }
+        }
+    }
 
     LaunchedEffect(uiState.notificationMessage) {
         if (uiState.notificationMessage != null) {
@@ -399,13 +409,7 @@ fun DealsScreen(
                                 val target = (deal.currentPrice * 0.95).toInt().toDouble()
                                 onQuickAlert(deal, target)
                             },
-                            onOpenStore = {
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(deal.storeUrl))
-                                    context.startActivity(intent)
-                                } catch (_: Exception) {
-                                }
-                            }
+                            onOpenStore = { onOpenStoreUrl(deal.storeUrl) }
                         )
                     }
                 }

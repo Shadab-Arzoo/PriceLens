@@ -1,5 +1,7 @@
 package com.pricelens.domain.model
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Discovery input source for product identification.
  */
@@ -14,6 +16,7 @@ enum class DiscoverySource {
  * Model representing an identified product candidate that requires explicit
  * user confirmation (and allows user editing/correction) before comparing retailer offers.
  */
+@Immutable
 data class ConfirmedProductIdentity(
     val source: DiscoverySource,
     val rawInput: String,

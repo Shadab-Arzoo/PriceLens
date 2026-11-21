@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 
+@androidx.compose.runtime.Immutable
 data class DashboardData(
     val recentSearches: List<RecentSearch>,
     val watchlistItems: List<WatchlistItem>,

@@ -5,6 +5,7 @@ import com.pricelens.domain.model.DiscoverySource
 import java.net.URI
 import javax.inject.Inject
 
+@androidx.compose.runtime.Immutable
 sealed class UrlValidationResult {
     data class Supported(
         val retailerName: String,
@@ -21,6 +22,19 @@ sealed class UrlValidationResult {
 }
 
 class ValidateProductUrlUseCase @Inject constructor() {
+
+    companion object {
+        private val AmazonAsinRegex1 = Regex("""/dp/([A-Z0-9]{10})""")
+        private val AmazonAsinRegex2 = Regex("""/gp/product/([A-Z0-9]{10})""")
+        private val AmazonAsinRegex3 = Regex("""/d/([A-Z0-9]{10})""")
+        private val AmazonAsinRegex4 = Regex("""/([A-Z0-9]{10})$""")
+
+        private val FlipkartRegex1 = Regex("""/p/([a-zA-Z0-9]+)""")
+        private val FlipkartRegex2 = Regex("""/s/([a-zA-Z0-9]+)""")
+        private val FlipkartRegex3 = Regex("""/dl/([a-zA-Z0-9]+)""")
+
+        private val NumericIdRegex = Regex("""([0-9]{4,})""")
+    }
 
     private val supportedRetailers = listOf(
         "amazon.in" to "Amazon India",
@@ -111,10 +125,10 @@ class ValidateProductUrlUseCase @Inject constructor() {
         val path = uri.path ?: return null
 
         // 1. Amazon ASIN extraction
-        val amazonAsinMatch = "/dp/([A-Z0-9]{10})".toRegex().find(path)
-            ?: "/gp/product/([A-Z0-9]{10})".toRegex().find(path)
-            ?: "/d/([A-Z0-9]{10})".toRegex().find(path)
-            ?: "/([A-Z0-9]{10})$".toRegex().find(path)
+        val amazonAsinMatch = AmazonAsinRegex1.find(path)
+            ?: AmazonAsinRegex2.find(path)
+            ?: AmazonAsinRegex3.find(path)
+            ?: AmazonAsinRegex4.find(path)
         if (amazonAsinMatch != null) {
             val asin = amazonAsinMatch.groupValues[1]
             val mapping = urlToProductMappings[asin]
@@ -151,9 +165,9 @@ class ValidateProductUrlUseCase @Inject constructor() {
         }
 
         // 2. Flipkart item ID extraction
-        val flipkartMatch = "/p/([a-zA-Z0-9]+)".toRegex().find(path)
-            ?: "/s/([a-zA-Z0-9]+)".toRegex().find(path)
-            ?: "/dl/([a-zA-Z0-9]+)".toRegex().find(path)
+        val flipkartMatch = FlipkartRegex1.find(path)
+            ?: FlipkartRegex2.find(path)
+            ?: FlipkartRegex3.find(path)
         if (flipkartMatch != null) {
             val itemId = flipkartMatch.groupValues[1]
             val mapping = urlToProductMappings[itemId]
@@ -190,7 +204,7 @@ class ValidateProductUrlUseCase @Inject constructor() {
         }
 
         // 3. Generic numeric ID extraction (Croma, Reliance Digital, Vijay Sales)
-        val numericIdMatch = "([0-9]{4,})".toRegex().find(path)
+        val numericIdMatch = NumericIdRegex.find(path)
         if (numericIdMatch != null) {
             val numId = numericIdMatch.groupValues[1]
             val mapping = urlToProductMappings[numId]

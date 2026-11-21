@@ -1,9 +1,12 @@
 package com.pricelens.domain.model
 
+import androidx.compose.runtime.Immutable
+
 /**
  * Domain model representing an alternative product with specification comparison
  * and price difference explanations.
  */
+@Immutable
 data class ProductAlternative(
     val productId: String,
     val title: String,
@@ -25,6 +28,7 @@ data class ProductAlternative(
  * Represents a specific, user-visible meaningful difference between the current product
  * and an alternative.
  */
+@Immutable
 data class MeaningfulDifference(
     val category: String, // e.g., "Price", "Battery", "Display", "Processor", "Weight"
     val currentProductValue: String,

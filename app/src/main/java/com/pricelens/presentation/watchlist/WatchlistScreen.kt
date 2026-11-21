@@ -134,6 +134,16 @@ fun WatchlistScreen(
     val filteredItems = remember(uiState.items, uiState.activeFilter, uiState.searchQuery, uiState.sortOrder) {
         uiState.filteredItems
     }
+    val onOpenWebsiteUrl: (String) -> Unit = remember(context) {
+        { url ->
+            runCatching {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(intent)
+            }
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -402,14 +412,7 @@ fun WatchlistScreen(
                             onClick = {
                                 onNavigateToComparison(item.productId, item.productName)
                             },
-                            onOpenWebsite = { url ->
-                                runCatching {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                    }
-                                    context.startActivity(intent)
-                                }
-                            },
+                            onOpenWebsite = onOpenWebsiteUrl,
                             onDelete = { onEvent(WatchlistUiEvent.RemoveItem(item.productId)) },
                             modifier = Modifier.animateItem()
                         )

@@ -17,9 +17,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
+import androidx.compose.runtime.Immutable
 import java.util.UUID
 import javax.inject.Inject
 
+@Immutable
 data class WebPricePickerUiState(
     val url: String = "",
     val domain: String = "",

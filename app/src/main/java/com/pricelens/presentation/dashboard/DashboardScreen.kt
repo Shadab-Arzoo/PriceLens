@@ -115,6 +115,8 @@ fun DashboardRoute(
     )
 }
 
+private val ClipboardUrlRegex = Regex("""https?://[^\s<>"{}|\\^`]+""", RegexOption.IGNORE_CASE)
+
 @Composable
 fun DashboardScreen(
     uiState: DashboardUiState,
@@ -131,8 +133,7 @@ fun DashboardScreen(
         clipboardManager.getText()?.text?.trim().orEmpty()
     }
     val detectedClipboardUrl = remember(clipboardText) {
-        val regex = Regex("""https?://[^\s<>"{}|\\^`]+""", RegexOption.IGNORE_CASE)
-        val foundUrl = regex.find(clipboardText)?.value
+        val foundUrl = ClipboardUrlRegex.find(clipboardText)?.value
             ?: if (clipboardText.contains(".") && !clipboardText.contains(" ")) clipboardText else null
         if (foundUrl != null) {
             val lower = foundUrl.lowercase()
@@ -423,7 +424,7 @@ private fun PriceLensLabsBanner(
                         tint = glow,
                         modifier = Modifier
                             .size(19.dp)
-                            .graphicsLayer(rotationZ = if (isMasterEnabled) iconTilt else 0f)
+                            .graphicsLayer { rotationZ = if (isMasterEnabled) iconTilt else 0f }
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))

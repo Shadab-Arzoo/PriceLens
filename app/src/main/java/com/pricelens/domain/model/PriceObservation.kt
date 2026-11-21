@@ -1,9 +1,12 @@
 package com.pricelens.domain.model
 
+import androidx.compose.runtime.Immutable
+
 /**
  * An immutable observation received from an authorized pricing source.
  * It is never used as a fallback or seed for historical commerce data.
  */
+@Immutable
 data class PriceObservation(
     val id: String,
     val productId: String,

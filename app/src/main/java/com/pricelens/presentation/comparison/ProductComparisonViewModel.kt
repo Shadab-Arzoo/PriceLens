@@ -69,6 +69,7 @@ class ProductComparisonViewModel @Inject constructor(
 
     private var alertsJob: Job? = null
     private var watchlistJob: Job? = null
+    private var detailsJob: Job? = null
 
     init {
         observeExperimentalFlags()
@@ -281,7 +282,8 @@ class ProductComparisonViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
+        detailsJob?.cancel()
+        detailsJob = viewModelScope.launch {
             val result = getProductComparisonUseCase(id)
             result.fold(
                 onSuccess = { details ->

@@ -12,6 +12,7 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@androidx.compose.runtime.Immutable
 data class UniversalProductMetadata(
     val url: String,
     val domain: String,
@@ -26,7 +27,21 @@ data class UniversalProductMetadata(
 @Singleton
 class UniversalProductExtractor @Inject constructor() {
 
-    private val embeddedUrlRegex = Regex("""https?://[^\s<>"{}|\\^`]+""", RegexOption.IGNORE_CASE)
+    companion object {
+        private val EmbeddedUrlRegex = Regex("""https?://[^\s<>"{}|\\^`]+""", RegexOption.IGNORE_CASE)
+        private val PriceRegex = Regex("""(?:₹|Rs\.?|INR|\$|€|£)?\s*([\d]+(?:\.\d{1,2})?)""")
+        private val JsonLdScriptPattern = Pattern.compile(
+            """<script[^>]*type=["']application/ld\+json["'][^>]*>(.*?)</script>""",
+            Pattern.DOTALL or Pattern.CASE_INSENSITIVE
+        )
+        private val JsonLdPriceRegex = Regex(""""(?:price|lowPrice)"\s*:\s*"?([\d.]+)"?""", RegexOption.IGNORE_CASE)
+        private val PriceTagPattern = Pattern.compile(
+            """(?:class|id)=["'][^"']*(?:price|offer|deal|cost)[^"']*["'][^>]*>[^<]*(?:₹|Rs\.?|INR)\s*([\d,]+(?:\.\d{1,2})?)""",
+            Pattern.CASE_INSENSITIVE
+        )
+        private val InrPattern = Pattern.compile("""(?:₹|Rs\.?\s*)\s*([\d,]{2,10}(?:\.\d{1,2})?)""")
+        private val SuffixCleaningRegex1 = Regex("""\s*[\|\-–—:]\s*(?:Buy online at|Shop online|Online in India|Amazon\.in|Flipkart|Tata CLiQ|Myntra|Croma|Vijay Sales|Reliance Digital).*$""", RegexOption.IGNORE_CASE)
+    }
 
     suspend fun extractMetadata(rawUrl: String): UniversalProductMetadata = withContext(Dispatchers.IO) {
         val normalizedUrl = normalizeUrl(rawUrl)
@@ -51,7 +66,7 @@ class UniversalProductExtractor @Inject constructor() {
 
     fun normalizeUrl(raw: String): String {
         val trimmed = raw.trim()
-        val extracted = embeddedUrlRegex.find(trimmed)?.value ?: trimmed
+        val extracted = EmbeddedUrlRegex.find(trimmed)?.value ?: trimmed
         return if (!extracted.startsWith("http://", ignoreCase = true) &&
             !extracted.startsWith("https://", ignoreCase = true)
         ) {
@@ -151,23 +166,17 @@ class UniversalProductExtractor @Inject constructor() {
 
     fun parsePrice(raw: String): Double? {
         val cleaned = raw.replace(",", "").trim()
-        val regex = Regex("""(?:₹|Rs\.?|INR|\$|€|£)?\s*([\d]+(?:\.\d{1,2})?)""")
-        val match = regex.find(cleaned)
+        val match = PriceRegex.find(cleaned)
         return match?.groupValues?.get(1)?.toDoubleOrNull()
     }
 
     private fun extractJsonLdPrice(html: String): Double? {
-        val scriptPattern = Pattern.compile(
-            """<script[^>]*type=["']application/ld\+json["'][^>]*>(.*?)</script>""",
-            Pattern.DOTALL or Pattern.CASE_INSENSITIVE
-        )
-        val matcher = scriptPattern.matcher(html)
+        val matcher = JsonLdScriptPattern.matcher(html)
         while (matcher.find()) {
             val json = matcher.group(1).orEmpty()
             if (json.contains("\"Product\"", ignoreCase = true) || json.contains("schema.org", ignoreCase = true)) {
                 // Find price
-                val priceRegex = Regex(""""(?:price|lowPrice)"\s*:\s*"?([\d.]+)"?""", RegexOption.IGNORE_CASE)
-                val priceMatch = priceRegex.find(json)
+                val priceMatch = JsonLdPriceRegex.find(json)
                 val value = priceMatch?.groupValues?.get(1)?.toDoubleOrNull()
                 if (value != null && value > 0) {
                     return value
@@ -179,11 +188,7 @@ class UniversalProductExtractor @Inject constructor() {
 
     private fun extractHeuristicPrice(html: String): Double? {
         // Looks for price classes/ids e.g. class="...price..." >₹1,999<
-        val priceTagPattern = Pattern.compile(
-            """(?:class|id)=["'][^"']*(?:price|offer|deal|cost)[^"']*["'][^>]*>[^<]*(?:₹|Rs\.?|INR)\s*([\d,]+(?:\.\d{1,2})?)""",
-            Pattern.CASE_INSENSITIVE
-        )
-        val matcher = priceTagPattern.matcher(html)
+        val matcher = PriceTagPattern.matcher(html)
         if (matcher.find()) {
             val found = matcher.group(1)
             if (!found.isNullOrBlank()) {
@@ -193,8 +198,7 @@ class UniversalProductExtractor @Inject constructor() {
         }
 
         // General INR pattern
-        val inrPattern = Pattern.compile("""(?:₹|Rs\.?\s*)\s*([\d,]{2,10}(?:\.\d{1,2})?)""")
-        val inrMatcher = inrPattern.matcher(html)
+        val inrMatcher = InrPattern.matcher(html)
         if (inrMatcher.find()) {
             val found = inrMatcher.group(1)
             if (!found.isNullOrBlank()) {
@@ -235,7 +239,7 @@ class UniversalProductExtractor @Inject constructor() {
 
     private fun cleanTitle(title: String, retailerName: String): String {
         return title
-            .replace(Regex("""\s*[\|\-–—:]\s*(?:Buy online at|Shop online|Online in India|Amazon\.in|Flipkart|Tata CLiQ|Myntra|Croma|Vijay Sales|Reliance Digital).*$""", RegexOption.IGNORE_CASE), "")
+            .replace(SuffixCleaningRegex1, "")
             .replace(Regex("""\s*[\|\-–—]\s*$retailerName.*$""", RegexOption.IGNORE_CASE), "")
             .trim()
     }

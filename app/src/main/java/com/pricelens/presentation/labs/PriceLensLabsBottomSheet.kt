@@ -313,7 +313,7 @@ fun PriceLensLabsBottomSheet(
                                 contentDescription = null,
                                 modifier = Modifier
                                     .size(16.dp)
-                                    .graphicsLayer(rotationZ = syncRotation)
+                                    .graphicsLayer { rotationZ = syncRotation }
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(text = "Sync Prices", style = MaterialTheme.typography.labelMedium)
@@ -337,7 +337,7 @@ fun PriceLensLabsBottomSheet(
                                 contentDescription = null,
                                 modifier = Modifier
                                     .size(16.dp)
-                                    .graphicsLayer(rotationZ = alertWiggle)
+                                    .graphicsLayer { rotationZ = alertWiggle }
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(text = "Test Alert", style = MaterialTheme.typography.labelMedium)
