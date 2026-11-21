@@ -555,7 +555,7 @@ fun WebPricePickerScreen(
                     // Product Name field
                     OutlinedTextField(
                         value = uiState.productNameInput,
-                        onValueChange = viewModel::onProductNameChanged,
+                        onValueChange = { viewModel.onProductNameChanged(it) },
                         label = { Text("Product Name") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -571,7 +571,7 @@ fun WebPricePickerScreen(
                     // Target Price field
                     OutlinedTextField(
                         value = uiState.targetPriceInput,
-                        onValueChange = viewModel::onTargetPriceChanged,
+                        onValueChange = { viewModel.onTargetPriceChanged(it) },
                         label = { Text("Alert me when price drops below (₹)") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -612,7 +612,7 @@ fun WebPricePickerScreen(
 
                         LiquidGlassPrimaryButton(
                             text = if (uiState.isSaving) "Saving..." else "Track This Price",
-                            onClick = viewModel::confirmTrackPrice,
+                            onClick = { viewModel.confirmTrackPrice() },
                             enabled = !uiState.isSaving,
                             modifier = Modifier.weight(1.5f)
                         )

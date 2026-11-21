@@ -1,6 +1,7 @@
 package com.pricelens.core.preferences
 
 import android.content.Context
+import androidx.compose.runtime.Stable
 import com.pricelens.core.designsystem.ThemeAccent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +13,7 @@ import javax.inject.Singleton
 /**
  * Manages user preference state such as theme mode, theme accents, and onboarding status.
  */
+@Stable
 @Singleton
 class UserPreferencesRepository @Inject constructor(
     @ApplicationContext private val context: Context
@@ -45,6 +47,7 @@ class UserPreferencesRepository @Inject constructor(
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+    @androidx.compose.runtime.Immutable
     data class ExperimentalFlags(
         val isMasterEnabled: Boolean = true,
         val enableDealAuthenticity: Boolean = true,
@@ -70,6 +73,27 @@ class UserPreferencesRepository @Inject constructor(
 
     private val _experimentalFlagsFlow = MutableStateFlow(getExperimentalFlags())
     val experimentalFlagsFlow: StateFlow<ExperimentalFlags> = _experimentalFlagsFlow.asStateFlow()
+
+    private val preferenceChangeListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        when (key) {
+            KEY_THEME_MODE -> _themeModeFlow.value = getThemeMode()
+            KEY_THEME_ACCENT -> _themeAccentFlow.value = getThemeAccent()
+            KEY_THEME_GLOW_INTENSITY -> _glowIntensityFlow.value = getGlowIntensity()
+            KEY_THEME_CONTRAST_STYLE -> _contrastStyleFlow.value = getContrastStyle()
+            KEY_EXP_MASTER,
+            KEY_EXP_DEAL_AUTHENTICITY,
+            KEY_EXP_BUY_NOW_VERDICT,
+            KEY_EXP_BANK_CARD,
+            KEY_EXP_ALERT_PRESETS,
+            KEY_EXP_DYNAMIC_SEARCH,
+            KEY_EXP_PRICE_DROP_FORECAST,
+            KEY_EXP_COUPON_FINDER -> _experimentalFlagsFlow.value = getExperimentalFlags()
+        }
+    }
+
+    init {
+        prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
+    }
 
     var hasCompletedOnboarding: Boolean
         get() = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)

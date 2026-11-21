@@ -133,26 +133,6 @@ fun PriceLensTopBar(
                         label = "labsScale"
                     )
 
-                    val infiniteTransition = rememberInfiniteTransition(label = "labsPulse")
-                    val dotAlpha by infiniteTransition.animateFloat(
-                        initialValue = 0.4f,
-                        targetValue = 1.0f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(1100, easing = FastOutSlowInEasing),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "dotAlpha"
-                    )
-                    val dotScale by infiniteTransition.animateFloat(
-                        initialValue = 0.85f,
-                        targetValue = 1.25f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(1100, easing = FastOutSlowInEasing),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "dotScale"
-                    )
-
                     Box(contentAlignment = Alignment.TopEnd) {
                         IconButton(
                             onClick = onLabsClick,
@@ -181,18 +161,7 @@ fun PriceLensTopBar(
                         }
 
                         if (isLabsActive) {
-                            Box(
-                                modifier = Modifier
-                                    .offset(x = 2.dp, y = (-2).dp)
-                                    .size(8.dp)
-                                    .graphicsLayer {
-                                        scaleX = dotScale
-                                        scaleY = dotScale
-                                        alpha = dotAlpha
-                                    }
-                                    .clip(CircleShape)
-                                    .background(PriceLensTheme.glassColors.ambientGlow)
-                            )
+                            LabsPulseDot()
                         }
                     }
                 }
@@ -314,4 +283,40 @@ fun ThemeToggleSwitch(
             )
         }
     }
+}
+
+@Composable
+private fun LabsPulseDot() {
+    val infiniteTransition = rememberInfiniteTransition(label = "labsPulse")
+    val dotAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1100, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dotAlpha"
+    )
+    val dotScale by infiniteTransition.animateFloat(
+        initialValue = 0.85f,
+        targetValue = 1.25f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1100, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dotScale"
+    )
+
+    Box(
+        modifier = Modifier
+            .offset(x = 2.dp, y = (-2).dp)
+            .size(8.dp)
+            .graphicsLayer {
+                scaleX = dotScale
+                scaleY = dotScale
+                alpha = dotAlpha
+            }
+            .clip(CircleShape)
+            .background(PriceLensTheme.glassColors.ambientGlow)
+    )
 }

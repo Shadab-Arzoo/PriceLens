@@ -81,9 +81,9 @@ import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
 import com.pricelens.core.designsystem.components.SkeletonBox
 import com.pricelens.core.designsystem.components.ThemeToggleSwitch
+import com.pricelens.core.util.rememberInrCurrencyFormatter
 import com.pricelens.domain.model.WatchlistItem
 import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun WatchlistRoute(
@@ -103,9 +103,11 @@ fun WatchlistRoute(
         }
     }
 
+    val onEvent = remember(viewModel) { { event: WatchlistUiEvent -> viewModel.onEvent(event) } }
+
     WatchlistScreen(
         uiState = uiState,
-        onEvent = viewModel::onEvent,
+        onEvent = onEvent,
         onNavigateBack = onNavigateBack,
         onNavigateToComparison = onNavigateToComparison,
         onNavigateToBrowse = onNavigateToBrowse,
@@ -126,11 +128,7 @@ fun WatchlistScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val currencyFormatter = remember {
-        NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
-            maximumFractionDigits = 0
-        }
-    }
+    val currencyFormatter = rememberInrCurrencyFormatter()
     val filteredItems = remember(uiState.items, uiState.activeFilter, uiState.searchQuery, uiState.sortOrder) {
         uiState.filteredItems
     }
@@ -309,6 +307,15 @@ fun WatchlistScreen(
                     // Search Filter
                     if (uiState.totalTrackedCount > 2) {
                         item(key = "search_filter") {
+                            val watchlistSearchColors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
+                                unfocusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
+                                focusedBorderColor = ElectricBlue,
+                                unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
+                                focusedTextColor = PriceLensTheme.glassColors.textPrimary,
+                                unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
+                            )
+
                             OutlinedTextField(
                                 value = uiState.searchQuery,
                                 onValueChange = { onEvent(WatchlistUiEvent.SearchQueryChanged(it)) },
@@ -339,14 +346,7 @@ fun WatchlistScreen(
                                 },
                                 singleLine = true,
                                 shape = RoundedCornerShape(16.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
-                                    unfocusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
-                                    focusedBorderColor = ElectricBlue,
-                                    unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
-                                    focusedTextColor = PriceLensTheme.glassColors.textPrimary,
-                                    unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
-                                )
+                                colors = watchlistSearchColors
                             )
                         }
                     }

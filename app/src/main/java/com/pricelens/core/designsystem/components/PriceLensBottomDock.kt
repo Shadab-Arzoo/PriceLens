@@ -15,8 +15,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -24,11 +22,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -192,24 +187,12 @@ fun PriceLensBottomDock(
             pillAnimatable.animateTo(
                 targetValue = selectedIndex.toFloat(),
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
+                    dampingRatio = 0.90f,
+                    stiffness = Spring.StiffnessMedium
                 )
             )
         }
     }
-
-    // Infinite breathing pulse for HOT deals badge
-    val infiniteTransition = rememberInfiniteTransition(label = "dockDealsHotPulse")
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.94f,
-        targetValue = 1.07f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 950, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "dockHotBadgePulseScale"
-    )
 
     AnimatedVisibility(
         visible = isVisible,
@@ -240,21 +223,25 @@ fun PriceLensBottomDock(
             ) {
                 Column {
                     // Specular top rim light highlight
+                    val specularBorder = PriceLensTheme.glassColors.specularBorder
+                    val isDarkTheme = PriceLensTheme.isDark
+                    val rimLightBrush = remember(specularBorder, isDarkTheme) {
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color.Transparent,
+                                specularBorder.copy(alpha = 0.5f),
+                                Color.White.copy(alpha = if (isDarkTheme) 0.30f else 0.55f),
+                                specularBorder.copy(alpha = 0.5f),
+                                Color.Transparent
+                            )
+                        )
+                    }
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(1.dp)
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(
-                                        Color.Transparent,
-                                        PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.5f),
-                                        Color.White.copy(alpha = if (PriceLensTheme.isDark) 0.30f else 0.55f),
-                                        PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.5f),
-                                        Color.Transparent
-                                    )
-                                )
-                            )
+                            .background(rimLightBrush)
                     )
 
                     BoxWithConstraints(
@@ -268,6 +255,27 @@ fun PriceLensBottomDock(
                         val tabWidthPx = with(density) { tabWidth.toPx() }
 
                         // 1. Fluid Sliding Indicator Pill with Hold-and-Slide support
+                        val ambientGlow = PriceLensTheme.glassColors.ambientGlow
+                        val pillBackgroundBrush = remember(ambientGlow) {
+                            Brush.verticalGradient(
+                                listOf(
+                                    ambientGlow.copy(alpha = 0.22f),
+                                    ambientGlow.copy(alpha = 0.08f)
+                                )
+                            )
+                        }
+                        val pillBorderBrush = remember(ambientGlow) {
+                            Brush.verticalGradient(
+                                listOf(
+                                    ambientGlow.copy(alpha = 0.55f),
+                                    ambientGlow.copy(alpha = 0.18f)
+                                )
+                            )
+                        }
+                        val pillBorderStroke = remember(pillBorderBrush) {
+                            BorderStroke(1.dp, pillBorderBrush)
+                        }
+
                         if (selectedIndex >= 0) {
                             val pillScale by animateFloatAsState(
                                 targetValue = when {
@@ -276,20 +284,10 @@ fun PriceLensBottomDock(
                                     else -> 1.0f
                                 },
                                 animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    dampingRatio = 0.85f,
                                     stiffness = Spring.StiffnessMedium
                                 ),
                                 label = "dockPillScale"
-                            )
-
-                            val pillGlowAlpha by animateFloatAsState(
-                                targetValue = if (isSliding) 0.30f else 0.18f,
-                                label = "dockPillGlowAlpha"
-                            )
-
-                            val pillBorderAlpha by animateFloatAsState(
-                                targetValue = if (isSliding) 0.65f else 0.45f,
-                                label = "dockPillBorderAlpha"
                             )
 
                             Box(
@@ -303,29 +301,12 @@ fun PriceLensBottomDock(
                                     .graphicsLayer {
                                         scaleX = pillScale
                                         scaleY = pillScale
+                                        alpha = if (isSliding) 1.0f else 0.88f
                                     }
                                     .padding(horizontal = 3.dp, vertical = 2.dp)
                                     .clip(RoundedCornerShape(22.dp))
-                                    .background(
-                                        Brush.verticalGradient(
-                                            listOf(
-                                                PriceLensTheme.glassColors.ambientGlow.copy(alpha = pillGlowAlpha),
-                                                PriceLensTheme.glassColors.ambientGlow.copy(alpha = pillGlowAlpha * 0.35f)
-                                            )
-                                        )
-                                    )
-                                    .border(
-                                        BorderStroke(
-                                            1.dp,
-                                            Brush.verticalGradient(
-                                                listOf(
-                                                    PriceLensTheme.glassColors.ambientGlow.copy(alpha = pillBorderAlpha),
-                                                    PriceLensTheme.glassColors.ambientGlow.copy(alpha = pillBorderAlpha * 0.33f)
-                                                )
-                                            )
-                                        ),
-                                        RoundedCornerShape(22.dp)
-                                    )
+                                    .background(pillBackgroundBrush)
+                                    .border(pillBorderStroke, RoundedCornerShape(22.dp))
                             )
                         }
 
@@ -340,14 +321,13 @@ fun PriceLensBottomDock(
                             DockTab.entries.forEachIndexed { index, tab ->
                                 val isSelected = selectedTab == tab
                                 val isHighlighted = if (isSliding) (index == currentHoveredIndex) else isSelected
-                                val interactionSource = remember { MutableInteractionSource() }
-                                val isPressed by interactionSource.collectIsPressedAsState()
+                                var isTabPressed by remember { mutableStateOf(false) }
 
                                 // Tactile press & selection scale
                                 val pressScale by animateFloatAsState(
-                                    targetValue = if (isPressed || (isSelected && isHoldingActiveTab && !isSliding)) 0.90f else 1.0f,
+                                    targetValue = if (isTabPressed || (isSelected && isHoldingActiveTab && !isSliding)) 0.90f else 1.0f,
                                     animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        dampingRatio = 0.85f,
                                         stiffness = Spring.StiffnessMedium
                                     ),
                                     label = "dockPressScale_${tab.name}"
@@ -356,8 +336,8 @@ fun PriceLensBottomDock(
                                 val iconScale by animateFloatAsState(
                                     targetValue = if (isHighlighted) 1.16f else 1.0f,
                                     animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                        stiffness = Spring.StiffnessLow
+                                        dampingRatio = 0.85f,
+                                        stiffness = Spring.StiffnessMedium
                                     ),
                                     label = "dockIconScale_${tab.name}"
                                 )
@@ -368,71 +348,65 @@ fun PriceLensBottomDock(
                                     } else {
                                         PriceLensTheme.glassColors.textSecondary
                                     },
+                                    animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
                                     label = "dockTabColor_${tab.name}"
                                 )
 
-                                val tabModifier = if (isSelected) {
-                                    Modifier
-                                        .weight(1f)
-                                        .graphicsLayer {
-                                            scaleX = pressScale
-                                            scaleY = pressScale
-                                        }
-                                        .clip(RoundedCornerShape(20.dp))
-                                        .pointerInput(selectedTab, tabWidth) {
-                                            val tabWidthPx = if (size.width > 0) size.width.toFloat() else with(density) { tabWidth.toPx() }
-                                            val touchSlop = viewConfiguration.touchSlop
-                                            val longPressTimeout = viewConfiguration.longPressTimeoutMillis
+                                val microAlpha by animateFloatAsState(
+                                    targetValue = if (isHighlighted) 1f else 0f,
+                                    animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+                                    label = "dockMicroAlpha_${tab.name}"
+                                )
 
-                                            awaitEachGesture {
-                                                val down = awaitFirstDown(requireUnconsumed = false)
-                                                val pointerId = down.id
-                                                val downTime = System.currentTimeMillis()
-                                                var totalDragX = 0f
-                                                var isDraggingLocal = false
-                                                var isTap = true
+                                val microScale by animateFloatAsState(
+                                    targetValue = if (isHighlighted) 1f else 0.4f,
+                                    animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+                                    label = "dockMicroScale_${tab.name}"
+                                )
 
+                                val tabModifier = Modifier
+                                    .weight(1f)
+                                    .graphicsLayer {
+                                        scaleX = pressScale
+                                        scaleY = pressScale
+                                    }
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .pointerInput(tab, tabWidth) {
+                                        val tabWidthPx = if (size.width > 0) size.width.toFloat() else with(density) { tabWidth.toPx() }
+                                        val touchSlop = viewConfiguration.touchSlop
+                                        val longPressTimeout = viewConfiguration.longPressTimeoutMillis
+
+                                        awaitEachGesture {
+                                            val down = awaitFirstDown(requireUnconsumed = false)
+                                            val pointerId = down.id
+                                            val downTime = System.currentTimeMillis()
+                                            var totalDragX = 0f
+                                            var isDraggingLocal = false
+                                            var isTap = true
+
+                                            isTabPressed = true
+                                            if (tab == selectedTab) {
                                                 isHoldingActiveTab = true
+                                            }
 
-                                                while (true) {
-                                                    val event = awaitPointerEvent()
-                                                    val change = event.changes.firstOrNull { it.id == pointerId }
-                                                    if (change == null || !change.pressed) {
-                                                        break
-                                                    }
+                                            while (true) {
+                                                val event = awaitPointerEvent()
+                                                val change = event.changes.firstOrNull { it.id == pointerId }
+                                                if (change == null || !change.pressed) {
+                                                    break
+                                                }
 
-                                                    val deltaX = change.position.x - down.position.x
-                                                    val deltaY = change.position.y - down.position.y
+                                                val deltaX = change.position.x - down.position.x
 
-                                                    if (!isDraggingLocal) {
-                                                        if (abs(deltaX) > touchSlop && abs(deltaX) >= abs(deltaY)) {
-                                                            isDraggingLocal = true
-                                                            isSliding = true
-                                                            isTap = false
-                                                            currentHoveredIndex = selectedIndex
-                                                            totalDragX = deltaX
-
-                                                            val result = DockGestureHelper.computeSlideIndices(
-                                                                baseIndex = selectedIndex,
-                                                                dragDeltaX = totalDragX,
-                                                                tabWidthPx = tabWidthPx,
-                                                                tabCount = tabCount
-                                                            )
-                                                            dragDisplayIndex = result.displayIndex
-                                                            if (result.hoveredIndex != currentHoveredIndex) {
-                                                                currentHoveredIndex = result.hoveredIndex
-                                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                                            }
-                                                            change.consume()
-                                                        } else if (abs(deltaY) > touchSlop && abs(deltaY) > abs(deltaX)) {
-                                                            // Vertical gesture disambiguation - abort gesture tracking cleanly
-                                                            isTap = false
-                                                            break
-                                                        }
-                                                    } else {
+                                                if (!isDraggingLocal) {
+                                                    if (abs(deltaX) > touchSlop) {
+                                                        isDraggingLocal = true
+                                                        isSliding = true
+                                                        currentHoveredIndex = index
                                                         totalDragX = deltaX
+
                                                         val result = DockGestureHelper.computeSlideIndices(
-                                                            baseIndex = selectedIndex,
+                                                            baseIndex = index,
                                                             dragDeltaX = totalDragX,
                                                             tabWidthPx = tabWidthPx,
                                                             tabCount = tabCount
@@ -444,32 +418,50 @@ fun PriceLensBottomDock(
                                                         }
                                                         change.consume()
                                                     }
-                                                }
-
-                                                isHoldingActiveTab = false
-
-                                                if (isDraggingLocal) {
-                                                    isSliding = false
-                                                    val targetTab = DockTab.entries[currentHoveredIndex]
-                                                    if (targetTab != selectedTab) {
+                                                } else {
+                                                    totalDragX = deltaX
+                                                    val result = DockGestureHelper.computeSlideIndices(
+                                                        baseIndex = index,
+                                                        dragDeltaX = totalDragX,
+                                                        tabWidthPx = tabWidthPx,
+                                                        tabCount = tabCount
+                                                    )
+                                                    dragDisplayIndex = result.displayIndex
+                                                    if (result.hoveredIndex != currentHoveredIndex) {
+                                                        currentHoveredIndex = result.hoveredIndex
                                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                                        onTabSelected(targetTab)
-                                                    } else {
-                                                        onTabReselected?.invoke(targetTab)
                                                     }
-                                                    val finalIndex = currentHoveredIndex.toFloat()
-                                                    coroutineScope.launch {
-                                                        pillAnimatable.snapTo(dragDisplayIndex)
-                                                        pillAnimatable.animateTo(
-                                                            targetValue = finalIndex,
-                                                            animationSpec = spring(
-                                                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                                                stiffness = Spring.StiffnessMedium
-                                                            )
+                                                    change.consume()
+                                                }
+                                            }
+
+                                            isTabPressed = false
+                                            isHoldingActiveTab = false
+
+                                            if (isDraggingLocal) {
+                                                isSliding = false
+                                                val targetTab = DockTab.entries[currentHoveredIndex]
+                                                if (targetTab != selectedTab) {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                    onTabSelected(targetTab)
+                                                } else {
+                                                    onTabReselected?.invoke(targetTab)
+                                                }
+                                                val finalIndex = currentHoveredIndex.toFloat()
+                                                coroutineScope.launch {
+                                                    pillAnimatable.snapTo(dragDisplayIndex)
+                                                    pillAnimatable.animateTo(
+                                                        targetValue = finalIndex,
+                                                        animationSpec = spring(
+                                                            dampingRatio = 0.90f,
+                                                            stiffness = Spring.StiffnessMedium
                                                         )
-                                                    }
-                                                } else if (isTap) {
-                                                    val elapsed = System.currentTimeMillis() - downTime
+                                                    )
+                                                }
+                                            } else {
+                                                // Instant tap without dropped touches
+                                                val elapsed = System.currentTimeMillis() - downTime
+                                                if (tab == selectedTab) {
                                                     if (elapsed >= longPressTimeout && onTabLongClick != null) {
                                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                                         onTabLongClick.invoke(tab)
@@ -477,32 +469,14 @@ fun PriceLensBottomDock(
                                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                                         onTabReselected?.invoke(tab)
                                                     }
+                                                } else {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                    onTabSelected(tab)
                                                 }
                                             }
                                         }
-                                        .padding(vertical = 4.dp, horizontal = 2.dp)
-                                } else {
-                                    Modifier
-                                        .weight(1f)
-                                        .graphicsLayer {
-                                            scaleX = pressScale
-                                            scaleY = pressScale
-                                        }
-                                        .clip(RoundedCornerShape(20.dp))
-                                        .combinedClickable(
-                                            interactionSource = interactionSource,
-                                            indication = null,
-                                            onClick = {
-                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                                onTabSelected(tab)
-                                            },
-                                            onLongClick = {
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                onTabLongClick?.invoke(tab)
-                                            }
-                                        )
-                                        .padding(vertical = 4.dp, horizontal = 2.dp)
-                                }
+                                    }
+                                    .padding(vertical = 4.dp, horizontal = 2.dp)
 
                                 Box(
                                     modifier = tabModifier,
@@ -553,25 +527,7 @@ fun PriceLensBottomDock(
                                                     }
                                                 }
                                             } else if (tab == DockTab.DEALS && hasActiveDeals) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .offset(x = 10.dp, y = (-4).dp)
-                                                        .graphicsLayer {
-                                                            scaleX = pulseScale
-                                                            scaleY = pulseScale
-                                                        }
-                                                        .clip(RoundedCornerShape(6.dp))
-                                                        .background(AmberAlert)
-                                                        .padding(horizontal = 3.dp, vertical = 1.dp)
-                                                ) {
-                                                    Text(
-                                                        text = "HOT",
-                                                        color = Color.Black,
-                                                        fontSize = 8.sp,
-                                                        fontWeight = FontWeight.ExtraBold,
-                                                        lineHeight = 9.sp
-                                                    )
-                                                }
+                                                HotDealsBadge(modifier = Modifier.offset(x = 10.dp, y = (-4).dp))
                                             } else if (tab == DockTab.TOOLS && hasLabsFeature) {
                                                 Box(
                                                     modifier = Modifier
@@ -594,23 +550,18 @@ fun PriceLensBottomDock(
                                             maxLines = 1
                                         )
 
-                                        // Active Tab Micro-Pill Glow Indicator
-                                        AnimatedVisibility(
-                                            visible = isHighlighted,
-                                            enter = fadeIn() + scaleIn(),
-                                            exit = fadeOut() + scaleOut()
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .padding(top = 2.dp)
-                                                    .size(width = 12.dp, height = 2.5.dp)
-                                                    .clip(RoundedCornerShape(99.dp))
-                                                    .background(PriceLensTheme.glassColors.ambientGlow)
-                                            )
-                                        }
-                                        if (!isHighlighted) {
-                                            Spacer(modifier = Modifier.height(4.5.dp))
-                                        }
+                                        // Active Tab Micro-Pill Glow Indicator (constant height: 4.5dp to eliminate layout shift)
+                                        Box(
+                                            modifier = Modifier
+                                                .padding(top = 2.dp)
+                                                .size(width = 12.dp, height = 2.5.dp)
+                                                .graphicsLayer {
+                                                    alpha = microAlpha
+                                                    scaleX = microScale
+                                                }
+                                                .clip(RoundedCornerShape(99.dp))
+                                                .background(PriceLensTheme.glassColors.ambientGlow)
+                                        )
                                     }
                                 }
                             }
@@ -619,5 +570,40 @@ fun PriceLensBottomDock(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun HotDealsBadge(
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "dockDealsHotPulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.94f,
+        targetValue = 1.07f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 950, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dockHotBadgePulseScale"
+    )
+
+    Box(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = pulseScale
+                scaleY = pulseScale
+            }
+            .clip(RoundedCornerShape(6.dp))
+            .background(AmberAlert)
+            .padding(horizontal = 3.dp, vertical = 1.dp)
+    ) {
+        Text(
+            text = "HOT",
+            color = Color.Black,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.ExtraBold,
+            lineHeight = 9.sp
+        )
     }
 }

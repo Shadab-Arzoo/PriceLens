@@ -31,6 +31,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pricelens.core.designsystem.PriceLensTheme
 
+private val CARD_AMBIENT_SHADOW = Color.Black.copy(alpha = 0.08f)
+private val CARD_SPOT_SHADOW = Color.Black.copy(alpha = 0.12f)
+
 /**
  * Clean modern surface card with 16dp rounded corners, crisp hairline perimeter,
  * subtle elevation, and responsive spring physics when clickable.
@@ -49,10 +52,13 @@ fun GlassCard(
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
-    val effectiveBorderStroke = when {
-        borderBrush != null -> BorderStroke(borderWidth, borderBrush)
-        borderColor != null -> BorderStroke(borderWidth, borderColor)
-        else -> BorderStroke(borderWidth, PriceLensTheme.glassColors.specularBorderBrush)
+    val defaultBorderBrush = PriceLensTheme.glassColors.specularBorderBrush
+    val effectiveBorderStroke = remember(borderWidth, borderBrush, borderColor, defaultBorderBrush) {
+        when {
+            borderBrush != null -> BorderStroke(borderWidth, borderBrush)
+            borderColor != null -> BorderStroke(borderWidth, borderColor)
+            else -> BorderStroke(borderWidth, defaultBorderBrush)
+        }
     }
 
     if (onClick != null) {
@@ -86,8 +92,8 @@ fun GlassCard(
                 .shadow(
                     elevation = currentElevation,
                     shape = shape,
-                    ambientColor = Color.Black.copy(alpha = 0.08f),
-                    spotColor = Color.Black.copy(alpha = 0.12f),
+                    ambientColor = CARD_AMBIENT_SHADOW,
+                    spotColor = CARD_SPOT_SHADOW,
                     clip = false
                 )
                 .clip(shape)
@@ -108,8 +114,8 @@ fun GlassCard(
                 .shadow(
                     elevation = elevation,
                     shape = shape,
-                    ambientColor = Color.Black.copy(alpha = 0.08f),
-                    spotColor = Color.Black.copy(alpha = 0.12f),
+                    ambientColor = CARD_AMBIENT_SHADOW,
+                    spotColor = CARD_SPOT_SHADOW,
                     clip = false
                 )
                 .clip(shape),

@@ -12,9 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -199,10 +199,11 @@ private val DarkGlassColors = GlassColors(
     ambientGlow = BrandMint
 )
 
-val LocalGlassColors = staticCompositionLocalOf { DarkGlassColors }
-val LocalThemeIsDark = staticCompositionLocalOf { true }
-val LocalThemeAccent = staticCompositionLocalOf { ThemeAccent.EMERALD_MINT }
-val LocalThemeToggle = staticCompositionLocalOf<() -> Unit> { {} }
+val LocalGlassColors = compositionLocalOf { DarkGlassColors }
+val LocalThemeIsDark = compositionLocalOf { true }
+val LocalThemeAccent = compositionLocalOf { ThemeAccent.EMERALD_MINT }
+val LocalThemeToggle = compositionLocalOf<() -> Unit> { {} }
+val LocalUserPreferences = compositionLocalOf<UserPreferencesRepository?> { null }
 
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF0F172A),
@@ -252,6 +253,7 @@ fun PriceLensTheme(
     accent: ThemeAccent = ThemeAccent.EMERALD_MINT,
     glowIntensity: UserPreferencesRepository.GlowIntensity = UserPreferencesRepository.GlowIntensity.VIVID,
     contrastStyle: UserPreferencesRepository.ContrastStyle = UserPreferencesRepository.ContrastStyle.PITCH_BLACK,
+    userPreferences: UserPreferencesRepository? = null,
     onToggleTheme: () -> Unit = {},
     content: @Composable () -> Unit
 ) {
@@ -362,7 +364,8 @@ fun PriceLensTheme(
         LocalGlassColors provides glassColors,
         LocalThemeIsDark provides darkTheme,
         LocalThemeAccent provides accent,
-        LocalThemeToggle provides onToggleTheme
+        LocalThemeToggle provides onToggleTheme,
+        LocalUserPreferences provides userPreferences
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
@@ -384,6 +387,10 @@ object PriceLensTheme {
     val accent: ThemeAccent
         @Composable
         get() = LocalThemeAccent.current
+
+    val userPreferences: UserPreferencesRepository?
+        @Composable
+        get() = LocalUserPreferences.current
 
     val glowIntensity: UserPreferencesRepository.GlowIntensity
         @Composable

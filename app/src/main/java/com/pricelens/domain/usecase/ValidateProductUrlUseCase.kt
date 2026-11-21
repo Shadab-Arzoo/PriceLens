@@ -1,22 +1,27 @@
 package com.pricelens.domain.usecase
 
+import androidx.compose.runtime.Immutable
 import com.pricelens.domain.model.ConfirmedProductIdentity
 import com.pricelens.domain.model.DiscoverySource
 import java.net.URI
 import javax.inject.Inject
 
+@Immutable
 sealed class UrlValidationResult {
+    @Immutable
     data class Supported(
         val retailerName: String,
         val normalizedUrl: String,
         val suggestedIdentity: ConfirmedProductIdentity? = null
     ) : UrlValidationResult()
 
+    @Immutable
     data class UnsupportedRetailer(
         val domain: String,
         val message: String = "PriceLens only compares prices via authorized retailer partner feeds. Web scraping is disabled."
     ) : UrlValidationResult()
 
+    @Immutable
     data class InvalidUrl(val reason: String) : UrlValidationResult()
 }
 

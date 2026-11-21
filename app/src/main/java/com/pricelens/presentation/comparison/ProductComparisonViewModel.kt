@@ -69,6 +69,7 @@ class ProductComparisonViewModel @Inject constructor(
 
     private var alertsJob: Job? = null
     private var watchlistJob: Job? = null
+    private var comparisonJob: Job? = null
 
     init {
         observeExperimentalFlags()
@@ -274,6 +275,7 @@ class ProductComparisonViewModel @Inject constructor(
     private fun loadComparisonDetails(id: String) {
         if (id.isBlank()) return
 
+        comparisonJob?.cancel()
         _uiState.update {
             it.copy(
                 isLoading = true,
@@ -281,7 +283,7 @@ class ProductComparisonViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
+        comparisonJob = viewModelScope.launch {
             val result = getProductComparisonUseCase(id)
             result.fold(
                 onSuccess = { details ->

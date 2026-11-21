@@ -1,5 +1,6 @@
 package com.pricelens.domain.service
 
+import androidx.compose.runtime.Immutable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
@@ -12,6 +13,7 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@Immutable
 data class UniversalProductMetadata(
     val url: String,
     val domain: String,

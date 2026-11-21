@@ -1,5 +1,8 @@
 package com.pricelens.domain.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class TargetPriceAlert(
     val id: String,
     val productId: String,
@@ -20,6 +23,7 @@ data class TargetPriceAlert(
     }
 }
 
+@Immutable
 data class NotificationRecord(
     val id: String,
     val alertId: String,

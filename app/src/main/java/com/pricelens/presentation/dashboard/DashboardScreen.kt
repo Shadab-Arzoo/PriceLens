@@ -87,11 +87,10 @@ import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
 import com.pricelens.core.designsystem.components.PriceLensSearchBar
 import com.pricelens.core.designsystem.components.PriceLensTopBar
+import com.pricelens.core.util.rememberInrCurrencyFormatter
 import com.pricelens.domain.model.RecentSearch
 import com.pricelens.domain.model.WatchlistItem
 import com.pricelens.presentation.pasteurl.PasteUrlBottomSheet
-import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun DashboardRoute(
@@ -103,10 +102,11 @@ fun DashboardRoute(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val onEvent = remember(viewModel) { { event: DashboardUiEvent -> viewModel.onEvent(event) } }
 
     DashboardScreen(
         uiState = uiState,
-        onEvent = viewModel::onEvent,
+        onEvent = onEvent,
         onNavigateToSearch = onNavigateToSearch,
         onNavigateToWatchlist = onNavigateToWatchlist,
         onNavigateToComparison = onNavigateToComparison,
@@ -128,7 +128,7 @@ fun DashboardScreen(
     val clipboardManager = LocalClipboardManager.current
     var dismissedClipboardUrl by rememberSaveable { mutableStateOf<String?>(null) }
     val clipboardText = remember(clipboardManager) {
-        clipboardManager.getText()?.text?.trim().orEmpty()
+        runCatching { clipboardManager.getText()?.text?.trim().orEmpty() }.getOrDefault("")
     }
     val detectedClipboardUrl = remember(clipboardText) {
         val regex = Regex("""https?://[^\s<>"{}|\\^`]+""", RegexOption.IGNORE_CASE)
@@ -423,7 +423,7 @@ private fun PriceLensLabsBanner(
                         tint = glow,
                         modifier = Modifier
                             .size(19.dp)
-                            .graphicsLayer(rotationZ = if (isMasterEnabled) iconTilt else 0f)
+                            .graphicsLayer { rotationZ = if (isMasterEnabled) iconTilt else 0f }
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
@@ -846,7 +846,9 @@ private fun TrendingSection(
         Spacer(modifier = Modifier.height(8.dp))
 
         var selectedCategory by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("All Flagships") }
-        val categories = listOf("All Flagships", "Smartphones", "Laptops & Mac", "Audio & ANC")
+        val categories = androidx.compose.runtime.remember {
+            listOf("All Flagships", "Smartphones", "Laptops & Mac", "Audio & ANC")
+        }
         val filteredTrending = androidx.compose.runtime.remember(trendingProducts, selectedCategory) {
             when (selectedCategory) {
                 "Smartphones" -> trendingProducts.filter {
@@ -909,11 +911,7 @@ private fun TrendingSection(
                 subtitle = stringResource(R.string.empty_trending_subtitle)
             )
         } else {
-            val currencyFormatter = remember {
-                NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
-                    maximumFractionDigits = 0
-                }
-            }
+            val currencyFormatter = rememberInrCurrencyFormatter()
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 filteredTrending.forEach { product ->
                     GlassCard(
@@ -1022,11 +1020,9 @@ private fun DashboardErrorState(
 }
 
 @Composable
-private fun FlashDealsTicker(
-    onProductClick: (productId: String, productName: String) -> Unit,
+private fun PulsingFlashDot(
     modifier: Modifier = Modifier
 ) {
-    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     val infiniteTransition = rememberInfiniteTransition(label = "flashPulse")
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.4f,
@@ -1037,6 +1033,22 @@ private fun FlashDealsTicker(
         ),
         label = "flashDotAlpha"
     )
+
+    Box(
+        modifier = modifier
+            .size(8.dp)
+            .graphicsLayer { alpha = pulseAlpha }
+            .clip(CircleShape)
+            .background(PriceLensTheme.glassColors.ambientGlow)
+    )
+}
+
+@Composable
+private fun FlashDealsTicker(
+    onProductClick: (productId: String, productName: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
 
     val flashDeals = remember {
         listOf(
@@ -1063,13 +1075,7 @@ private fun FlashDealsTicker(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .graphicsLayer { alpha = pulseAlpha }
-                        .clip(CircleShape)
-                        .background(PriceLensTheme.glassColors.ambientGlow)
-                )
+                PulsingFlashDot()
                 Text(
                     text = "Today's Flash Drops",
                     style = MaterialTheme.typography.titleMedium,
@@ -1112,13 +1118,13 @@ private fun FlashDealsTicker(
                 GlassCard(
                     modifier = Modifier
                         .width(220.dp)
-                        .animateItem()
-                        .clickable {
-                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
-                            onProductClick(id, name)
-                        },
+                        .animateItem(),
                     shape = RoundedCornerShape(16.dp),
-                    borderColor = PriceLensTheme.glassColors.specularBorder
+                    borderColor = PriceLensTheme.glassColors.specularBorder,
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                        onProductClick(id, name)
+                    }
                 ) {
                     Column(
                         modifier = Modifier

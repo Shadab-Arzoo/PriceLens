@@ -1,5 +1,6 @@
 package com.pricelens.presentation.webpicker
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,6 +21,7 @@ import java.nio.charset.StandardCharsets
 import java.util.UUID
 import javax.inject.Inject
 
+@Immutable
 data class WebPricePickerUiState(
     val url: String = "",
     val domain: String = "",

@@ -32,7 +32,9 @@ class DealsViewModel @Inject constructor(
 
     fun loadDeals() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            if (allDealsCache.isEmpty()) {
+                _uiState.update { it.copy(isLoading = true) }
+            }
             val result = productCatalogRepository.searchProducts("")
             result.onSuccess { summaries ->
                 allDealsCache = summaries.map { summary ->

@@ -73,6 +73,7 @@ fun ProductThumbnailImage(
             .build()
     }
     var hasError by remember(resolvedUrl) { mutableStateOf(false) }
+    var isLoading by remember(resolvedUrl) { mutableStateOf(true) }
 
     Box(
         modifier = modifier
@@ -81,14 +82,18 @@ fun ProductThumbnailImage(
             .border(0.5.dp, PriceLensTheme.glassColors.specularBorder, shape),
         contentAlignment = Alignment.Center
     ) {
+        if (isLoading && !hasError) {
+            SkeletonBox(modifier = Modifier.fillMaxSize(), shape = shape)
+        }
+
         if (!hasError) {
             AsyncImage(
                 model = imageRequest,
                 contentDescription = productName,
                 contentScale = ContentScale.Crop,
-                onLoading = { hasError = false },
-                onSuccess = { hasError = false },
-                onError = { hasError = true },
+                onLoading = { isLoading = true; hasError = false },
+                onSuccess = { isLoading = false; hasError = false },
+                onError = { isLoading = false; hasError = true },
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -122,24 +127,30 @@ fun ProductHeroImage(
             .build()
     }
     var hasError by remember(resolvedUrl) { mutableStateOf(false) }
+    var isLoading by remember(resolvedUrl) { mutableStateOf(true) }
 
+    val heroShape = RoundedCornerShape(16.dp)
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
-            .clip(RoundedCornerShape(16.dp))
-            .background(PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.7f), RoundedCornerShape(16.dp))
-            .border(1.dp, PriceLensTheme.glassColors.specularBorder, RoundedCornerShape(16.dp)),
+            .clip(heroShape)
+            .background(PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.7f), heroShape)
+            .border(1.dp, PriceLensTheme.glassColors.specularBorder, heroShape),
         contentAlignment = Alignment.Center
     ) {
+        if (isLoading && !hasError) {
+            SkeletonBox(modifier = Modifier.fillMaxSize(), shape = heroShape)
+        }
+
         if (!hasError) {
             AsyncImage(
                 model = imageRequest,
                 contentDescription = productName,
                 contentScale = ContentScale.Fit,
-                onLoading = { hasError = false },
-                onSuccess = { hasError = false },
-                onError = { hasError = true },
+                onLoading = { isLoading = true; hasError = false },
+                onSuccess = { isLoading = false; hasError = false },
+                onError = { isLoading = false; hasError = true },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(8.dp)

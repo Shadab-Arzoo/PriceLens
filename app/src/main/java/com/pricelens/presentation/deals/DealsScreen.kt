@@ -51,6 +51,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,6 +75,8 @@ import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import java.util.Locale
 
+private val DISCOUNT_OPTIONS = listOf(0 to "All Discounts", 15 to "15%+ Off 🔥", 20 to "20%+ Off ⚡", 25 to "25%+ Off 💥")
+
 @Composable
 fun DealsRoute(
     onNavigateToComparison: (productId: String, productName: String) -> Unit,
@@ -81,18 +84,27 @@ fun DealsRoute(
     viewModel: DealsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val onCategorySelected = remember(viewModel) { { cat: DealCategory -> viewModel.onCategorySelected(cat) } }
+    val onStoreSelected = remember(viewModel) { { store: String -> viewModel.onStoreSelected(store) } }
+    val onSortSelected = remember(viewModel) { { sort: DealSortOrder -> viewModel.onSortSelected(sort) } }
+    val onBudgetSelected = remember(viewModel) { { budget: BudgetFilter -> viewModel.onBudgetSelected(budget) } }
+    val onSearchQueryChanged = remember(viewModel) { { query: String -> viewModel.onSearchQueryChanged(query) } }
+    val onMinDiscountChanged = remember(viewModel) { { discount: Int -> viewModel.onMinDiscountChanged(discount) } }
+    val onQuickAlert = remember(viewModel) { { deal: DealItem, targetPrice: Double -> viewModel.quickSetAlert(deal, targetPrice) } }
+    val onDismissNotification = remember(viewModel) { { viewModel.clearNotification() } }
+    val onRefresh = remember(viewModel) { { viewModel.loadDeals() } }
 
     DealsScreen(
         uiState = uiState,
-        onCategorySelected = viewModel::onCategorySelected,
-        onStoreSelected = viewModel::onStoreSelected,
-        onSortSelected = viewModel::onSortSelected,
-        onBudgetSelected = viewModel::onBudgetSelected,
-        onSearchQueryChanged = viewModel::onSearchQueryChanged,
-        onMinDiscountChanged = viewModel::onMinDiscountChanged,
-        onQuickAlert = viewModel::quickSetAlert,
-        onDismissNotification = viewModel::clearNotification,
-        onRefresh = viewModel::loadDeals,
+        onCategorySelected = onCategorySelected,
+        onStoreSelected = onStoreSelected,
+        onSortSelected = onSortSelected,
+        onBudgetSelected = onBudgetSelected,
+        onSearchQueryChanged = onSearchQueryChanged,
+        onMinDiscountChanged = onMinDiscountChanged,
+        onQuickAlert = onQuickAlert,
+        onDismissNotification = onDismissNotification,
+        onRefresh = onRefresh,
         onNavigateToComparison = onNavigateToComparison,
         modifier = modifier
     )
@@ -192,6 +204,13 @@ fun DealsScreen(
 
             // In-page search bar
             Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)) {
+                val dealsSearchColors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AmberAlert,
+                    unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
+                    focusedTextColor = PriceLensTheme.glassColors.textPrimary,
+                    unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
+                )
+
                 OutlinedTextField(
                     value = uiState.searchQuery,
                     onValueChange = onSearchQueryChanged,
@@ -224,12 +243,7 @@ fun DealsScreen(
                     },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AmberAlert,
-                        unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
-                        focusedTextColor = PriceLensTheme.glassColors.textPrimary,
-                        unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
-                    ),
+                    colors = dealsSearchColors,
                     modifier = Modifier.fillMaxWidth().height(48.dp)
                 )
             }
@@ -242,7 +256,7 @@ fun DealsScreen(
                     .padding(horizontal = 16.dp, vertical = 2.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                val discountOptions = listOf(0 to "All Discounts", 15 to "15%+ Off 🔥", 20 to "20%+ Off ⚡", 25 to "25%+ Off 💥")
+                val discountOptions = DISCOUNT_OPTIONS
                 discountOptions.forEach { (pct, label) ->
                     val isSelected = uiState.minDiscountPercent == pct
                     Surface(

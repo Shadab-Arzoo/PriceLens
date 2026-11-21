@@ -44,6 +44,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.pricelens.core.designsystem.PriceLensTheme
 
+private val BUTTON_AMBIENT_SHADOW = Color.Black.copy(alpha = 0.2f)
+private val BUTTON_SPOT_SHADOW = Color.Black.copy(alpha = 0.3f)
+private val DISABLED_BUTTON_BRUSH = Brush.horizontalGradient(
+    listOf(Color.Gray.copy(alpha = 0.35f), Color.Gray.copy(alpha = 0.25f))
+)
+
 /**
  * Modern pill action button with solid fill, clean hairline border,
  * dynamic elevation, and fluid spring physics.
@@ -83,6 +89,11 @@ fun LiquidGlassPrimaryButton(
         label = "primaryButtonElevation"
     )
 
+    val specularBorder = PriceLensTheme.glassColors.specularBorder
+    val buttonBorderStroke = remember(specularBorder) {
+        BorderStroke(1.dp, specularBorder)
+    }
+
     Surface(
         modifier = modifier
             .graphicsLayer {
@@ -92,8 +103,8 @@ fun LiquidGlassPrimaryButton(
             .shadow(
                 elevation = currentElevation,
                 shape = shape,
-                ambientColor = Color.Black.copy(alpha = 0.2f),
-                spotColor = Color.Black.copy(alpha = 0.3f)
+                ambientColor = BUTTON_AMBIENT_SHADOW,
+                spotColor = BUTTON_SPOT_SHADOW
             )
             .clip(shape)
             .clickable(
@@ -104,16 +115,14 @@ fun LiquidGlassPrimaryButton(
             ),
         shape = shape,
         color = PriceLensTheme.glassColors.actionFill,
-        border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder)
+        border = buttonBorderStroke
     ) {
         Box(
             modifier = (if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.wrapContentWidth())
                 .height(height)
                 .background(
                     if (enabled) gradientBrush
-                    else Brush.horizontalGradient(
-                        listOf(Color.Gray.copy(alpha = 0.35f), Color.Gray.copy(alpha = 0.25f))
-                    )
+                    else DISABLED_BUTTON_BRUSH
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -197,6 +206,11 @@ fun LiquidGlassSecondaryButton(
         label = "secondaryButtonElevation"
     )
 
+    val specularBorder = PriceLensTheme.glassColors.specularBorder
+    val buttonBorderStroke = remember(specularBorder) {
+        BorderStroke(1.dp, specularBorder)
+    }
+
     Surface(
         modifier = modifier
             .graphicsLayer {
@@ -213,7 +227,7 @@ fun LiquidGlassSecondaryButton(
             ),
         shape = shape,
         color = PriceLensTheme.glassColors.surfaceGlass,
-        border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder)
+        border = buttonBorderStroke
     ) {
         Box(
             modifier = (if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.wrapContentWidth())

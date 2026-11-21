@@ -41,6 +41,16 @@ fun PriceLensSearchBar(
     modifier: Modifier = Modifier,
     placeholder: String = "Search products, brands, or models…"
 ) {
+    val searchColors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
+        unfocusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
+        focusedBorderColor = PriceLensTheme.glassColors.ambientGlow,
+        unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
+        focusedTextColor = PriceLensTheme.glassColors.textPrimary,
+        unfocusedTextColor = PriceLensTheme.glassColors.textPrimary,
+        cursorColor = PriceLensTheme.glassColors.ambientGlow
+    )
+
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
@@ -89,14 +99,6 @@ fun PriceLensSearchBar(
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(onSearch = { onSearch(query) }),
         shape = RoundedCornerShape(9999.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
-            unfocusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
-            focusedBorderColor = PriceLensTheme.glassColors.ambientGlow,
-            unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
-            focusedTextColor = PriceLensTheme.glassColors.textPrimary,
-            unfocusedTextColor = PriceLensTheme.glassColors.textPrimary,
-            cursorColor = PriceLensTheme.glassColors.ambientGlow
-        )
+        colors = searchColors
     )
 }

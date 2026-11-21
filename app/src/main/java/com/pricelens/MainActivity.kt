@@ -9,12 +9,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.pricelens.core.designsystem.PriceLensTheme
@@ -25,6 +27,8 @@ import com.pricelens.core.navigation.PriceLensNavGraph
 import com.pricelens.core.preferences.UserPreferencesRepository
 import com.pricelens.domain.repository.DashboardRepository
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -45,10 +49,10 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
 
         setContent {
-            val themeMode by userPreferences.themeModeFlow.collectAsState()
-            val themeAccent by userPreferences.themeAccentFlow.collectAsState()
-            val glowIntensity by userPreferences.glowIntensityFlow.collectAsState()
-            val contrastStyle by userPreferences.contrastStyleFlow.collectAsState()
+            val themeMode by userPreferences.themeModeFlow.collectAsStateWithLifecycle()
+            val themeAccent by userPreferences.themeAccentFlow.collectAsStateWithLifecycle()
+            val glowIntensity by userPreferences.glowIntensityFlow.collectAsStateWithLifecycle()
+            val contrastStyle by userPreferences.contrastStyleFlow.collectAsStateWithLifecycle()
             val systemDark = isSystemInDarkTheme()
             val isDark = when (themeMode) {
                 UserPreferencesRepository.ThemeMode.DARK -> true
@@ -61,6 +65,7 @@ class MainActivity : ComponentActivity() {
                 accent = themeAccent,
                 glowIntensity = glowIntensity,
                 contrastStyle = contrastStyle,
+                userPreferences = userPreferences,
                 onToggleTheme = {
                     userPreferences.toggleTheme(isDark)
                 }
@@ -69,21 +74,22 @@ class MainActivity : ComponentActivity() {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
-                val watchlistItems by dashboardRepository.getWatchlistItems().collectAsState(initial = emptyList())
-                val watchlistCount = watchlistItems.size
+                val isDockVisible = remember(currentRoute) {
+                    currentRoute != null &&
+                        !currentRoute.startsWith(PriceLensDestination.Onboarding.route) &&
+                        !currentRoute.startsWith(PriceLensDestination.WebPricePicker.route.substringBefore("?"))
+                }
 
-                val isDockVisible = currentRoute != null &&
-                    !currentRoute.startsWith(PriceLensDestination.Onboarding.route) &&
-                    !currentRoute.startsWith(PriceLensDestination.WebPricePicker.route.substringBefore("?"))
-
-                val selectedTab = when {
-                    currentRoute == null -> DockTab.EXPLORE
-                    currentRoute.startsWith(PriceLensDestination.Dashboard.route) -> DockTab.EXPLORE
-                    currentRoute.startsWith("search") -> DockTab.SEARCH
-                    currentRoute.startsWith(PriceLensDestination.Deals.route) -> DockTab.DEALS
-                    currentRoute.startsWith(PriceLensDestination.Watchlist.route) -> DockTab.WATCHLIST
-                    currentRoute.startsWith(PriceLensDestination.Tools.route) -> DockTab.TOOLS
-                    else -> null
+                val selectedTab = remember(currentRoute) {
+                    when {
+                        currentRoute == null -> DockTab.EXPLORE
+                        currentRoute.startsWith(PriceLensDestination.Dashboard.route) -> DockTab.EXPLORE
+                        currentRoute.startsWith("search") -> DockTab.SEARCH
+                        currentRoute.startsWith(PriceLensDestination.Deals.route) -> DockTab.DEALS
+                        currentRoute.startsWith(PriceLensDestination.Watchlist.route) -> DockTab.WATCHLIST
+                        currentRoute.startsWith(PriceLensDestination.Tools.route) -> DockTab.TOOLS
+                        else -> null
+                    }
                 }
 
                 Box(
@@ -93,13 +99,13 @@ class MainActivity : ComponentActivity() {
                 ) {
                     PriceLensNavGraph(
                         navController = navController,
+                        userPreferences = userPreferences,
                         sharedUrl = sharedUrl,
                         sharedProductId = sharedProductId
                     )
 
-                    PriceLensBottomDock(
-                        selectedTab = selectedTab,
-                        onTabSelected = { tab ->
+                    val onTabSelected = remember(navController) {
+                        { tab: DockTab ->
                             val targetRoute = when (tab) {
                                 DockTab.EXPLORE -> PriceLensDestination.Dashboard.route
                                 DockTab.SEARCH -> PriceLensDestination.Search.createRoute("")
@@ -114,8 +120,11 @@ class MainActivity : ComponentActivity() {
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                        },
-                        onTabReselected = { tab ->
+                        }
+                    }
+
+                    val onTabReselected = remember(navController) {
+                        { tab: DockTab ->
                             val targetRoute = when (tab) {
                                 DockTab.EXPLORE -> PriceLensDestination.Dashboard.route
                                 DockTab.SEARCH -> PriceLensDestination.Search.createRoute("")
@@ -127,8 +136,11 @@ class MainActivity : ComponentActivity() {
                                 popUpTo(targetRoute) { inclusive = true }
                                 launchSingleTop = true
                             }
-                        },
-                        onTabLongClick = { tab ->
+                        }
+                    }
+
+                    val onTabLongClick = remember(navController) {
+                        { tab: DockTab ->
                             when (tab) {
                                 DockTab.EXPLORE -> {
                                     navController.navigate(PriceLensDestination.Dashboard.route) {
@@ -156,8 +168,15 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
-                        },
-                        watchlistCount = watchlistCount,
+                        }
+                    }
+
+                    MainActivityBottomDock(
+                        dashboardRepository = dashboardRepository,
+                        selectedTab = selectedTab,
+                        onTabSelected = onTabSelected,
+                        onTabReselected = onTabReselected,
+                        onTabLongClick = onTabLongClick,
                         isVisible = isDockVisible,
                         modifier = Modifier.align(Alignment.BottomCenter)
                     )
@@ -185,4 +204,32 @@ class MainActivity : ComponentActivity() {
             sharedProductId = intent.getStringExtra("productId")
         }
     }
+}
+
+@Composable
+private fun MainActivityBottomDock(
+    dashboardRepository: DashboardRepository,
+    selectedTab: DockTab?,
+    onTabSelected: (DockTab) -> Unit,
+    onTabReselected: (DockTab) -> Unit,
+    onTabLongClick: (DockTab) -> Unit,
+    isVisible: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val watchlistCountFlow = remember(dashboardRepository) {
+        dashboardRepository.getWatchlistItems()
+            .map { it.size }
+            .distinctUntilChanged()
+    }
+    val watchlistCount by watchlistCountFlow.collectAsStateWithLifecycle(initialValue = 0)
+
+    PriceLensBottomDock(
+        selectedTab = selectedTab,
+        onTabSelected = onTabSelected,
+        onTabReselected = onTabReselected,
+        onTabLongClick = onTabLongClick,
+        watchlistCount = watchlistCount,
+        isVisible = isVisible,
+        modifier = modifier
+    )
 }

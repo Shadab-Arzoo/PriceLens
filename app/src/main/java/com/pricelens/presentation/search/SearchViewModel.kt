@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.pricelens.domain.model.PriceLensException
 import com.pricelens.domain.usecase.SearchProductsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +21,7 @@ class SearchViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val initialQuery: String = savedStateHandle.get<String>("q").orEmpty()
+    private var searchJob: Job? = null
 
     private val _uiState = MutableStateFlow(SearchUiState(query = initialQuery))
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
@@ -51,12 +53,14 @@ class SearchViewModel @Inject constructor(
                 performSearch(_uiState.value.query)
             }
             SearchUiEvent.ClearQuery -> {
+                searchJob?.cancel()
                 _uiState.update {
                     it.copy(
                         query = "",
                         products = emptyList(),
                         errorMessage = null,
-                        isSubmitted = false
+                        isSubmitted = false,
+                        isLoading = false
                     )
                 }
             }
@@ -67,6 +71,7 @@ class SearchViewModel @Inject constructor(
         val trimmed = query.trim()
         if (trimmed.isBlank()) return
 
+        searchJob?.cancel()
         _uiState.update {
             it.copy(
                 query = trimmed,
@@ -76,7 +81,7 @@ class SearchViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
+        searchJob = viewModelScope.launch {
             val result = searchProductsUseCase(trimmed)
             result.fold(
                 onSuccess = { products ->

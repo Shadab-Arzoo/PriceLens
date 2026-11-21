@@ -45,21 +45,35 @@ import com.pricelens.presentation.watchlist.WatchlistViewModel
 import com.pricelens.presentation.webpicker.WebPricePickerScreen
 import com.pricelens.presentation.webpicker.WebPricePickerViewModel
 
+private fun isDockTabRoute(route: String?): Boolean {
+    if (route == null) return false
+    return route == PriceLensDestination.Dashboard.route ||
+        route.startsWith("search") ||
+        route == PriceLensDestination.Deals.route ||
+        route == PriceLensDestination.Watchlist.route ||
+        route == PriceLensDestination.Tools.route
+}
+
 @Composable
 fun PriceLensNavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    userPreferences: UserPreferencesRepository? = null,
     startDestination: String? = null,
     sharedUrl: String? = null,
     sharedProductId: String? = null
 ) {
     val context = LocalContext.current
-    val userPreferences = remember { UserPreferencesRepository(context.applicationContext) }
+    val effectiveUserPreferences = userPreferences
+        ?: PriceLensTheme.userPreferences
+        ?: remember { UserPreferencesRepository(context.applicationContext) }
 
-    val resolvedStartDestination = startDestination ?: if (userPreferences.hasCompletedOnboarding) {
-        PriceLensDestination.Dashboard.route
-    } else {
-        PriceLensDestination.Onboarding.route
+    val resolvedStartDestination = remember {
+        startDestination ?: if (effectiveUserPreferences.hasCompletedOnboarding) {
+            PriceLensDestination.Dashboard.route
+        } else {
+            PriceLensDestination.Onboarding.route
+        }
     }
 
     NavHost(
@@ -67,51 +81,67 @@ fun PriceLensNavGraph(
         startDestination = resolvedStartDestination,
         modifier = modifier.fillMaxSize(),
         enterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { fullWidth -> (fullWidth * 0.16f).toInt() },
-                animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
-            ) + fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
-            scaleIn(
-                initialScale = 0.95f,
-                animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
-            )
+            if (isDockTabRoute(initialState.destination.route) && isDockTabRoute(targetState.destination.route)) {
+                fadeIn(animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing))
+            } else {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> (fullWidth * 0.16f).toInt() },
+                    animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+                ) + fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
+                scaleIn(
+                    initialScale = 0.95f,
+                    animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+                )
+            }
         },
         exitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { fullWidth -> -(fullWidth * 0.12f).toInt() },
-                animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
-            ) + fadeOut(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
-            scaleOut(
-                targetScale = 0.96f,
-                animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
-            )
+            if (isDockTabRoute(initialState.destination.route) && isDockTabRoute(targetState.destination.route)) {
+                fadeOut(animationSpec = tween(durationMillis = 60, easing = FastOutSlowInEasing))
+            } else {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> -(fullWidth * 0.12f).toInt() },
+                    animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+                ) + fadeOut(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
+                scaleOut(
+                    targetScale = 0.96f,
+                    animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+                )
+            }
         },
         popEnterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { fullWidth -> -(fullWidth * 0.12f).toInt() },
-                animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
-            ) + fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
-            scaleIn(
-                initialScale = 0.96f,
-                animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
-            )
+            if (isDockTabRoute(initialState.destination.route) && isDockTabRoute(targetState.destination.route)) {
+                fadeIn(animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing))
+            } else {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> -(fullWidth * 0.12f).toInt() },
+                    animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+                ) + fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
+                scaleIn(
+                    initialScale = 0.96f,
+                    animationSpec = tween(durationMillis = 320, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+                )
+            }
         },
         popExitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { fullWidth -> (fullWidth * 0.16f).toInt() },
-                animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
-            ) + fadeOut(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
-            scaleOut(
-                targetScale = 0.95f,
-                animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
-            )
+            if (isDockTabRoute(initialState.destination.route) && isDockTabRoute(targetState.destination.route)) {
+                fadeOut(animationSpec = tween(durationMillis = 60, easing = FastOutSlowInEasing))
+            } else {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> (fullWidth * 0.16f).toInt() },
+                    animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+                ) + fadeOut(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
+                scaleOut(
+                    targetScale = 0.95f,
+                    animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f))
+                )
+            }
         }
     ) {
         // 1. Onboarding / Intro Screen
         composable(PriceLensDestination.Onboarding.route) {
             OnboardingScreen(
                 onFinishOnboarding = {
-                    userPreferences.hasCompletedOnboarding = true
+                    effectiveUserPreferences.hasCompletedOnboarding = true
                     navController.navigate(PriceLensDestination.Dashboard.route) {
                         popUpTo(PriceLensDestination.Onboarding.route) {
                             inclusive = true
@@ -125,16 +155,8 @@ fun PriceLensNavGraph(
         composable(
             route = PriceLensDestination.Dashboard.route,
             enterTransition = {
-                if (initialState.destination.route == PriceLensDestination.Watchlist.route) {
-                    scaleIn(
-                        initialScale = 0.93f,
-                        animationSpec = tween(durationMillis = 340, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
-                    ) + fadeIn(
-                        animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing)
-                    ) + slideInVertically(
-                        initialOffsetY = { -it / 20 },
-                        animationSpec = tween(durationMillis = 340, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
-                    )
+                if (isDockTabRoute(initialState.destination.route)) {
+                    fadeIn(animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing))
                 } else {
                     slideInHorizontally(
                         initialOffsetX = { fullWidth -> fullWidth / 4 },
@@ -143,16 +165,8 @@ fun PriceLensNavGraph(
                 }
             },
             exitTransition = {
-                if (targetState.destination.route == PriceLensDestination.Watchlist.route) {
-                    scaleOut(
-                        targetScale = 0.93f,
-                        animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
-                    ) + fadeOut(
-                        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
-                    ) + slideOutVertically(
-                        targetOffsetY = { -it / 20 },
-                        animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
-                    )
+                if (isDockTabRoute(targetState.destination.route)) {
+                    fadeOut(animationSpec = tween(durationMillis = 60, easing = FastOutSlowInEasing))
                 } else {
                     slideOutHorizontally(
                         targetOffsetX = { fullWidth -> -fullWidth / 4 },
@@ -161,16 +175,8 @@ fun PriceLensNavGraph(
                 }
             },
             popEnterTransition = {
-                if (initialState.destination.route == PriceLensDestination.Watchlist.route) {
-                    scaleIn(
-                        initialScale = 0.93f,
-                        animationSpec = tween(durationMillis = 340, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
-                    ) + fadeIn(
-                        animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing)
-                    ) + slideInVertically(
-                        initialOffsetY = { -it / 20 },
-                        animationSpec = tween(durationMillis = 340, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
-                    )
+                if (isDockTabRoute(initialState.destination.route)) {
+                    fadeIn(animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing))
                 } else {
                     slideInHorizontally(
                         initialOffsetX = { fullWidth -> -fullWidth / 4 },
@@ -179,10 +185,14 @@ fun PriceLensNavGraph(
                 }
             },
             popExitTransition = {
-                slideOutHorizontally(
-                    targetOffsetX = { fullWidth -> fullWidth / 4 },
-                    animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
-                ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+                if (isDockTabRoute(targetState.destination.route)) {
+                    fadeOut(animationSpec = tween(durationMillis = 60, easing = FastOutSlowInEasing))
+                } else {
+                    slideOutHorizontally(
+                        targetOffsetX = { fullWidth -> fullWidth / 4 },
+                        animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                    ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+                }
             }
         ) {
             val viewModel: DashboardViewModel = hiltViewModel()
@@ -233,29 +243,45 @@ fun PriceLensNavGraph(
                 }
             ),
             enterTransition = {
-                fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
-                    slideInVertically(
-                        initialOffsetY = { -it / 8 },
-                        animationSpec = tween(durationMillis = 260, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
-                    ) +
-                    scaleIn(
-                        initialScale = 0.96f,
-                        animationSpec = tween(durationMillis = 260, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
-                    )
+                if (isDockTabRoute(initialState.destination.route)) {
+                    fadeIn(animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing))
+                } else {
+                    fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
+                        slideInVertically(
+                            initialOffsetY = { -it / 8 },
+                            animationSpec = tween(durationMillis = 260, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                        ) +
+                        scaleIn(
+                            initialScale = 0.96f,
+                            animationSpec = tween(durationMillis = 260, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                        )
+                }
             },
             exitTransition = {
-                fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)) +
-                    scaleOut(targetScale = 0.96f, animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing))
+                if (isDockTabRoute(targetState.destination.route)) {
+                    fadeOut(animationSpec = tween(durationMillis = 60, easing = FastOutSlowInEasing))
+                } else {
+                    fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)) +
+                        scaleOut(targetScale = 0.96f, animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing))
+                }
             },
             popEnterTransition = {
-                fadeIn(animationSpec = tween(durationMillis = 200)) + scaleIn(initialScale = 0.96f)
+                if (isDockTabRoute(initialState.destination.route)) {
+                    fadeIn(animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing))
+                } else {
+                    fadeIn(animationSpec = tween(durationMillis = 200)) + scaleIn(initialScale = 0.96f)
+                }
             },
             popExitTransition = {
-                fadeOut(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
-                    slideOutVertically(
-                        targetOffsetY = { -it / 8 },
-                        animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)
-                    )
+                if (isDockTabRoute(targetState.destination.route)) {
+                    fadeOut(animationSpec = tween(durationMillis = 60, easing = FastOutSlowInEasing))
+                } else {
+                    fadeOut(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
+                        slideOutVertically(
+                            targetOffsetY = { -it / 8 },
+                            animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)
+                        )
+                }
             }
         ) {
             val viewModel: SearchViewModel = hiltViewModel()
@@ -328,24 +354,50 @@ fun PriceLensNavGraph(
         composable(
             route = PriceLensDestination.Watchlist.route,
             enterTransition = {
-                slideInVertically(
-                    initialOffsetY = { fullHeight -> (fullHeight * 0.95f).toInt() },
-                    animationSpec = tween(
-                        durationMillis = 360,
-                        easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+                if (isDockTabRoute(initialState.destination.route)) {
+                    fadeIn(animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing))
+                } else {
+                    slideInVertically(
+                        initialOffsetY = { fullHeight -> (fullHeight * 0.95f).toInt() },
+                        animationSpec = tween(
+                            durationMillis = 360,
+                            easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+                        )
+                    ) + fadeIn(
+                        animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)
+                    ) + scaleIn(
+                        initialScale = 0.93f,
+                        animationSpec = tween(
+                            durationMillis = 360,
+                            easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+                        )
                     )
-                ) + fadeIn(
-                    animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)
-                ) + scaleIn(
-                    initialScale = 0.93f,
-                    animationSpec = tween(
-                        durationMillis = 360,
-                        easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
-                    )
-                )
+                }
             },
             exitTransition = {
-                if (targetState.destination.route == PriceLensDestination.Dashboard.route) {
+                if (isDockTabRoute(targetState.destination.route)) {
+                    fadeOut(animationSpec = tween(durationMillis = 60, easing = FastOutSlowInEasing))
+                } else {
+                    slideOutHorizontally(
+                        targetOffsetX = { fullWidth -> -fullWidth / 4 },
+                        animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                    ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+                }
+            },
+            popEnterTransition = {
+                if (isDockTabRoute(initialState.destination.route)) {
+                    fadeIn(animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing))
+                } else {
+                    slideInHorizontally(
+                        initialOffsetX = { fullWidth -> -fullWidth / 4 },
+                        animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
+                    ) + fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing))
+                }
+            },
+            popExitTransition = {
+                if (isDockTabRoute(targetState.destination.route)) {
+                    fadeOut(animationSpec = tween(durationMillis = 60, easing = FastOutSlowInEasing))
+                } else {
                     slideOutVertically(
                         targetOffsetY = { fullHeight -> (fullHeight * 0.95f).toInt() },
                         animationSpec = tween(
@@ -361,35 +413,7 @@ fun PriceLensNavGraph(
                             easing = FastOutSlowInEasing
                         )
                     )
-                } else {
-                    slideOutHorizontally(
-                        targetOffsetX = { fullWidth -> -fullWidth / 4 },
-                        animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
-                    ) + fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
                 }
-            },
-            popEnterTransition = {
-                slideInHorizontally(
-                    initialOffsetX = { fullWidth -> -fullWidth / 4 },
-                    animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing)
-                ) + fadeIn(animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing))
-            },
-            popExitTransition = {
-                slideOutVertically(
-                    targetOffsetY = { fullHeight -> (fullHeight * 0.95f).toInt() },
-                    animationSpec = tween(
-                        durationMillis = 320,
-                        easing = CubicBezierEasing(0.3f, 0.0f, 0.8f, 0.15f)
-                    )
-                ) + fadeOut(
-                    animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)
-                ) + scaleOut(
-                    targetScale = 0.93f,
-                    animationSpec = tween(
-                        durationMillis = 320,
-                        easing = FastOutSlowInEasing
-                    )
-                )
             }
         ) {
             val viewModel: WatchlistViewModel = hiltViewModel()
@@ -455,18 +479,26 @@ fun PriceLensNavGraph(
         composable(
             route = PriceLensDestination.Deals.route,
             enterTransition = {
-                fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
-                slideInVertically(
-                    initialOffsetY = { fullHeight -> (fullHeight * 0.12f).toInt() },
-                    animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
-                )
+                if (isDockTabRoute(initialState.destination.route)) {
+                    fadeIn(animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing))
+                } else {
+                    fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
+                    slideInVertically(
+                        initialOffsetY = { fullHeight -> (fullHeight * 0.12f).toInt() },
+                        animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                    )
+                }
             },
             exitTransition = {
-                fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)) +
-                slideOutVertically(
-                    targetOffsetY = { fullHeight -> -(fullHeight * 0.08f).toInt() },
-                    animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)
-                )
+                if (isDockTabRoute(targetState.destination.route)) {
+                    fadeOut(animationSpec = tween(durationMillis = 60, easing = FastOutSlowInEasing))
+                } else {
+                    fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)) +
+                    slideOutVertically(
+                        targetOffsetY = { fullHeight -> -(fullHeight * 0.08f).toInt() },
+                        animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)
+                    )
+                }
             }
         ) {
             DealsRoute(
@@ -482,21 +514,30 @@ fun PriceLensNavGraph(
         composable(
             route = PriceLensDestination.Tools.route,
             enterTransition = {
-                fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
-                slideInVertically(
-                    initialOffsetY = { fullHeight -> (fullHeight * 0.12f).toInt() },
-                    animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
-                )
+                if (isDockTabRoute(initialState.destination.route)) {
+                    fadeIn(animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing))
+                } else {
+                    fadeIn(animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)) +
+                    slideInVertically(
+                        initialOffsetY = { fullHeight -> (fullHeight * 0.12f).toInt() },
+                        animationSpec = tween(durationMillis = 300, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f))
+                    )
+                }
             },
             exitTransition = {
-                fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)) +
-                slideOutVertically(
-                    targetOffsetY = { fullHeight -> -(fullHeight * 0.08f).toInt() },
-                    animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)
-                )
+                if (isDockTabRoute(targetState.destination.route)) {
+                    fadeOut(animationSpec = tween(durationMillis = 60, easing = FastOutSlowInEasing))
+                } else {
+                    fadeOut(animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing)) +
+                    slideOutVertically(
+                        targetOffsetY = { fullHeight -> -(fullHeight * 0.08f).toInt() },
+                        animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing)
+                    )
+                }
             }
         ) {
             ToolsRoute(
+                userPreferences = effectiveUserPreferences,
                 onNavigateToWebPicker = { url, name ->
                     navController.navigate(
                         PriceLensDestination.WebPricePicker.createRoute(url, name)

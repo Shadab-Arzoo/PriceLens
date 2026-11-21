@@ -156,12 +156,9 @@ fun ProductComparisonRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-
-    ProductComparisonScreen(
-        uiState = uiState,
-        onEvent = viewModel::onEvent,
-        onNavigateBack = onNavigateBack,
-        onOpenOfferUrl = { url ->
+    val onEvent = remember(viewModel) { { event: ProductComparisonUiEvent -> viewModel.onEvent(event) } }
+    val onOpenOfferUrl = remember(context) {
+        { url: String ->
             if (url.isNotBlank()) {
                 try {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
@@ -172,7 +169,14 @@ fun ProductComparisonRoute(
                     android.widget.Toast.makeText(context, "Could not open retailer link", android.widget.Toast.LENGTH_SHORT).show()
                 }
             }
-        },
+        }
+    }
+
+    ProductComparisonScreen(
+        uiState = uiState,
+        onEvent = onEvent,
+        onNavigateBack = onNavigateBack,
+        onOpenOfferUrl = onOpenOfferUrl,
         modifier = modifier
     )
 }
@@ -247,9 +251,9 @@ fun ProductComparisonScreen(
                         val details = uiState.comparisonDetails
                         val lowestOffer = details?.lowestPriceOffer
                         val productName = details?.name ?: uiState.productName
-                        val currencyFormat = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
-                        val shareText = if (lowestOffer != null && lowestOffer.price != null) {
-                            "🔥 PriceLens Deal: $productName is available at the lowest price of ${currencyFormat.format(lowestOffer.price)} on ${lowestOffer.retailerName}!\nCheck offer: ${lowestOffer.productUrl}"
+                        val formattedPrice = lowestOffer?.price?.let { PriceLensFormatters.formatInr(it) }
+                        val shareText = if (lowestOffer != null && formattedPrice != null) {
+                            "🔥 PriceLens Deal: $productName is available at the lowest price of $formattedPrice on ${lowestOffer.retailerName}!\nCheck offer: ${lowestOffer.productUrl}"
                         } else {
                             "🔍 Compare prices for $productName across Amazon, Flipkart, Croma & more on PriceLens!"
                         }
@@ -403,6 +407,9 @@ private fun ComparisonDetailsContent(
     modifier: Modifier = Modifier
 ) {
     val currencyFormatter = rememberInrCurrencyFormatter()
+    val highestOfferPrice = remember(details.offers) {
+        details.offers.mapNotNull { it.price }.maxOrNull()
+    }
 
     LazyColumn(
         modifier = modifier
@@ -441,7 +448,6 @@ private fun ComparisonDetailsContent(
 
         // 2c. Experimental: Deal Authenticity & Fake Discount Detector
         if (flags.isMasterEnabled && flags.enableDealAuthenticity && details.lowestPriceOffer?.price != null) {
-            val highestOfferPrice = details.offers.mapNotNull { it.price }.maxOrNull()
             item(key = "comparison_deal_authenticity") {
                 DealAuthenticityCard(
                     lowestPrice = details.lowestPriceOffer.price,
@@ -965,7 +971,10 @@ private fun androidx.compose.foundation.layout.RowScope.PresetChip(
         border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (isPressed) 0.6f else 0.35f)),
         modifier = Modifier
             .weight(1f)
-            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -1241,17 +1250,35 @@ private fun PriceSparkline(
         Modifier
     }
 
+    val (minPrice, maxPrice) = androidx.compose.runtime.remember(points) {
+        if (points.isEmpty()) 0.0 to 0.0
+        else {
+            var min = Double.MAX_VALUE
+            var max = -Double.MAX_VALUE
+            for (p in points) {
+                if (p.price < min) min = p.price
+                if (p.price > max) max = p.price
+            }
+            min to max
+        }
+    }
+    val priceRange = androidx.compose.runtime.remember(minPrice, maxPrice) {
+        if (maxPrice - minPrice > 0) (maxPrice - minPrice) else 1.0
+    }
+
+    val fullStrokePath = androidx.compose.runtime.remember { androidx.compose.ui.graphics.Path() }
+    val animatedPath = androidx.compose.runtime.remember { androidx.compose.ui.graphics.Path() }
+    val fillPath = androidx.compose.runtime.remember { androidx.compose.ui.graphics.Path() }
+    val pathMeasure = androidx.compose.runtime.remember { androidx.compose.ui.graphics.PathMeasure() }
+
     androidx.compose.foundation.Canvas(modifier = modifier.then(scrubModifier)) {
         val progress = animatedProgress.value
         if (points.size < 2 || progress <= 0.01f) return@Canvas
         val width = size.width
         val height = size.height
-        val minPrice = points.minOf { it.price }
-        val maxPrice = points.maxOf { it.price }
-        val priceRange = if (maxPrice - minPrice > 0) (maxPrice - minPrice) else 1.0
 
         val stepX = width / (points.size - 1)
-        val fullStrokePath = androidx.compose.ui.graphics.Path()
+        fullStrokePath.reset()
 
         points.forEachIndexed { index, point ->
             val x = index * stepX
@@ -1265,17 +1292,16 @@ private fun PriceSparkline(
             }
         }
 
-        val pathMeasure = androidx.compose.ui.graphics.PathMeasure()
         pathMeasure.setPath(fullStrokePath, forceClosed = false)
         val pathLength = pathMeasure.length
-        val animatedPath = androidx.compose.ui.graphics.Path()
+        animatedPath.reset()
         val currentLength = pathLength * progress
         pathMeasure.getSegment(0f, currentLength, animatedPath, startWithMoveTo = true)
 
         val currentPosition = pathMeasure.getPosition(currentLength)
 
         // Draw animated fill under the drawn portion
-        val fillPath = androidx.compose.ui.graphics.Path()
+        fillPath.reset()
         fillPath.addPath(animatedPath)
         fillPath.lineTo(currentPosition.x, height)
         fillPath.lineTo(0f, height)
@@ -2812,7 +2838,10 @@ private fun BankOfferSimulatorCard(
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .graphicsLayer(scaleX = chipScale, scaleY = chipScale)
+                            .graphicsLayer {
+                                scaleX = chipScale
+                                scaleY = chipScale
+                            }
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 selectedOfferIndex = idx

@@ -82,10 +82,11 @@ fun SearchRoute(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val onEvent = androidx.compose.runtime.remember(viewModel) { { event: SearchUiEvent -> viewModel.onEvent(event) } }
 
     SearchScreen(
         uiState = uiState,
-        onEvent = viewModel::onEvent,
+        onEvent = onEvent,
         onNavigateBack = onNavigateBack,
         onProductClick = onProductClick,
         modifier = modifier

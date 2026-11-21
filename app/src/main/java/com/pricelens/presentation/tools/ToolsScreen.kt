@@ -54,13 +54,14 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -90,19 +91,23 @@ import kotlin.math.min
 fun ToolsRoute(
     onNavigateToWebPicker: (url: String, name: String) -> Unit,
     onNavigateToSearch: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    userPreferences: UserPreferencesRepository? = null
 ) {
     val context = LocalContext.current
-    val userPreferences = remember { UserPreferencesRepository(context.applicationContext) }
+    val resolvedUserPreferences = userPreferences
+        ?: PriceLensTheme.userPreferences
+        ?: remember { UserPreferencesRepository(context.applicationContext) }
 
     ToolsScreen(
-        userPreferences = userPreferences,
+        userPreferences = resolvedUserPreferences,
         onNavigateToWebPicker = onNavigateToWebPicker,
         onNavigateToSearch = onNavigateToSearch,
         modifier = modifier
     )
 }
 
+@Immutable
 data class UrlDiagnosticInfo(
     val storeName: String,
     val storeColor: Color,
@@ -111,6 +116,15 @@ data class UrlDiagnosticInfo(
     val isSupported: Boolean,
     val diagnosticMessage: String
 )
+
+private val BANK_OPTIONS = listOf(
+    "HDFC Bank" to 3000.0,
+    "ICICI Bank" to 2500.0,
+    "SBI Card" to 2000.0,
+    "Axis Bank" to 0.05,
+    "OneCard" to 1500.0
+)
+private val TENOR_OPTIONS = listOf(3, 6, 9, 12)
 
 private fun diagnoseStoreUrl(url: String): UrlDiagnosticInfo {
     val cleanUrl = url.trim()
@@ -205,7 +219,7 @@ fun ToolsScreen(
 ) {
     val currencyFormatter = rememberInrCurrencyFormatter()
     val haptic = LocalHapticFeedback.current
-    val flags by userPreferences.experimentalFlagsFlow.collectAsState()
+    val flags by userPreferences.experimentalFlagsFlow.collectAsStateWithLifecycle()
     val themeToggle = LocalThemeToggle.current
 
     // Web Inspector State
@@ -220,15 +234,9 @@ fun ToolsScreen(
     // No-Cost EMI & Bank Card Calculator State
     var emiBasePrice by remember { mutableDoubleStateOf(65000.0) }
     var selectedBankIndex by remember { mutableIntStateOf(0) }
-    val bankOptions = listOf(
-        "HDFC Bank" to 3000.0,
-        "ICICI Bank" to 2500.0,
-        "SBI Card" to 2000.0,
-        "Axis Bank" to 0.05,
-        "OneCard" to 1500.0
-    )
+    val bankOptions = BANK_OPTIONS
     var selectedTenorMonths by remember { mutableIntStateOf(6) }
-    val tenorOptions = listOf(3, 6, 9, 12)
+    val tenorOptions = TENOR_OPTIONS
 
     val currentBank = bankOptions[selectedBankIndex]
     val emiDiscount = if (currentBank.first == "Axis Bank") {
@@ -247,15 +255,13 @@ fun ToolsScreen(
     var cachePurged by remember { mutableStateOf(false) }
 
     // Theme state
-    val currentThemeMode by userPreferences.themeModeFlow.collectAsState()
-    val currentThemeAccent by userPreferences.themeAccentFlow.collectAsState()
-    val currentGlowIntensity by userPreferences.glowIntensityFlow.collectAsState()
-    val currentContrastStyle by userPreferences.contrastStyleFlow.collectAsState()
+    val currentThemeMode by userPreferences.themeModeFlow.collectAsStateWithLifecycle()
+    val currentThemeAccent by userPreferences.themeAccentFlow.collectAsStateWithLifecycle()
+    val currentGlowIntensity by userPreferences.glowIntensityFlow.collectAsStateWithLifecycle()
+    val currentContrastStyle by userPreferences.contrastStyleFlow.collectAsStateWithLifecycle()
 
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(brush = PriceLensTheme.glassColors.backgroundBrush),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {

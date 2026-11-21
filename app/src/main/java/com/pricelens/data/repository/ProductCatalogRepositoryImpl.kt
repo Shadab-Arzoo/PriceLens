@@ -27,15 +27,26 @@ class ProductCatalogRepositoryImpl @Inject constructor(
         return remoteDataSource.searchProducts(query)
     }
 
+    private var cachedTrending: List<ProductSummary>? = null
+    private var cachedTrendingTime: Long = 0L
+    private val comparisonCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, ProductComparisonDetails>>()
+
     override suspend fun getProductOffers(productId: String): Result<List<RetailerOffer>> {
         return remoteDataSource.getProductOffers(productId)
     }
 
     override suspend fun getProductComparison(productId: String): Result<ProductComparisonDetails> {
+        val cached = comparisonCache[productId]
+        val now = System.currentTimeMillis()
+        if (cached != null && now - cached.first < 3 * 60 * 1000L) {
+            return Result.success(cached.second)
+        }
+
         val remoteResult = remoteDataSource.getProductComparison(productId)
         if (remoteResult.isSuccess) {
             val details = remoteResult.getOrThrow()
             val enriched = enrichPriceHistory(details)
+            comparisonCache[productId] = Pair(now, enriched)
             return Result.success(enriched)
         }
 
@@ -43,6 +54,7 @@ class ProductCatalogRepositoryImpl @Inject constructor(
         val watchlistItem = watchlistDao?.getWatchlistItemById(productId)
         if (watchlistItem != null) {
             val details = createDetailsFromWatchlist(watchlistItem)
+            comparisonCache[productId] = Pair(now, details)
             return Result.success(details)
         }
 
@@ -50,7 +62,17 @@ class ProductCatalogRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getTrendingProducts(): Result<List<ProductSummary>> {
-        return remoteDataSource.getTrendingProducts()
+        val cached = cachedTrending
+        val now = System.currentTimeMillis()
+        if (cached != null && now - cachedTrendingTime < 5 * 60 * 1000L) {
+            return Result.success(cached)
+        }
+        val result = remoteDataSource.getTrendingProducts()
+        if (result.isSuccess) {
+            cachedTrending = result.getOrNull()
+            cachedTrendingTime = now
+        }
+        return result
     }
 
     override suspend fun getProductAlternatives(productId: String): Result<List<ProductAlternative>> {
