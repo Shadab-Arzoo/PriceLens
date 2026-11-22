@@ -16,40 +16,46 @@ val ElectricBlueGlow = Color(0x262563EB)
 val AmberAlert = Color(0xFFF59E0B)           // Warm Amber
 val CoralError = Color(0xFFF43F5E)           // Rose Crimson
 
-// Dark Theme Specification (Pitch Black #000000, Surface #0B0B0B, Hairline #1D1D1D)
-val DarkBackgroundStart = Color(0xFF000000)  // Pitch black ground
-val DarkBackgroundEnd = Color(0xFF000000)    // Uniform pitch black ground
-val DarkSurface = Color(0xFF0B0B0B)          // Clean solid dark surface card
-val DarkSurfaceVariant = Color(0xFF141414)
-val DarkHairline = Color(0xFF1D1D1D)         // Clean crisp hairline border
-val DarkActionFill = Color(0xFF1C1C1C)       // Pill button fill
+// Dark Liquid Glass Palette (Smoked Obsidian Glass with Chromatic Dispersion)
+val DarkBackgroundStart = Color(0xFF020408)  // Deep interstellar space
+val DarkBackgroundEnd = Color(0xFF080D18)    // Subtle cosmic midnight
+val DarkSurface = Color(0xB80E1422)          // Translucent Liquid Glass Obsidian (~72% opacity)
+val DarkSurfaceVariant = Color(0x99172034)   // Medium glass tint
+val DarkHairline = Color(0x40FFFFFF)         // Specular hairline border
+val DarkActionFill = Color(0xDD151F30)       // Liquid pill button fill
 val DarkActionLabel = Color(0xFFFCFCFD)      // Button label
 val DarkTextPrimary = Color(0xFFF9F8F9)      // Crisp primary text
-val DarkTextSecondary = Color(0xFFE5E5E4)    // Readable secondary text
-val DarkTextTertiary = Color(0xFFD6D6D5)     // Muted text
+val DarkTextSecondary = Color(0xFFD1D5DB)    // Readable secondary text
+val DarkTextTertiary = Color(0xFF9CA3AF)     // Muted text
 
-// Solid clean surface tokens (scrapped liquid glass)
-val DarkGlassSurface = Color(0xFF0B0B0B)     // Solid clean #0B0B0B
-val DarkGlassBorder = Color(0xFF1D1D1D)      // Crisp #1D1D1D hairline
-val DarkGlassHighlight = Color(0xFF141414)
-val DarkGlassSpecularTop = Color(0xFF1D1D1D)
-val DarkGlassSpecularBottom = Color(0xFF1D1D1D)
+// Liquid Glass Surface Tokens (Dark)
+val DarkGlassSurface = Color(0xB80E1422)     // Refractive translucent glass
+val DarkGlassSurfaceElevated = Color(0xD0121A2A) // Higher elevation glass
+val DarkGlassBorder = Color(0x40FFFFFF)      // Specular rim hairline
+val DarkGlassHighlight = Color(0x24FFFFFF)   // Subtle inner sheen
+val DarkGlassSpecularTop = Color(0x99FFFFFF) // Bright upper specular reflection
+val DarkGlassSpecularBottom = Color(0x1AFFFFFF) // Bottom bounce light
+val DarkGlassDispersionCyan = Color(0x5538BDF8) // Dispersion prism Cyan
+val DarkGlassDispersionMagenta = Color(0x44FB7185) // Dispersion prism Magenta
 
-// Light Theme (Clean Porcelain White #F8FAFC, Surface #FFFFFF, Hairline #E2E8F0)
-val LightBackgroundStart = Color(0xFFF8FAFC)
-val LightBackgroundEnd = Color(0xFFF1F5F9)
-val LightSurface = Color(0xFFFFFFFF)        // Solid clean white surface card
-val LightSurfaceVariant = Color(0xFFF4F4F5)
-val LightHairline = Color(0xFFE2E8F0)        // Clean slate hairline border
-val LightActionFill = Color(0xFF18181B)      // Clean dark pill button in light mode
+// Light Liquid Glass Palette (Crystalline Frosted Glass)
+val LightBackgroundStart = Color(0xFFF0F4F9)
+val LightBackgroundEnd = Color(0xFFE2E8F0)
+val LightSurface = Color(0xD0FFFFFF)        // Translucent Crystalline White (~82% opacity)
+val LightSurfaceVariant = Color(0xADF1F5F9)
+val LightHairline = Color(0x66CBD5E1)
+val LightActionFill = Color(0xEE0F172A)      // Deep slate pill button
 val LightActionLabel = Color(0xFFFFFFFF)
 val LightTextPrimary = Color(0xFF0F172A)     // Slate 900
 val LightTextSecondary = Color(0xFF475569)   // Slate 600
 val LightTextTertiary = Color(0xFF94A3B8)    // Slate 400
 
-val LightGlassSurface = Color(0xFFFFFFFF)    // Solid clean white
-val LightGlassBorder = Color(0xFFE2E8F0)     // Crisp hairline
-val LightGlassHighlight = Color(0xFFF8FAFC)
-val LightGlassSpecularTop = Color(0xFFE2E8F0)
-val LightGlassSpecularBottom = Color(0xFFE2E8F0)
-
+// Liquid Glass Surface Tokens (Light)
+val LightGlassSurface = Color(0xD0FFFFFF)    // Translucent crystalline frosted glass
+val LightGlassSurfaceElevated = Color(0xEBFFFFFF)
+val LightGlassBorder = Color(0x80FFFFFF)     // Crisp specular border
+val LightGlassHighlight = Color(0x4DFFFFFF)
+val LightGlassSpecularTop = Color(0xCCFFFFFF) // Crisp top glint
+val LightGlassSpecularBottom = Color(0x3394A3B8)
+val LightGlassDispersionCyan = Color(0x4438BDF8)
+val LightGlassDispersionMagenta = Color(0x33FB7185)

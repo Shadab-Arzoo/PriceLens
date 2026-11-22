@@ -80,6 +80,9 @@ import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.ThemeAccent
 import com.pricelens.core.designsystem.components.GlassCard
+import com.pricelens.core.designsystem.components.liquidGlass
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import com.pricelens.core.preferences.UserPreferencesRepository
 import com.pricelens.core.util.rememberInrCurrencyFormatter
 import java.text.NumberFormat
@@ -258,6 +261,8 @@ fun ToolsScreen(
     val currentThemeAccent by userPreferences.themeAccentFlow.collectAsState()
     val currentGlowIntensity by userPreferences.glowIntensityFlow.collectAsState()
     val currentContrastStyle by userPreferences.contrastStyleFlow.collectAsState()
+    val currentGlassRefraction by userPreferences.glassRefractionFlow.collectAsState()
+    val currentGlassDispersion by userPreferences.glassDispersionFlow.collectAsState()
 
     LazyColumn(
         modifier = modifier
@@ -406,6 +411,234 @@ fun ToolsScreen(
                                         fontWeight = FontWeight.ExtraBold,
                                         color = PriceLensTheme.glassColors.ambientGlow
                                     )
+                                }
+                            }
+                        }
+                    }
+
+                    // Liquid Glass Engine Banner
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.08f),
+                        border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.25f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(PriceLensTheme.glassColors.ambientGlow)
+                            )
+                            Text(
+                                text = "Liquid Glass Engine",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = PriceLensTheme.glassColors.ambientGlow
+                            )
+                            Text(
+                                text = "• Physically-based Refraction & Dispersion",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = PriceLensTheme.glassColors.textSecondary
+                            )
+                        }
+                    }
+
+                    // Interactive Liquid Glass Lens Preview Playground
+                    val playgroundAccent = PriceLensTheme.glassColors.ambientGlow
+                    val playgroundSecondary = PriceLensTheme.glassColors.accentSecondary
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(115.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .drawBehind {
+                                // Dynamic colorful backdrop pattern behind glass
+                                drawRect(
+                                    brush = Brush.linearGradient(
+                                        listOf(
+                                            playgroundAccent.copy(alpha = 0.35f),
+                                            playgroundSecondary.copy(alpha = 0.30f),
+                                            Color(0xFF38BDF8).copy(alpha = 0.25f),
+                                            Color(0xFFA855F7).copy(alpha = 0.25f)
+                                        ),
+                                        start = Offset(0f, 0f),
+                                        end = Offset(size.width, size.height)
+                                    )
+                                )
+                                drawCircle(
+                                    brush = Brush.radialGradient(
+                                        listOf(playgroundAccent.copy(alpha = 0.45f), Color.Transparent)
+                                    ),
+                                    center = Offset(size.width * 0.25f, size.height * 0.5f),
+                                    radius = size.height * 0.8f
+                                )
+                                drawCircle(
+                                    brush = Brush.radialGradient(
+                                        listOf(playgroundSecondary.copy(alpha = 0.40f), Color.Transparent)
+                                    ),
+                                    center = Offset(size.width * 0.75f, size.height * 0.5f),
+                                    radius = size.height * 0.7f
+                                )
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.92f)
+                                .height(85.dp)
+                                .liquidGlass(
+                                    shape = RoundedCornerShape(16.dp),
+                                    cornerRadius = 16.dp,
+                                    showTopGlint = true,
+                                    interactiveTouch = true
+                                )
+                                .padding(12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(7.dp)
+                                            .clip(CircleShape)
+                                            .background(playgroundAccent)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Interactive Optical Lens",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.textPrimary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Text(
+                                    text = "Touch and drag to experience reactive ray refraction",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.5.sp),
+                                    color = PriceLensTheme.glassColors.textSecondary
+                                )
+                            }
+                        }
+                    }
+
+                    // Optical Refraction Curve
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "OPTICAL REFRACTION STRENGTH",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textTertiary,
+                            letterSpacing = 0.8.sp
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            UserPreferencesRepository.GlassRefraction.entries.forEach { refraction ->
+                                val isSelected = currentGlassRefraction == refraction
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isSelected) {
+                                        PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.18f)
+                                    } else {
+                                        PriceLensTheme.glassColors.surfaceHighlight
+                                    },
+                                    border = BorderStroke(
+                                        if (isSelected) 1.5.dp else 1.dp,
+                                        if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            userPreferences.setGlassRefraction(refraction)
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Text(
+                                            text = refraction.displayName,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary,
+                                            maxLines = 1
+                                        )
+                                        Text(
+                                            text = "${(refraction.multiplier * 100).toInt()}% lens",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.8f) else PriceLensTheme.glassColors.textTertiary,
+                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Chromatic Dispersion (Prism Fringes)
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "CHROMATIC DISPERSION (PRISM)",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textTertiary,
+                            letterSpacing = 0.8.sp
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            UserPreferencesRepository.GlassDispersion.entries.forEach { dispersion ->
+                                val isSelected = currentGlassDispersion == dispersion
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (isSelected) {
+                                        PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.18f)
+                                    } else {
+                                        PriceLensTheme.glassColors.surfaceHighlight
+                                    },
+                                    border = BorderStroke(
+                                        if (isSelected) 1.5.dp else 1.dp,
+                                        if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            userPreferences.setGlassDispersion(dispersion)
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Text(
+                                            text = dispersion.displayName,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary,
+                                            maxLines = 1
+                                        )
+                                        Text(
+                                            text = dispersion.subtitle,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.5.sp),
+                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.8f) else PriceLensTheme.glassColors.textTertiary,
+                                            maxLines = 1
+                                        )
+                                    }
                                 }
                             }
                         }

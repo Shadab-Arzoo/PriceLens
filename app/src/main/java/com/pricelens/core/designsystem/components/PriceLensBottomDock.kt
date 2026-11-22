@@ -213,37 +213,41 @@ fun PriceLensBottomDock(
             contentAlignment = Alignment.Center
         ) {
             Surface(
-                shape = RoundedCornerShape(28.dp),
+                shape = RoundedCornerShape(30.dp),
                 color = PriceLensTheme.glassColors.surfaceGlass,
-                border = BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorder),
-                shadowElevation = 18.dp,
+                border = BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush),
+                shadowElevation = 20.dp,
                 modifier = Modifier
                     .widthIn(max = 440.dp)
                     .shadow(
-                        elevation = 24.dp,
-                        shape = RoundedCornerShape(28.dp),
-                        ambientColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.28f),
-                        spotColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.28f)
+                        elevation = 28.dp,
+                        shape = RoundedCornerShape(30.dp),
+                        ambientColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (PriceLensTheme.isDark) 0.35f else 0.18f),
+                        spotColor = Color.Black.copy(alpha = if (PriceLensTheme.isDark) 0.40f else 0.15f)
                     )
             ) {
-                Column {
-                    // Specular top rim light highlight
+                Box {
+                    // Inner meniscus glass volume gradient
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
+                            .matchParentSize()
                             .background(
-                                Brush.horizontalGradient(
-                                    listOf(
-                                        Color.Transparent,
-                                        PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.5f),
-                                        Color.White.copy(alpha = if (PriceLensTheme.isDark) 0.30f else 0.55f),
-                                        PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.5f),
-                                        Color.Transparent
-                                    )
+                                Brush.verticalGradient(
+                                    0.0f to Color.White.copy(alpha = if (PriceLensTheme.isDark) 0.09f else 0.20f),
+                                    0.35f to Color.Transparent,
+                                    1.0f to Color.Black.copy(alpha = if (PriceLensTheme.isDark) 0.08f else 0.03f)
                                 )
                             )
                     )
+
+                    Column {
+                        // Specular top rim light highlight
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.5.dp)
+                                .background(PriceLensTheme.glassColors.specularTopGlintBrush)
+                        )
 
                     BoxWithConstraints(
                         modifier = Modifier
@@ -571,6 +575,7 @@ fun PriceLensBottomDock(
             }
         }
     }
+}
 }
 
 @Composable

@@ -167,35 +167,39 @@ data class GlassColors(
     val badgeBorder: Color = ambientGlow.copy(alpha = 0.35f),
     val accentSecondary: Color = ambientGlow,
     val glowIntensity: UserPreferencesRepository.GlowIntensity = UserPreferencesRepository.GlowIntensity.VIVID,
-    val contrastStyle: UserPreferencesRepository.ContrastStyle = UserPreferencesRepository.ContrastStyle.PITCH_BLACK
+    val contrastStyle: UserPreferencesRepository.ContrastStyle = UserPreferencesRepository.ContrastStyle.PITCH_BLACK,
+    val chromaticBorderBrush: Brush = specularBorderBrush,
+    val specularTopGlintBrush: Brush = SolidColor(Color.White),
+    val glassRefraction: UserPreferencesRepository.GlassRefraction = UserPreferencesRepository.GlassRefraction.STANDARD,
+    val glassDispersion: UserPreferencesRepository.GlassDispersion = UserPreferencesRepository.GlassDispersion.PRISM
 )
 
 private val LightGlassColors = GlassColors(
     backgroundBrush = SolidColor(LightBackgroundStart),
-    surfaceGlass = LightSurface,
+    surfaceGlass = LightGlassSurface,
     surfaceHighlight = LightSurfaceVariant,
-    specularBorder = LightHairline,
+    specularBorder = LightGlassBorder,
     textPrimary = LightTextPrimary,
     textSecondary = LightTextSecondary,
     textTertiary = LightTextTertiary,
     actionFill = LightActionFill,
     actionLabel = LightActionLabel,
-    specularBorderBrush = SolidColor(LightHairline),
+    specularBorderBrush = SolidColor(LightGlassBorder),
     primaryGradientBrush = SolidColor(LightActionFill),
     ambientGlow = Color(0xFF059669)
 )
 
 private val DarkGlassColors = GlassColors(
     backgroundBrush = SolidColor(DarkBackgroundStart),
-    surfaceGlass = DarkSurface,
+    surfaceGlass = DarkGlassSurface,
     surfaceHighlight = DarkSurfaceVariant,
-    specularBorder = DarkHairline,
+    specularBorder = DarkGlassBorder,
     textPrimary = DarkTextPrimary,
     textSecondary = DarkTextSecondary,
     textTertiary = DarkTextTertiary,
     actionFill = DarkActionFill,
     actionLabel = DarkActionLabel,
-    specularBorderBrush = SolidColor(DarkHairline),
+    specularBorderBrush = SolidColor(DarkGlassBorder),
     primaryGradientBrush = SolidColor(DarkActionFill),
     ambientGlow = BrandMint
 )
@@ -254,6 +258,8 @@ fun PriceLensTheme(
     accent: ThemeAccent = ThemeAccent.EMERALD_MINT,
     glowIntensity: UserPreferencesRepository.GlowIntensity = UserPreferencesRepository.GlowIntensity.VIVID,
     contrastStyle: UserPreferencesRepository.ContrastStyle = UserPreferencesRepository.ContrastStyle.PITCH_BLACK,
+    glassRefraction: UserPreferencesRepository.GlassRefraction = UserPreferencesRepository.GlassRefraction.STANDARD,
+    glassDispersion: UserPreferencesRepository.GlassDispersion = UserPreferencesRepository.GlassDispersion.PRISM,
     userPreferences: UserPreferencesRepository? = null,
     onToggleTheme: () -> Unit = {},
     content: @Composable () -> Unit
@@ -272,43 +278,78 @@ fun PriceLensTheme(
         label = "themeSecondaryAnim"
     )
 
-    val backgroundBrush = remember(darkTheme, animatedAccent, glowIntensity, contrastStyle) {
+    val backgroundBrush = remember(darkTheme, animatedAccent, animatedSecondary, glowIntensity, contrastStyle) {
         if (darkTheme) {
             when (contrastStyle) {
                 UserPreferencesRepository.ContrastStyle.PITCH_BLACK -> {
-                    val canopyAlpha = (0.048f * glowIntensity.multiplier).coerceIn(0.012f, 0.12f)
+                    val canopyAlpha = (0.09f * glowIntensity.multiplier).coerceIn(0.04f, 0.22f)
+                    val secondaryAlpha = (0.05f * glowIntensity.multiplier).coerceIn(0.02f, 0.14f)
                     Brush.verticalGradient(
                         0.0f to animatedAccent.copy(alpha = canopyAlpha),
-                        0.22f to Color(0xFF000000),
-                        1.0f to Color(0xFF000000)
+                        0.18f to animatedSecondary.copy(alpha = secondaryAlpha),
+                        0.48f to DarkBackgroundStart,
+                        1.0f to DarkBackgroundEnd
                     )
                 }
                 UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT -> {
-                    val canopyAlpha = (0.082f * glowIntensity.multiplier).coerceIn(0.025f, 0.18f)
+                    val canopyAlpha = (0.13f * glowIntensity.multiplier).coerceIn(0.06f, 0.28f)
+                    val secondaryAlpha = (0.08f * glowIntensity.multiplier).coerceIn(0.03f, 0.18f)
                     Brush.verticalGradient(
                         0.0f to animatedAccent.copy(alpha = canopyAlpha),
-                        0.28f to Color(0xFF090D16),
+                        0.22f to animatedSecondary.copy(alpha = secondaryAlpha),
+                        0.52f to Color(0xFF070C16),
                         1.0f to Color(0xFF030508)
                     )
                 }
             }
         } else {
-            val canopyAlpha = (0.045f * glowIntensity.multiplier).coerceIn(0.015f, 0.10f)
+            val canopyAlpha = (0.08f * glowIntensity.multiplier).coerceIn(0.03f, 0.18f)
+            val secondaryAlpha = (0.04f * glowIntensity.multiplier).coerceIn(0.015f, 0.12f)
             Brush.verticalGradient(
                 0.0f to animatedAccent.copy(alpha = canopyAlpha),
-                0.22f to LightBackgroundStart,
+                0.20f to animatedSecondary.copy(alpha = secondaryAlpha),
+                0.55f to LightBackgroundStart,
                 1.0f to LightBackgroundEnd
             )
         }
     }
 
-    val specularBorderBrush = remember(darkTheme, animatedAccent, glowIntensity) {
-        val baseBorder = if (darkTheme) DarkHairline else LightHairline
-        val topAlpha = (if (darkTheme) 0.28f else 0.22f) * glowIntensity.multiplier
+    val specularBorderBrush = remember(darkTheme, animatedAccent, animatedSecondary, glowIntensity) {
+        val topAlpha = (if (darkTheme) 0.65f else 0.80f) * glowIntensity.multiplier
+        val dispersionAlpha = (if (darkTheme) 0.45f else 0.50f) * glowIntensity.multiplier
+        val baseHairline = if (darkTheme) DarkHairline else LightHairline
+        val dispersionColor = if (darkTheme) DarkGlassDispersionCyan else LightGlassDispersionCyan
         Brush.verticalGradient(
-            0.0f to animatedAccent.copy(alpha = topAlpha.coerceIn(0.06f, 0.65f)),
-            0.45f to baseBorder,
-            1.0f to baseBorder
+            0.0f to Color.White.copy(alpha = topAlpha.coerceIn(0.35f, 0.95f)),
+            0.22f to animatedAccent.copy(alpha = dispersionAlpha.coerceIn(0.20f, 0.70f)),
+            0.45f to dispersionColor.copy(alpha = dispersionAlpha.coerceIn(0.15f, 0.60f)),
+            0.75f to baseHairline,
+            1.0f to (if (darkTheme) DarkGlassSpecularBottom else LightGlassSpecularBottom)
+        )
+    }
+
+    val chromaticBorderBrush = remember(darkTheme, animatedAccent, animatedSecondary, glowIntensity) {
+        val topAlpha = (if (darkTheme) 0.70f else 0.85f) * glowIntensity.multiplier
+        val accentAlpha = (if (darkTheme) 0.50f else 0.55f) * glowIntensity.multiplier
+        Brush.sweepGradient(
+            0.0f to Color.White.copy(alpha = topAlpha.coerceIn(0.35f, 0.95f)),
+            0.20f to animatedAccent.copy(alpha = accentAlpha.coerceIn(0.20f, 0.75f)),
+            0.40f to (if (darkTheme) DarkGlassDispersionCyan else LightGlassDispersionCyan),
+            0.65f to (if (darkTheme) DarkHairline else LightHairline),
+            0.85f to animatedSecondary.copy(alpha = accentAlpha.coerceIn(0.15f, 0.65f)),
+            1.0f to Color.White.copy(alpha = topAlpha.coerceIn(0.35f, 0.95f))
+        )
+    }
+
+    val specularTopGlintBrush = remember(darkTheme, animatedAccent) {
+        Brush.horizontalGradient(
+            listOf(
+                Color.Transparent,
+                Color.White.copy(alpha = if (darkTheme) 0.45f else 0.75f),
+                animatedAccent.copy(alpha = if (darkTheme) 0.40f else 0.55f),
+                Color.White.copy(alpha = if (darkTheme) 0.45f else 0.75f),
+                Color.Transparent
+            )
         )
     }
 
@@ -318,29 +359,56 @@ fun PriceLensTheme(
         )
     }
 
+    val primaryGradientBrush = remember(darkTheme, animatedAccent) {
+        if (darkTheme) {
+            Brush.verticalGradient(
+                listOf(
+                    DarkActionFill,
+                    DarkActionFill.copy(alpha = 0.90f),
+                    DarkActionFill
+                )
+            )
+        } else {
+            Brush.verticalGradient(
+                listOf(
+                    LightActionFill,
+                    LightActionFill.copy(alpha = 0.92f),
+                    LightActionFill
+                )
+            )
+        }
+    }
+
     val ambientHaloBrush = remember(animatedAccent, glowIntensity) {
         Brush.radialGradient(
             colors = listOf(
-                animatedAccent.copy(alpha = (0.18f * glowIntensity.multiplier).coerceIn(0.04f, 0.45f)),
+                animatedAccent.copy(alpha = (0.24f * glowIntensity.multiplier).coerceIn(0.08f, 0.55f)),
                 Color.Transparent
             ),
-            radius = 500f * glowIntensity.multiplier
+            radius = 600f * glowIntensity.multiplier
         )
     }
 
     val baseColors = if (darkTheme) DarkGlassColors else LightGlassColors
     val glassColors = baseColors.copy(
         backgroundBrush = backgroundBrush,
+        surfaceGlass = if (darkTheme) DarkGlassSurface else LightGlassSurface,
+        surfaceHighlight = if (darkTheme) DarkSurfaceVariant else LightSurfaceVariant,
+        specularBorder = if (darkTheme) DarkGlassBorder else LightGlassBorder,
         ambientGlow = animatedAccent,
         specularBorderBrush = specularBorderBrush,
-        primaryGradientBrush = if (darkTheme) SolidColor(DarkActionFill) else SolidColor(LightActionFill),
+        chromaticBorderBrush = chromaticBorderBrush,
+        specularTopGlintBrush = specularTopGlintBrush,
+        primaryGradientBrush = primaryGradientBrush,
         accentGradientBrush = accentGradientBrush,
         ambientHaloBrush = ambientHaloBrush,
-        badgeBackground = animatedAccent.copy(alpha = ((if (darkTheme) 0.15f else 0.12f) * glowIntensity.multiplier).coerceIn(0.06f, 0.35f)),
-        badgeBorder = animatedAccent.copy(alpha = ((if (darkTheme) 0.38f else 0.28f) * glowIntensity.multiplier).coerceIn(0.15f, 0.70f)),
+        badgeBackground = animatedAccent.copy(alpha = ((if (darkTheme) 0.18f else 0.15f) * glowIntensity.multiplier).coerceIn(0.08f, 0.40f)),
+        badgeBorder = animatedAccent.copy(alpha = ((if (darkTheme) 0.42f else 0.32f) * glowIntensity.multiplier).coerceIn(0.18f, 0.75f)),
         accentSecondary = animatedSecondary,
         glowIntensity = glowIntensity,
-        contrastStyle = contrastStyle
+        contrastStyle = contrastStyle,
+        glassRefraction = glassRefraction,
+        glassDispersion = glassDispersion
     )
 
     val baseScheme = if (darkTheme) DarkColorScheme else LightColorScheme
@@ -412,4 +480,20 @@ object PriceLensTheme {
     val badgeBorder: Color
         @Composable
         get() = LocalGlassColors.current.badgeBorder
+
+    val chromaticBorder: Brush
+        @Composable
+        get() = LocalGlassColors.current.chromaticBorderBrush
+
+    val specularTopGlint: Brush
+        @Composable
+        get() = LocalGlassColors.current.specularTopGlintBrush
+
+    val glassRefraction: UserPreferencesRepository.GlassRefraction
+        @Composable
+        get() = LocalGlassColors.current.glassRefraction
+
+    val glassDispersion: UserPreferencesRepository.GlassDispersion
+        @Composable
+        get() = LocalGlassColors.current.glassDispersion
 }

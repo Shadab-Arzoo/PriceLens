@@ -16,6 +16,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -57,6 +61,8 @@ class MainActivity : ComponentActivity() {
             val themeAccent by userPreferences.themeAccentFlow.collectAsStateWithLifecycle()
             val glowIntensity by userPreferences.glowIntensityFlow.collectAsStateWithLifecycle()
             val contrastStyle by userPreferences.contrastStyleFlow.collectAsStateWithLifecycle()
+            val glassRefraction by userPreferences.glassRefractionFlow.collectAsStateWithLifecycle()
+            val glassDispersion by userPreferences.glassDispersionFlow.collectAsStateWithLifecycle()
             val systemDark = isSystemInDarkTheme()
             val isDark = when (themeMode) {
                 UserPreferencesRepository.ThemeMode.DARK -> true
@@ -69,6 +75,8 @@ class MainActivity : ComponentActivity() {
                 accent = themeAccent,
                 glowIntensity = glowIntensity,
                 contrastStyle = contrastStyle,
+                glassRefraction = glassRefraction,
+                glassDispersion = glassDispersion,
                 userPreferences = userPreferences,
                 onToggleTheme = {
                     userPreferences.toggleTheme(isDark)
@@ -101,6 +109,53 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(brush = PriceLensTheme.glassColors.backgroundBrush)
                 ) {
+                    val accent = PriceLensTheme.glassColors.ambientGlow
+                    val secondary = PriceLensTheme.glassColors.accentSecondary
+                    val isDark = PriceLensTheme.isDark
+
+                    // Ambient liquid glass backdrop orbs
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .drawBehind {
+                                // Top-right radiant orb
+                                drawCircle(
+                                    brush = Brush.radialGradient(
+                                        colors = listOf(
+                                            accent.copy(alpha = if (isDark) 0.16f else 0.08f),
+                                            Color.Transparent
+                                        ),
+                                        center = Offset(size.width * 0.85f, size.height * 0.10f),
+                                        radius = size.width * 0.70f
+                                    )
+                                )
+
+                                // Middle-left secondary orb
+                                drawCircle(
+                                    brush = Brush.radialGradient(
+                                        colors = listOf(
+                                            secondary.copy(alpha = if (isDark) 0.12f else 0.06f),
+                                            Color.Transparent
+                                        ),
+                                        center = Offset(size.width * 0.10f, size.height * 0.42f),
+                                        radius = size.width * 0.65f
+                                    )
+                                )
+
+                                // Bottom floating orb behind dock
+                                drawCircle(
+                                    brush = Brush.radialGradient(
+                                        colors = listOf(
+                                            accent.copy(alpha = if (isDark) 0.18f else 0.09f),
+                                            Color.Transparent
+                                        ),
+                                        center = Offset(size.width * 0.50f, size.height * 0.92f),
+                                        radius = size.width * 0.60f
+                                    )
+                                )
+                            }
+                    )
+
                     PriceLensNavGraph(
                         navController = navController,
                         userPreferences = userPreferences,

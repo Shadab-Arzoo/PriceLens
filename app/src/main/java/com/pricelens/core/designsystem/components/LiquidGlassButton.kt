@@ -45,8 +45,12 @@ import androidx.compose.ui.unit.dp
 import com.pricelens.core.designsystem.PriceLensTheme
 
 /**
- * Modern pill action button with solid fill, clean hairline border,
- * dynamic elevation, and fluid spring physics.
+ * Modern Liquid Glass pill action button with:
+ * - Optical meniscus lens gleam
+ * - Specular top rim light highlight
+ * - Chromatic perimeter dispersion border
+ * - Colored ambient glow reflection
+ * - Dynamic tactile spring compression physics
  */
 @Composable
 fun LiquidGlassPrimaryButton(
@@ -59,14 +63,17 @@ fun LiquidGlassPrimaryButton(
     loading: Boolean = false,
     fillMaxWidth: Boolean = true,
     shape: Shape = RoundedCornerShape(9999.dp),
-    height: Dp = 50.dp,
+    height: Dp = 52.dp,
     gradientBrush: Brush = PriceLensTheme.glassColors.primaryGradientBrush
 ) {
+    val isDark = PriceLensTheme.isDark
+    val glowColor = PriceLensTheme.glassColors.ambientGlow
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled && !loading) 0.96f else 1f,
+        targetValue = if (isPressed && enabled && !loading) 0.95f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 500f
@@ -75,13 +82,22 @@ fun LiquidGlassPrimaryButton(
     )
 
     val currentElevation by animateDpAsState(
-        targetValue = if (isPressed && enabled) 1.dp else if (enabled) 3.dp else 0.dp,
+        targetValue = if (isPressed && enabled) 1.dp else if (enabled) 5.dp else 0.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 500f
         ),
         label = "primaryButtonElevation"
     )
+
+    val glintAlpha by animateFloatAsState(
+        targetValue = if (isPressed && enabled) 0.95f else 0.55f,
+        animationSpec = spring(stiffness = 500f),
+        label = "buttonGlintAlpha"
+    )
+
+    val ambientShadow = glowColor.copy(alpha = if (isDark) 0.25f else 0.12f)
+    val spotShadow = Color.Black.copy(alpha = if (isDark) 0.35f else 0.15f)
 
     Surface(
         modifier = modifier
@@ -92,8 +108,8 @@ fun LiquidGlassPrimaryButton(
             .shadow(
                 elevation = currentElevation,
                 shape = shape,
-                ambientColor = Color.Black.copy(alpha = 0.2f),
-                spotColor = Color.Black.copy(alpha = 0.3f)
+                ambientColor = ambientShadow,
+                spotColor = spotShadow
             )
             .clip(shape)
             .clickable(
@@ -104,7 +120,7 @@ fun LiquidGlassPrimaryButton(
             ),
         shape = shape,
         color = PriceLensTheme.glassColors.actionFill,
-        border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder)
+        border = BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
     ) {
         Box(
             modifier = (if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.wrapContentWidth())
@@ -117,6 +133,29 @@ fun LiquidGlassPrimaryButton(
                 ),
             contentAlignment = Alignment.Center
         ) {
+            // Inner meniscus specular sheen
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0.0f to Color.White.copy(alpha = if (isDark) 0.15f else 0.25f),
+                            0.35f to Color.Transparent,
+                            1.0f to Color.Black.copy(alpha = if (isDark) 0.12f else 0.05f)
+                        )
+                    )
+            )
+
+            // Top specular rim glint
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.4.dp)
+                    .align(Alignment.TopCenter)
+                    .graphicsLayer { alpha = glintAlpha }
+                    .background(PriceLensTheme.glassColors.specularTopGlintBrush)
+            )
+
             Crossfade(targetState = loading, label = "buttonLoadingTransition") { isLoading ->
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -162,8 +201,8 @@ fun LiquidGlassPrimaryButton(
 }
 
 /**
- * Secondary pill action button with clean surface fill, hairline outline,
- * dynamic elevation, and tactile spring compression.
+ * Secondary Liquid Glass pill action button with frosted translucent fill,
+ * chromatic specular outline, dynamic ambient glow, and tactile spring compression.
  */
 @Composable
 fun LiquidGlassSecondaryButton(
@@ -176,11 +215,14 @@ fun LiquidGlassSecondaryButton(
     shape: Shape = RoundedCornerShape(9999.dp),
     height: Dp = 48.dp
 ) {
+    val isDark = PriceLensTheme.isDark
+    val glowColor = PriceLensTheme.glassColors.ambientGlow
+
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.96f else 1f,
+        targetValue = if (isPressed && enabled) 0.95f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 500f
@@ -189,7 +231,7 @@ fun LiquidGlassSecondaryButton(
     )
 
     val currentElevation by animateDpAsState(
-        targetValue = if (isPressed && enabled) 0.dp else 1.dp,
+        targetValue = if (isPressed && enabled) 0.5.dp else 2.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 500f
@@ -197,13 +239,27 @@ fun LiquidGlassSecondaryButton(
         label = "secondaryButtonElevation"
     )
 
+    val glintAlpha by animateFloatAsState(
+        targetValue = if (isPressed && enabled) 0.90f else 0.40f,
+        animationSpec = spring(stiffness = 500f),
+        label = "secondaryButtonGlintAlpha"
+    )
+
+    val ambientShadow = glowColor.copy(alpha = if (isDark) 0.15f else 0.06f)
+    val spotShadow = Color.Black.copy(alpha = if (isDark) 0.22f else 0.08f)
+
     Surface(
         modifier = modifier
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
-            .shadow(elevation = currentElevation, shape = shape)
+            .shadow(
+                elevation = currentElevation,
+                shape = shape,
+                ambientColor = ambientShadow,
+                spotColor = spotShadow
+            )
             .clip(shape)
             .clickable(
                 enabled = enabled,
@@ -213,13 +269,23 @@ fun LiquidGlassSecondaryButton(
             ),
         shape = shape,
         color = PriceLensTheme.glassColors.surfaceGlass,
-        border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder)
+        border = BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
     ) {
         Box(
             modifier = (if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.wrapContentWidth())
                 .height(height),
             contentAlignment = Alignment.Center
         ) {
+            // Subtle specular glint
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.2.dp)
+                    .align(Alignment.TopCenter)
+                    .graphicsLayer { alpha = glintAlpha }
+                    .background(PriceLensTheme.glassColors.specularTopGlintBrush)
+            )
+
             Row(
                 modifier = Modifier.padding(horizontal = if (fillMaxWidth) 18.dp else 14.dp),
                 verticalAlignment = Alignment.CenterVertically,

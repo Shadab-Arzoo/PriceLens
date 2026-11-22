@@ -130,7 +130,17 @@ fun PriceLensLabsBottomSheet(
         sheetState = sheetState,
         containerColor = PriceLensTheme.glassColors.surfaceGlass,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = PriceLensTheme.glassColors.specularBorder) }
+        dragHandle = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                BottomSheetDefaults.DragHandle(color = PriceLensTheme.glassColors.specularBorder)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(PriceLensTheme.glassColors.specularTopGlintBrush)
+                )
+            }
+        }
     ) {
         Column(
             modifier = modifier

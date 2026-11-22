@@ -14,8 +14,8 @@ android {
         applicationId = "com.pricelens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 26
-        versionName = "2.0.1"
+        versionCode = 27
+        versionName = "2.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -27,6 +27,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

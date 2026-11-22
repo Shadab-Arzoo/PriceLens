@@ -105,7 +105,18 @@ fun PasteUrlBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = PriceLensTheme.glassColors.surfaceGlass,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        dragHandle = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                androidx.compose.material3.BottomSheetDefaults.DragHandle(color = PriceLensTheme.glassColors.specularBorder)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(PriceLensTheme.glassColors.specularTopGlintBrush)
+                )
+            }
+        }
     ) {
         Column(
             modifier = Modifier

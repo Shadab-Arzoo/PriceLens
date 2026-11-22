@@ -46,6 +46,30 @@ class UserPreferencesRepository @Inject constructor(
         }
     }
 
+    enum class GlassRefraction(val displayName: String, val subtitle: String, val multiplier: Float) {
+        SUBTLE("Subtle Lens", "Gentle optical curve", 0.5f),
+        STANDARD("Standard Lens", "Balanced liquid refraction", 1.0f),
+        INTENSE("Ultra Liquid", "Deep convex meniscus", 1.6f);
+
+        companion object {
+            fun fromName(name: String?): GlassRefraction {
+                return entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: STANDARD
+            }
+        }
+    }
+
+    enum class GlassDispersion(val displayName: String, val subtitle: String, val dispersionFactor: Float) {
+        DELICATE("Delicate", "Faint chromatic edge", 0.15f),
+        PRISM("Prism ROYGCBP", "Physically-accurate dispersion", 0.35f),
+        SPECTRUM("Vibrant Spectrum", "High-contrast iridescent fringe", 0.65f);
+
+        companion object {
+            fun fromName(name: String?): GlassDispersion {
+                return entries.firstOrNull { it.name.equals(name, ignoreCase = true) } ?: PRISM
+            }
+        }
+    }
+
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     @Immutable
@@ -72,6 +96,12 @@ class UserPreferencesRepository @Inject constructor(
     private val _contrastStyleFlow = MutableStateFlow(getContrastStyle())
     val contrastStyleFlow: StateFlow<ContrastStyle> = _contrastStyleFlow.asStateFlow()
 
+    private val _glassRefractionFlow = MutableStateFlow(getGlassRefraction())
+    val glassRefractionFlow: StateFlow<GlassRefraction> = _glassRefractionFlow.asStateFlow()
+
+    private val _glassDispersionFlow = MutableStateFlow(getGlassDispersion())
+    val glassDispersionFlow: StateFlow<GlassDispersion> = _glassDispersionFlow.asStateFlow()
+
     private val _experimentalFlagsFlow = MutableStateFlow(getExperimentalFlags())
     val experimentalFlagsFlow: StateFlow<ExperimentalFlags> = _experimentalFlagsFlow.asStateFlow()
 
@@ -81,6 +111,8 @@ class UserPreferencesRepository @Inject constructor(
             KEY_THEME_ACCENT -> _themeAccentFlow.value = getThemeAccent()
             KEY_THEME_GLOW_INTENSITY -> _glowIntensityFlow.value = getGlowIntensity()
             KEY_THEME_CONTRAST_STYLE -> _contrastStyleFlow.value = getContrastStyle()
+            KEY_THEME_GLASS_REFRACTION -> _glassRefractionFlow.value = getGlassRefraction()
+            KEY_THEME_GLASS_DISPERSION -> _glassDispersionFlow.value = getGlassDispersion()
             KEY_EXP_MASTER,
             KEY_EXP_DEAL_AUTHENTICITY,
             KEY_EXP_BUY_NOW_VERDICT,
@@ -179,6 +211,26 @@ class UserPreferencesRepository @Inject constructor(
         _contrastStyleFlow.value = style
     }
 
+    fun getGlassRefraction(): GlassRefraction {
+        val name = prefs.getString(KEY_THEME_GLASS_REFRACTION, GlassRefraction.STANDARD.name) ?: GlassRefraction.STANDARD.name
+        return GlassRefraction.fromName(name)
+    }
+
+    fun setGlassRefraction(refraction: GlassRefraction) {
+        prefs.edit().putString(KEY_THEME_GLASS_REFRACTION, refraction.name).apply()
+        _glassRefractionFlow.value = refraction
+    }
+
+    fun getGlassDispersion(): GlassDispersion {
+        val name = prefs.getString(KEY_THEME_GLASS_DISPERSION, GlassDispersion.PRISM.name) ?: GlassDispersion.PRISM.name
+        return GlassDispersion.fromName(name)
+    }
+
+    fun setGlassDispersion(dispersion: GlassDispersion) {
+        prefs.edit().putString(KEY_THEME_GLASS_DISPERSION, dispersion.name).apply()
+        _glassDispersionFlow.value = dispersion
+    }
+
     fun toggleTheme(currentIsDark: Boolean) {
         val next = if (currentIsDark) ThemeMode.LIGHT else ThemeMode.DARK
         setThemeMode(next)
@@ -201,6 +253,8 @@ class UserPreferencesRepository @Inject constructor(
         private const val KEY_THEME_ACCENT = "key_theme_accent"
         const val KEY_THEME_GLOW_INTENSITY = "key_theme_glow_intensity"
         const val KEY_THEME_CONTRAST_STYLE = "key_theme_contrast_style"
+        const val KEY_THEME_GLASS_REFRACTION = "key_theme_glass_refraction"
+        const val KEY_THEME_GLASS_DISPERSION = "key_theme_glass_dispersion"
 
         const val KEY_EXP_MASTER = "key_exp_master"
         const val KEY_EXP_DEAL_AUTHENTICITY = "key_exp_deal_authenticity"
