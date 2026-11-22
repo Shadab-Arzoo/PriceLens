@@ -127,7 +127,16 @@ class UserPreferencesRepositoryTest {
         preferencesRepository.setThemeAccent(ThemeAccent.TITANIUM)
         assertEquals(ThemeAccent.TITANIUM, preferencesRepository.getThemeAccent())
 
-        assertEquals(10, ThemeAccent.entries.size)
+        preferencesRepository.setThemeAccent(ThemeAccent.CUPERTINO_BLUE)
+        assertEquals(ThemeAccent.CUPERTINO_BLUE, preferencesRepository.getThemeAccent())
+
+        preferencesRepository.setThemeAccent(ThemeAccent.APPLE_SILICON)
+        assertEquals(ThemeAccent.APPLE_SILICON, preferencesRepository.getThemeAccent())
+
+        preferencesRepository.setThemeAccent(ThemeAccent.CUPERTINO_PURPLE)
+        assertEquals(ThemeAccent.CUPERTINO_PURPLE, preferencesRepository.getThemeAccent())
+
+        assertEquals(13, ThemeAccent.entries.size)
     }
 
     @Test
@@ -152,6 +161,10 @@ class UserPreferencesRepositoryTest {
         preferencesRepository.setContrastStyle(UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT)
         assertEquals(UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT, preferencesRepository.getContrastStyle())
         assertEquals(UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT, preferencesRepository.contrastStyleFlow.value)
+
+        preferencesRepository.setContrastStyle(UserPreferencesRepository.ContrastStyle.APPLE_CUPERTINO)
+        assertEquals(UserPreferencesRepository.ContrastStyle.APPLE_CUPERTINO, preferencesRepository.getContrastStyle())
+        assertEquals(UserPreferencesRepository.ContrastStyle.APPLE_CUPERTINO, preferencesRepository.contrastStyleFlow.value)
 
         preferencesRepository.setContrastStyle(UserPreferencesRepository.ContrastStyle.PITCH_BLACK)
         assertEquals(UserPreferencesRepository.ContrastStyle.PITCH_BLACK, preferencesRepository.getContrastStyle())

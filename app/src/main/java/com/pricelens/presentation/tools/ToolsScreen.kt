@@ -644,6 +644,122 @@ fun ToolsScreen(
                         }
                     }
 
+                    // Apple Experience Feature Banner / 1-Tap Switcher
+                    val isAppleActive = currentContrastStyle == UserPreferencesRepository.ContrastStyle.APPLE_CUPERTINO &&
+                        currentThemeAccent == ThemeAccent.CUPERTINO_BLUE
+
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isAppleActive) {
+                            Color(0xFF007AFF).copy(alpha = if (PriceLensTheme.isDark) 0.18f else 0.10f)
+                        } else {
+                            PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.5f)
+                        },
+                        border = BorderStroke(
+                            if (isAppleActive) 1.5.dp else 1.dp,
+                            if (isAppleActive) Color(0xFF0A84FF) else PriceLensTheme.glassColors.specularBorder
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                if (isAppleActive) {
+                                    userPreferences.setThemeAccent(ThemeAccent.EMERALD_MINT)
+                                    userPreferences.setContrastStyle(UserPreferencesRepository.ContrastStyle.PITCH_BLACK)
+                                    userPreferences.setGlowIntensity(UserPreferencesRepository.GlowIntensity.VIVID)
+                                    userPreferences.setGlassRefraction(UserPreferencesRepository.GlassRefraction.STANDARD)
+                                } else {
+                                    userPreferences.setThemeAccent(ThemeAccent.CUPERTINO_BLUE)
+                                    userPreferences.setContrastStyle(UserPreferencesRepository.ContrastStyle.APPLE_CUPERTINO)
+                                    userPreferences.setGlowIntensity(UserPreferencesRepository.GlowIntensity.SUBTLE)
+                                    userPreferences.setGlassRefraction(UserPreferencesRepository.GlassRefraction.SUBTLE)
+                                    userPreferences.setGlassDispersion(UserPreferencesRepository.GlassDispersion.DELICATE)
+                                }
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            Brush.linearGradient(
+                                                listOf(Color(0xFF0A84FF), Color(0xFF5E5CE6))
+                                            )
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+
+                                Column {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = "Apple Cupertino Theme",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isAppleActive) Color(0xFF0A84FF) else PriceLensTheme.glassColors.textPrimary
+                                        )
+                                        if (isAppleActive) {
+                                            Surface(
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = Color(0xFF007AFF),
+                                                modifier = Modifier.padding(start = 2.dp)
+                                            ) {
+                                                Text(
+                                                    text = "ACTIVE",
+                                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.5.sp),
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = Color.White,
+                                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Text(
+                                        text = if (isAppleActive) "Authentic iOS 18 & iPadOS Dock active" else "Tap to switch to 1:1 Apple HIG design",
+                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                        color = PriceLensTheme.glassColors.textSecondary
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isAppleActive) Color(0xFF007AFF).copy(alpha = 0.2f) else PriceLensTheme.glassColors.surfaceHighlight,
+                                border = BorderStroke(1.dp, if (isAppleActive) Color(0xFF0A84FF) else PriceLensTheme.glassColors.specularBorder)
+                            ) {
+                                Text(
+                                    text = if (isAppleActive) "Reset" else "Apply",
+                                    style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp),
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isAppleActive) Color(0xFF0A84FF) else PriceLensTheme.glassColors.textPrimary,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                )
+                            }
+                        }
+                    }
+
                     // A. Mode Selector (Dark / Light / System)
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
@@ -666,20 +782,47 @@ fun ToolsScreen(
 
                             modes.forEach { (mode, label, icon) ->
                                 val isSelected = currentThemeMode == mode
-                                Surface(
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = if (isSelected) {
+                                val isCupertino = PriceLensTheme.isCupertino
+                                val isDark = PriceLensTheme.isDark
+
+                                val itemBg = if (isSelected) {
+                                    if (isCupertino) {
+                                        if (isDark) Color(0xFF636366) else Color.White
+                                    } else {
                                         PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.18f)
+                                    }
+                                } else {
+                                    if (isCupertino) {
+                                        if (isDark) Color(0xFF1C1C1E) else Color(0xFFE5E5EA)
                                     } else {
                                         PriceLensTheme.glassColors.surfaceHighlight
-                                    },
-                                    border = BorderStroke(
-                                        1.dp,
-                                        if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder
-                                    ),
+                                    }
+                                }
+
+                                val itemBorder = if (isCupertino) {
+                                    if (isSelected && !isDark) BorderStroke(0.5.dp, Color(0x1A000000)) else BorderStroke(0.dp, Color.Transparent)
+                                } else {
+                                    BorderStroke(1.dp, if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder)
+                                }
+
+                                val itemTextColor = if (isSelected) {
+                                    if (isCupertino) {
+                                        if (isDark) Color.White else Color.Black
+                                    } else {
+                                        PriceLensTheme.glassColors.ambientGlow
+                                    }
+                                } else {
+                                    PriceLensTheme.glassColors.textSecondary
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(if (isCupertino) 9.dp else 12.dp),
+                                    color = itemBg,
+                                    border = itemBorder,
+                                    shadowElevation = if (isCupertino && isSelected && !isDark) 2.dp else 0.dp,
                                     modifier = Modifier
                                         .weight(1f)
-                                        .clip(RoundedCornerShape(12.dp))
+                                        .clip(RoundedCornerShape(if (isCupertino) 9.dp else 12.dp))
                                         .clickable {
                                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                             userPreferences.setThemeMode(mode)
@@ -693,7 +836,7 @@ fun ToolsScreen(
                                         Icon(
                                             imageVector = icon,
                                             contentDescription = null,
-                                            tint = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary,
+                                            tint = itemTextColor,
                                             modifier = Modifier.size(15.dp)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -701,7 +844,7 @@ fun ToolsScreen(
                                             text = label,
                                             style = MaterialTheme.typography.labelMedium,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary
+                                            color = itemTextColor
                                         )
                                     }
                                 }
@@ -726,13 +869,18 @@ fun ToolsScreen(
                             val contrastStyles = listOf(
                                 Triple(
                                     UserPreferencesRepository.ContrastStyle.PITCH_BLACK,
-                                    "AMOLED Pitch",
-                                    "Pure #000000 canvas"
+                                    "AMOLED",
+                                    "Pure pitch"
                                 ),
                                 Triple(
                                     UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT,
-                                    "Deep Obsidian",
-                                    "Atmospheric aura glow"
+                                    "Obsidian",
+                                    "Aura glow"
+                                ),
+                                Triple(
+                                    UserPreferencesRepository.ContrastStyle.APPLE_CUPERTINO,
+                                    "Apple",
+                                    "iOS / visionOS"
                                 )
                             )
 
@@ -767,10 +915,10 @@ fun ToolsScreen(
                                                 .size(18.dp)
                                                 .clip(CircleShape)
                                                 .background(
-                                                    if (style == UserPreferencesRepository.ContrastStyle.PITCH_BLACK) {
-                                                        Color.Black
-                                                    } else {
-                                                        Color(0xFF0D131F)
+                                                    when (style) {
+                                                        UserPreferencesRepository.ContrastStyle.PITCH_BLACK -> Color.Black
+                                                        UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT -> Color(0xFF0D131F)
+                                                        UserPreferencesRepository.ContrastStyle.APPLE_CUPERTINO -> Color(0xFF007AFF)
                                                     }
                                                 )
                                                 .border(

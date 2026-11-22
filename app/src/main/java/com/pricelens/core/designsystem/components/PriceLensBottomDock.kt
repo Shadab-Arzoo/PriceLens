@@ -75,6 +75,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -199,6 +200,9 @@ fun PriceLensBottomDock(
         }
     }
 
+    val isCupertino = PriceLensTheme.isCupertino
+    val isDark = PriceLensTheme.isDark
+
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
@@ -213,40 +217,52 @@ fun PriceLensBottomDock(
             contentAlignment = Alignment.Center
         ) {
             Surface(
-                shape = RoundedCornerShape(30.dp),
+                shape = RoundedCornerShape(if (isCupertino) 32.dp else 30.dp),
                 color = PriceLensTheme.glassColors.surfaceGlass,
-                border = BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush),
-                shadowElevation = 20.dp,
+                border = if (isCupertino) {
+                    BorderStroke(0.75.dp, if (isDark) Color(0x38FFFFFF) else Color(0x20000000))
+                } else {
+                    BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
+                },
+                shadowElevation = if (isCupertino) 12.dp else 20.dp,
                 modifier = Modifier
                     .widthIn(max = 440.dp)
                     .shadow(
-                        elevation = 28.dp,
-                        shape = RoundedCornerShape(30.dp),
-                        ambientColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (PriceLensTheme.isDark) 0.35f else 0.18f),
-                        spotColor = Color.Black.copy(alpha = if (PriceLensTheme.isDark) 0.40f else 0.15f)
+                        elevation = if (isCupertino) 16.dp else 28.dp,
+                        shape = RoundedCornerShape(if (isCupertino) 32.dp else 30.dp),
+                        ambientColor = if (isCupertino) Color.Black.copy(alpha = if (isDark) 0.35f else 0.08f) else PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (isDark) 0.35f else 0.18f),
+                        spotColor = Color.Black.copy(alpha = if (isDark) 0.45f else 0.12f)
                     )
             ) {
                 Box {
-                    // Inner meniscus glass volume gradient
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    0.0f to Color.White.copy(alpha = if (PriceLensTheme.isDark) 0.09f else 0.20f),
-                                    0.35f to Color.Transparent,
-                                    1.0f to Color.Black.copy(alpha = if (PriceLensTheme.isDark) 0.08f else 0.03f)
+                    if (!isCupertino) {
+                        // Inner meniscus glass volume gradient (for non-Apple themes)
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        0.0f to Color.White.copy(alpha = if (isDark) 0.09f else 0.20f),
+                                        0.35f to Color.Transparent,
+                                        1.0f to Color.Black.copy(alpha = if (isDark) 0.08f else 0.03f)
+                                    )
                                 )
-                            )
-                    )
+                        )
+                    }
 
                     Column {
                         // Specular top rim light highlight
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(1.5.dp)
-                                .background(PriceLensTheme.glassColors.specularTopGlintBrush)
+                                .height(if (isCupertino) 0.75.dp else 1.5.dp)
+                                .background(
+                                    if (isCupertino) {
+                                        SolidColor(if (isDark) Color(0x24FFFFFF) else Color(0x14000000))
+                                    } else {
+                                        PriceLensTheme.glassColors.specularTopGlintBrush
+                                    }
+                                )
                         )
 
                     BoxWithConstraints(
@@ -259,8 +275,8 @@ fun PriceLensBottomDock(
                         val tabWidth = totalWidth / tabCount
                         val tabWidthPx = with(density) { tabWidth.toPx() }
 
-                        // 1. Fluid Sliding Indicator Pill with Hold-and-Slide support
-                        if (selectedIndex >= 0) {
+                        // 1. Fluid Sliding Indicator Pill with Hold-and-Slide support (non-Apple themes only; Apple Tab Bar uses direct icon/title tint)
+                        if (selectedIndex >= 0 && !isCupertino) {
                             val pillScale by animateFloatAsState(
                                 targetValue = when {
                                     isSliding -> 1.05f
@@ -337,7 +353,7 @@ fun PriceLensBottomDock(
 
                                 // Tactile press & selection scale
                                 val pressScale by animateFloatAsState(
-                                    targetValue = if (isPressed || (isSelected && isHoldingActiveTab && !isSliding)) 0.90f else 1.0f,
+                                    targetValue = if (!isCupertino && (isPressed || (isSelected && isHoldingActiveTab && !isSliding))) 0.90f else 1.0f,
                                     animationSpec = spring(
                                         dampingRatio = Spring.DampingRatioMediumBouncy,
                                         stiffness = Spring.StiffnessMedium
@@ -346,7 +362,7 @@ fun PriceLensBottomDock(
                                 )
 
                                 val iconScale by animateFloatAsState(
-                                    targetValue = if (isHighlighted) 1.16f else 1.0f,
+                                    targetValue = if (!isCupertino && isHighlighted) 1.16f else 1.0f,
                                     animationSpec = spring(
                                         dampingRatio = Spring.DampingRatioMediumBouncy,
                                         stiffness = Spring.StiffnessLow
@@ -356,9 +372,17 @@ fun PriceLensBottomDock(
 
                                 val tabColor by animateColorAsState(
                                     targetValue = if (isHighlighted) {
-                                        PriceLensTheme.glassColors.ambientGlow
+                                        if (isCupertino) {
+                                            if (isDark) Color(0xFF0A84FF) else Color(0xFF007AFF)
+                                        } else {
+                                            PriceLensTheme.glassColors.ambientGlow
+                                        }
                                     } else {
-                                        PriceLensTheme.glassColors.textSecondary
+                                        if (isCupertino) {
+                                            if (isDark) Color(0xFF98989D) else Color(0xFF8E8E93)
+                                        } else {
+                                            PriceLensTheme.glassColors.textSecondary
+                                        }
                                     },
                                     label = "dockTabColor_${tab.name}"
                                 )
@@ -504,8 +528,12 @@ fun PriceLensBottomDock(
                                                     modifier = Modifier
                                                         .offset(x = 8.dp, y = (-4).dp)
                                                         .clip(RoundedCornerShape(99.dp))
-                                                        .background(PriceLensTheme.glassColors.ambientGlow)
-                                                        .border(1.dp, Color.Black.copy(alpha = 0.25f), RoundedCornerShape(99.dp))
+                                                        .background(if (isCupertino) Color(0xFFFF3B30) else PriceLensTheme.glassColors.ambientGlow)
+                                                        .border(
+                                                            1.dp,
+                                                            if (isCupertino) (if (isDark) Color(0xFF1C1C1E) else Color.White) else Color.Black.copy(alpha = 0.25f),
+                                                            RoundedCornerShape(99.dp)
+                                                        )
                                                         .padding(horizontal = 4.dp, vertical = 1.dp)
                                                 ) {
                                                     AnimatedContent(
@@ -518,7 +546,7 @@ fun PriceLensBottomDock(
                                                     ) { count ->
                                                         Text(
                                                             text = if (count > 99) "99+" else count.toString(),
-                                                            color = Color.Black,
+                                                            color = if (isCupertino) Color.White else Color.Black,
                                                             fontSize = 9.sp,
                                                             fontWeight = FontWeight.ExtraBold,
                                                             lineHeight = 10.sp
@@ -526,14 +554,14 @@ fun PriceLensBottomDock(
                                                     }
                                                 }
                                             } else if (tab == DockTab.DEALS && hasActiveDeals) {
-                                                HotDealsBadge(modifier = Modifier.offset(x = 10.dp, y = (-4).dp))
+                                                HotDealsBadge(modifier = Modifier.offset(x = 10.dp, y = (-4).dp), isCupertino = isCupertino)
                                             } else if (tab == DockTab.TOOLS && hasLabsFeature) {
                                                 Box(
                                                     modifier = Modifier
                                                         .offset(x = 5.dp, y = (-2).dp)
                                                         .size(6.dp)
                                                         .clip(CircleShape)
-                                                        .background(PriceLensTheme.glassColors.ambientGlow)
+                                                        .background(if (isCupertino) (if (isDark) Color(0xFF0A84FF) else Color(0xFF007AFF)) else PriceLensTheme.glassColors.ambientGlow)
                                                         .border(1.dp, Color.Black.copy(alpha = 0.3f), CircleShape)
                                                 )
                                             }
@@ -549,21 +577,23 @@ fun PriceLensBottomDock(
                                             maxLines = 1
                                         )
 
-                                        // Active Tab Micro-Pill Glow Indicator
-                                        AnimatedVisibility(
-                                            visible = isHighlighted,
-                                            enter = fadeIn() + scaleIn(),
-                                            exit = fadeOut() + scaleOut()
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .padding(top = 2.dp)
-                                                    .size(width = 12.dp, height = 2.5.dp)
-                                                    .clip(RoundedCornerShape(99.dp))
-                                                    .background(PriceLensTheme.glassColors.ambientGlow)
-                                            )
+                                        // Active Tab Micro-Pill Indicator (omitted in Apple mode for native iOS Tab Bar HIG fidelity)
+                                        if (!isCupertino) {
+                                            AnimatedVisibility(
+                                                visible = isHighlighted,
+                                                enter = fadeIn() + scaleIn(),
+                                                exit = fadeOut() + scaleOut()
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .padding(top = 2.dp)
+                                                        .size(width = 12.dp, height = 2.5.dp)
+                                                        .clip(RoundedCornerShape(99.dp))
+                                                        .background(PriceLensTheme.glassColors.ambientGlow)
+                                                )
+                                            }
                                         }
-                                        if (!isHighlighted) {
+                                        if (!isHighlighted || isCupertino) {
                                             Spacer(modifier = Modifier.height(4.5.dp))
                                         }
                                     }
@@ -579,11 +609,11 @@ fun PriceLensBottomDock(
 }
 
 @Composable
-private fun HotDealsBadge(modifier: Modifier = Modifier) {
+private fun HotDealsBadge(modifier: Modifier = Modifier, isCupertino: Boolean = false) {
     val infiniteTransition = rememberInfiniteTransition(label = "dockDealsHotPulse")
     val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.94f,
-        targetValue = 1.07f,
+        initialValue = if (isCupertino) 1f else 0.94f,
+        targetValue = if (isCupertino) 1f else 1.07f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 950, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -598,12 +628,12 @@ private fun HotDealsBadge(modifier: Modifier = Modifier) {
                 scaleY = pulseScale
             }
             .clip(RoundedCornerShape(6.dp))
-            .background(AmberAlert)
+            .background(if (isCupertino) Color(0xFFFF3B30) else AmberAlert)
             .padding(horizontal = 3.dp, vertical = 1.dp)
     ) {
         Text(
             text = "HOT",
-            color = Color.Black,
+            color = if (isCupertino) Color.White else Color.Black,
             fontSize = 8.sp,
             fontWeight = FontWeight.ExtraBold,
             lineHeight = 9.sp

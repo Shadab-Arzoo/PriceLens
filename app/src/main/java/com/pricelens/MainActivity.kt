@@ -113,48 +113,52 @@ class MainActivity : ComponentActivity() {
                     val secondary = PriceLensTheme.glassColors.accentSecondary
                     val isDark = PriceLensTheme.isDark
 
-                    // Ambient liquid glass backdrop orbs
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .drawBehind {
-                                // Top-right radiant orb
-                                drawCircle(
-                                    brush = Brush.radialGradient(
-                                        colors = listOf(
-                                            accent.copy(alpha = if (isDark) 0.16f else 0.08f),
-                                            Color.Transparent
-                                        ),
-                                        center = Offset(size.width * 0.85f, size.height * 0.10f),
-                                        radius = size.width * 0.70f
-                                    )
-                                )
+                    val isCupertino = PriceLensTheme.isCupertino
 
-                                // Middle-left secondary orb
-                                drawCircle(
-                                    brush = Brush.radialGradient(
-                                        colors = listOf(
-                                            secondary.copy(alpha = if (isDark) 0.12f else 0.06f),
-                                            Color.Transparent
-                                        ),
-                                        center = Offset(size.width * 0.10f, size.height * 0.42f),
-                                        radius = size.width * 0.65f
+                    // Ambient liquid glass backdrop orbs (active only for non-Apple themes; Apple uses pure neutral canvas)
+                    if (!isCupertino) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .drawBehind {
+                                    // Top-right radiant orb
+                                    drawCircle(
+                                        brush = Brush.radialGradient(
+                                            colors = listOf(
+                                                accent.copy(alpha = if (isDark) 0.16f else 0.08f),
+                                                Color.Transparent
+                                            ),
+                                            center = Offset(size.width * 0.85f, size.height * 0.10f),
+                                            radius = size.width * 0.70f
+                                        )
                                     )
-                                )
 
-                                // Bottom floating orb behind dock
-                                drawCircle(
-                                    brush = Brush.radialGradient(
-                                        colors = listOf(
-                                            accent.copy(alpha = if (isDark) 0.18f else 0.09f),
-                                            Color.Transparent
-                                        ),
-                                        center = Offset(size.width * 0.50f, size.height * 0.92f),
-                                        radius = size.width * 0.60f
+                                    // Middle-left secondary orb
+                                    drawCircle(
+                                        brush = Brush.radialGradient(
+                                            colors = listOf(
+                                                secondary.copy(alpha = if (isDark) 0.12f else 0.06f),
+                                                Color.Transparent
+                                            ),
+                                            center = Offset(size.width * 0.10f, size.height * 0.42f),
+                                            radius = size.width * 0.65f
+                                        )
                                     )
-                                )
-                            }
-                    )
+
+                                    // Bottom floating orb behind dock
+                                    drawCircle(
+                                        brush = Brush.radialGradient(
+                                            colors = listOf(
+                                                accent.copy(alpha = if (isDark) 0.18f else 0.09f),
+                                                Color.Transparent
+                                            ),
+                                            center = Offset(size.width * 0.50f, size.height * 0.92f),
+                                            radius = size.width * 0.60f
+                                        )
+                                    )
+                                }
+                        )
+                    }
 
                     PriceLensNavGraph(
                         navController = navController,

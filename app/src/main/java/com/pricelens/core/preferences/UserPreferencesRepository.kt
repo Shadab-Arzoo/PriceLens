@@ -37,7 +37,8 @@ class UserPreferencesRepository @Inject constructor(
 
     enum class ContrastStyle(val displayName: String, val subtitle: String) {
         PITCH_BLACK("AMOLED Pitch", "Pure #000000 canvas"),
-        OBSIDIAN_TINT("Deep Obsidian", "Tinted ambient aura canvas");
+        OBSIDIAN_TINT("Deep Obsidian", "Tinted ambient aura canvas"),
+        APPLE_CUPERTINO("Apple Cupertino", "iOS 18 & visionOS frosted canvas");
 
         companion object {
             fun fromName(name: String?): ContrastStyle {

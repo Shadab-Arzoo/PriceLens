@@ -52,17 +52,27 @@ fun GlassCard(
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
+    val isCupertino = PriceLensTheme.isCupertino
     val isDark = PriceLensTheme.isDark
     val glowColor = PriceLensTheme.glassColors.ambientGlow
 
     val effectiveBorderStroke = when {
         borderBrush != null -> BorderStroke(borderWidth, borderBrush)
         borderColor != null -> BorderStroke(borderWidth, borderColor)
+        isCupertino -> BorderStroke(0.75.dp, if (isDark) Color(0x38FFFFFF) else Color(0x20000000))
         else -> BorderStroke(borderWidth, PriceLensTheme.glassColors.specularBorderBrush)
     }
 
-    val ambientShadow = glowColor.copy(alpha = if (isDark) 0.16f else 0.08f)
-    val spotShadow = Color.Black.copy(alpha = if (isDark) 0.28f else 0.10f)
+    val ambientShadow = if (isCupertino) {
+        Color.Black.copy(alpha = if (isDark) 0.22f else 0.04f)
+    } else {
+        glowColor.copy(alpha = if (isDark) 0.16f else 0.08f)
+    }
+    val spotShadow = if (isCupertino) {
+        Color.Black.copy(alpha = if (isDark) 0.35f else 0.08f)
+    } else {
+        Color.Black.copy(alpha = if (isDark) 0.28f else 0.10f)
+    }
 
     if (onClick != null) {
         val interactionSource = remember { MutableInteractionSource() }
@@ -117,25 +127,27 @@ fun GlassCard(
         ) {
             Box {
                 if (showSpecularSheen) {
-                    // Inner meniscus glass volume gradient
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    0.0f to Color.White.copy(alpha = if (isDark) 0.05f else 0.12f),
-                                    0.28f to Color.Transparent,
-                                    1.0f to Color.Black.copy(alpha = if (isDark) 0.06f else 0.02f)
+                    if (!isCupertino) {
+                        // Inner meniscus glass volume gradient (non-Apple themes)
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        0.0f to Color.White.copy(alpha = if (isDark) 0.05f else 0.12f),
+                                        0.28f to Color.Transparent,
+                                        1.0f to Color.Black.copy(alpha = if (isDark) 0.06f else 0.02f)
+                                    )
                                 )
-                            )
-                    )
+                        )
+                    }
                     // Directional top rim specular reflection glint
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(1.4.dp)
+                            .height(if (isCupertino) 0.75.dp else 1.4.dp)
                             .align(Alignment.TopCenter)
-                            .graphicsLayer { alpha = glintAlpha }
+                            .graphicsLayer { alpha = if (isCupertino) 0.40f else glintAlpha }
                             .background(PriceLensTheme.glassColors.specularTopGlintBrush)
                     )
                 }
@@ -159,23 +171,25 @@ fun GlassCard(
         ) {
             Box {
                 if (showSpecularSheen) {
-                    // Inner meniscus glass volume gradient
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    0.0f to Color.White.copy(alpha = if (isDark) 0.05f else 0.12f),
-                                    0.28f to Color.Transparent,
-                                    1.0f to Color.Black.copy(alpha = if (isDark) 0.06f else 0.02f)
+                    if (!isCupertino) {
+                        // Inner meniscus glass volume gradient (non-Apple themes)
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        0.0f to Color.White.copy(alpha = if (isDark) 0.05f else 0.12f),
+                                        0.28f to Color.Transparent,
+                                        1.0f to Color.Black.copy(alpha = if (isDark) 0.06f else 0.02f)
+                                    )
                                 )
-                            )
-                    )
+                        )
+                    }
                     // Directional top rim specular reflection glint
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(1.4.dp)
+                            .height(if (isCupertino) 0.75.dp else 1.4.dp)
                             .align(Alignment.TopCenter)
                             .background(PriceLensTheme.glassColors.specularTopGlintBrush)
                     )

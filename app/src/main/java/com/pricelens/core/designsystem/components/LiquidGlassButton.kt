@@ -66,6 +66,7 @@ fun LiquidGlassPrimaryButton(
     height: Dp = 52.dp,
     gradientBrush: Brush = PriceLensTheme.glassColors.primaryGradientBrush
 ) {
+    val isCupertino = PriceLensTheme.isCupertino
     val isDark = PriceLensTheme.isDark
     val glowColor = PriceLensTheme.glassColors.ambientGlow
 
@@ -82,7 +83,7 @@ fun LiquidGlassPrimaryButton(
     )
 
     val currentElevation by animateDpAsState(
-        targetValue = if (isPressed && enabled) 1.dp else if (enabled) 5.dp else 0.dp,
+        targetValue = if (isPressed && enabled) 1.dp else if (enabled) (if (isCupertino) 2.dp else 5.dp) else 0.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 500f
@@ -96,8 +97,16 @@ fun LiquidGlassPrimaryButton(
         label = "buttonGlintAlpha"
     )
 
-    val ambientShadow = glowColor.copy(alpha = if (isDark) 0.25f else 0.12f)
-    val spotShadow = Color.Black.copy(alpha = if (isDark) 0.35f else 0.15f)
+    val ambientShadow = if (isCupertino) {
+        Color.Black.copy(alpha = if (isDark) 0.20f else 0.05f)
+    } else {
+        glowColor.copy(alpha = if (isDark) 0.25f else 0.12f)
+    }
+    val spotShadow = if (isCupertino) {
+        Color.Black.copy(alpha = if (isDark) 0.35f else 0.10f)
+    } else {
+        Color.Black.copy(alpha = if (isDark) 0.35f else 0.15f)
+    }
 
     Surface(
         modifier = modifier
@@ -120,7 +129,11 @@ fun LiquidGlassPrimaryButton(
             ),
         shape = shape,
         color = PriceLensTheme.glassColors.actionFill,
-        border = BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
+        border = if (isCupertino) {
+            BorderStroke(0.5.dp, if (isDark) Color.White.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.40f))
+        } else {
+            BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
+        }
     ) {
         Box(
             modifier = (if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.wrapContentWidth())
@@ -215,6 +228,7 @@ fun LiquidGlassSecondaryButton(
     shape: Shape = RoundedCornerShape(9999.dp),
     height: Dp = 48.dp
 ) {
+    val isCupertino = PriceLensTheme.isCupertino
     val isDark = PriceLensTheme.isDark
     val glowColor = PriceLensTheme.glassColors.ambientGlow
 
@@ -231,7 +245,7 @@ fun LiquidGlassSecondaryButton(
     )
 
     val currentElevation by animateDpAsState(
-        targetValue = if (isPressed && enabled) 0.5.dp else 2.dp,
+        targetValue = if (isPressed && enabled) 0.5.dp else (if (isCupertino) 1.dp else 2.dp),
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 500f
@@ -245,8 +259,16 @@ fun LiquidGlassSecondaryButton(
         label = "secondaryButtonGlintAlpha"
     )
 
-    val ambientShadow = glowColor.copy(alpha = if (isDark) 0.15f else 0.06f)
-    val spotShadow = Color.Black.copy(alpha = if (isDark) 0.22f else 0.08f)
+    val ambientShadow = if (isCupertino) {
+        Color.Black.copy(alpha = if (isDark) 0.15f else 0.03f)
+    } else {
+        glowColor.copy(alpha = if (isDark) 0.15f else 0.06f)
+    }
+    val spotShadow = if (isCupertino) {
+        Color.Black.copy(alpha = if (isDark) 0.25f else 0.06f)
+    } else {
+        Color.Black.copy(alpha = if (isDark) 0.22f else 0.08f)
+    }
 
     Surface(
         modifier = modifier
@@ -268,8 +290,16 @@ fun LiquidGlassSecondaryButton(
                 onClick = onClick
             ),
         shape = shape,
-        color = PriceLensTheme.glassColors.surfaceGlass,
-        border = BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
+        color = if (isCupertino) {
+            if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)
+        } else {
+            PriceLensTheme.glassColors.surfaceGlass
+        },
+        border = if (isCupertino) {
+            BorderStroke(0.5.dp, if (isDark) Color(0x38FFFFFF) else Color(0x1F000000))
+        } else {
+            BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
+        }
     ) {
         Box(
             modifier = (if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.wrapContentWidth())
@@ -286,6 +316,12 @@ fun LiquidGlassSecondaryButton(
                     .background(PriceLensTheme.glassColors.specularTopGlintBrush)
             )
 
+            val secondaryTextColor = if (isCupertino) {
+                if (isDark) Color(0xFF0A84FF) else Color(0xFF007AFF)
+            } else {
+                PriceLensTheme.glassColors.textPrimary
+            }
+
             Row(
                 modifier = Modifier.padding(horizontal = if (fillMaxWidth) 18.dp else 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -295,7 +331,7 @@ fun LiquidGlassSecondaryButton(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = PriceLensTheme.glassColors.textPrimary,
+                        tint = secondaryTextColor,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -304,7 +340,7 @@ fun LiquidGlassSecondaryButton(
                     text = text,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
-                    color = PriceLensTheme.glassColors.textPrimary
+                    color = secondaryTextColor
                 )
             }
         }
