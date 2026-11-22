@@ -508,6 +508,9 @@ fun PriceLensNavGraph(
                 onNavigateToSearch = { query ->
                     navController.navigate(PriceLensDestination.Search.createRoute(query))
                 },
+                onNavigateToOnboarding = {
+                    navController.navigate(PriceLensDestination.Onboarding.route)
+                },
                 userPreferences = effectivePreferences
             )
         }

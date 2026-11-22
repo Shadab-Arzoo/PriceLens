@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Calculate
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.PriceCheck
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -93,6 +95,7 @@ import kotlin.math.min
 fun ToolsRoute(
     onNavigateToWebPicker: (url: String, name: String) -> Unit,
     onNavigateToSearch: (String) -> Unit,
+    onNavigateToOnboarding: () -> Unit = {},
     userPreferences: UserPreferencesRepository? = null,
     modifier: Modifier = Modifier
 ) {
@@ -105,6 +108,7 @@ fun ToolsRoute(
         userPreferences = effectivePreferences,
         onNavigateToWebPicker = onNavigateToWebPicker,
         onNavigateToSearch = onNavigateToSearch,
+        onNavigateToOnboarding = onNavigateToOnboarding,
         modifier = modifier
     )
 }
@@ -211,6 +215,7 @@ fun ToolsScreen(
     userPreferences: UserPreferencesRepository,
     onNavigateToWebPicker: (url: String, name: String) -> Unit,
     onNavigateToSearch: (String) -> Unit,
+    onNavigateToOnboarding: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val currencyFormatter = rememberInrCurrencyFormatter()
@@ -299,6 +304,58 @@ fun ToolsScreen(
                     style = MaterialTheme.typography.labelSmall,
                     color = PriceLensTheme.glassColors.textSecondary
                 )
+            }
+        }
+
+        // Interactive Intro & Feature Walkthrough Replay
+        item {
+            GlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onNavigateToOnboarding()
+                }
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayCircle,
+                            contentDescription = null,
+                            tint = PriceLensTheme.glassColors.ambientGlow,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Interactive App Tour",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textPrimary
+                        )
+                        Text(
+                            text = "Replay the interactive price comparisons, tap-to-inspect sandbox & alerts demo",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PriceLensTheme.glassColors.textSecondary
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = PriceLensTheme.glassColors.textSecondary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
 
