@@ -217,10 +217,14 @@ fun PriceLensBottomDock(
             contentAlignment = Alignment.Center
         ) {
             Surface(
-                shape = RoundedCornerShape(if (isCupertino) 32.dp else 30.dp),
-                color = PriceLensTheme.glassColors.surfaceGlass,
+                shape = RoundedCornerShape(if (isCupertino) 9999.dp else 30.dp),
+                color = if (isCupertino) {
+                    if (!isDark) Color(0xFFFAFAFA).copy(alpha = 0.55f) else Color(0xFF121212).copy(alpha = 0.50f)
+                } else {
+                    PriceLensTheme.glassColors.surfaceGlass
+                },
                 border = if (isCupertino) {
-                    BorderStroke(0.75.dp, if (isDark) Color(0x38FFFFFF) else Color(0x20000000))
+                    BorderStroke(0.75.dp, if (isDark) Color(0x38FFFFFF) else Color(0x1F000000))
                 } else {
                     BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
                 },
@@ -229,7 +233,7 @@ fun PriceLensBottomDock(
                     .widthIn(max = 440.dp)
                     .shadow(
                         elevation = if (isCupertino) 16.dp else 28.dp,
-                        shape = RoundedCornerShape(if (isCupertino) 32.dp else 30.dp),
+                        shape = RoundedCornerShape(if (isCupertino) 9999.dp else 30.dp),
                         ambientColor = if (isCupertino) Color.Black.copy(alpha = if (isDark) 0.35f else 0.08f) else PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (isDark) 0.35f else 0.18f),
                         spotColor = Color.Black.copy(alpha = if (isDark) 0.45f else 0.12f)
                     )
@@ -275,7 +279,7 @@ fun PriceLensBottomDock(
                         val tabWidth = totalWidth / tabCount
                         val tabWidthPx = with(density) { tabWidth.toPx() }
 
-                        // 1. Fluid Sliding Indicator Pill with Hold-and-Slide support (non-Apple themes only; Apple Tab Bar uses direct icon/title tint)
+                        // 1. Fluid Sliding Indicator Pill with Hold-and-Slide support (iOS Liquid Glass Lens Capsule when in iOS mode)
                         if (selectedIndex >= 0 && !isCupertino) {
                             val pillScale by animateFloatAsState(
                                 targetValue = when {
@@ -335,6 +339,69 @@ fun PriceLensBottomDock(
                                         RoundedCornerShape(22.dp)
                                     )
                             )
+                        } else if (selectedIndex >= 0 && isCupertino) {
+                            // iOS Liquid Glass Sliding Capsule Lens (inspired by Kyant0 LiquidBottomTabs)
+                            val iosPillScaleX by animateFloatAsState(
+                                targetValue = when {
+                                    isSliding -> 1.06f
+                                    isHoldingActiveTab -> 0.95f
+                                    else -> 1.0f
+                                },
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessMedium
+                                ),
+                                label = "dockIosPillScaleX"
+                            )
+
+                            val iosPillScaleY by animateFloatAsState(
+                                targetValue = when {
+                                    isSliding -> 0.96f
+                                    isHoldingActiveTab -> 0.95f
+                                    else -> 1.0f
+                                },
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessMedium
+                                ),
+                                label = "dockIosPillScaleY"
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .offset {
+                                        val currentPillIndex = if (isSliding) dragDisplayIndex else pillAnimatable.value
+                                        IntOffset((tabWidthPx * currentPillIndex).roundToInt(), 0)
+                                    }
+                                    .width(tabWidth)
+                                    .height(58.dp)
+                                    .graphicsLayer {
+                                        scaleX = iosPillScaleX
+                                        scaleY = iosPillScaleY
+                                    }
+                                    .padding(horizontal = 4.dp, vertical = 3.dp)
+                                    .clip(RoundedCornerShape(9999.dp))
+                                    .background(
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                if (!isDark) Color.Black.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.16f),
+                                                if (!isDark) Color.Black.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.09f)
+                                            )
+                                        )
+                                    )
+                                    .border(
+                                        BorderStroke(
+                                            0.75.dp,
+                                            Brush.verticalGradient(
+                                                listOf(
+                                                    if (!isDark) Color.White.copy(alpha = 0.40f) else Color.White.copy(alpha = 0.28f),
+                                                    if (!isDark) Color.Black.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.08f)
+                                                )
+                                            )
+                                        ),
+                                        RoundedCornerShape(9999.dp)
+                                    )
+                            )
                         }
 
                         // 2. Interactive Tab Items Row
@@ -353,7 +420,9 @@ fun PriceLensBottomDock(
 
                                 // Tactile press & selection scale
                                 val pressScale by animateFloatAsState(
-                                    targetValue = if (!isCupertino && (isPressed || (isSelected && isHoldingActiveTab && !isSliding))) 0.90f else 1.0f,
+                                    targetValue = if (isPressed || (isSelected && isHoldingActiveTab && !isSliding)) {
+                                        if (isCupertino) 0.94f else 0.90f
+                                    } else 1.0f,
                                     animationSpec = spring(
                                         dampingRatio = Spring.DampingRatioMediumBouncy,
                                         stiffness = Spring.StiffnessMedium
@@ -362,7 +431,9 @@ fun PriceLensBottomDock(
                                 )
 
                                 val iconScale by animateFloatAsState(
-                                    targetValue = if (!isCupertino && isHighlighted) 1.16f else 1.0f,
+                                    targetValue = if (isHighlighted) {
+                                        if (isCupertino) 1.12f else 1.16f
+                                    } else 1.0f,
                                     animationSpec = spring(
                                         dampingRatio = Spring.DampingRatioMediumBouncy,
                                         stiffness = Spring.StiffnessLow
@@ -373,7 +444,7 @@ fun PriceLensBottomDock(
                                 val tabColor by animateColorAsState(
                                     targetValue = if (isHighlighted) {
                                         if (isCupertino) {
-                                            if (isDark) Color(0xFF0A84FF) else Color(0xFF007AFF)
+                                            if (isDark) Color(0xFF0091FF) else Color(0xFF0088FF)
                                         } else {
                                             PriceLensTheme.glassColors.ambientGlow
                                         }
@@ -561,7 +632,7 @@ fun PriceLensBottomDock(
                                                         .offset(x = 5.dp, y = (-2).dp)
                                                         .size(6.dp)
                                                         .clip(CircleShape)
-                                                        .background(if (isCupertino) (if (isDark) Color(0xFF0A84FF) else Color(0xFF007AFF)) else PriceLensTheme.glassColors.ambientGlow)
+                                                        .background(if (isCupertino) (if (isDark) Color(0xFF0091FF) else Color(0xFF0088FF)) else PriceLensTheme.glassColors.ambientGlow)
                                                         .border(1.dp, Color.Black.copy(alpha = 0.3f), CircleShape)
                                                 )
                                             }
