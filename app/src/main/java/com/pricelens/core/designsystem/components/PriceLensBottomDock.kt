@@ -236,6 +236,7 @@ fun PriceLensBottomDock(
                 },
                 backdrop = effectiveBackdrop,
                 tabsCount = tabsCount,
+                effectIntensity = PriceLensTheme.iosGlassIntensity,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 DockTab.entries.forEachIndexed { index, tab ->

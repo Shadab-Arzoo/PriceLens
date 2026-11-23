@@ -241,6 +241,7 @@ val LocalThemeAccent = staticCompositionLocalOf { ThemeAccent.EMERALD_MINT }
 val LocalThemeToggle = staticCompositionLocalOf<() -> Unit> { {} }
 val LocalUserPreferences = compositionLocalOf<UserPreferencesRepository?> { null }
 val LocalIosSwitch = compositionLocalOf { false }
+val LocalIosGlassIntensity = compositionLocalOf { 1.0f }
 val LocalAppFont = compositionLocalOf { AppFont.DEFAULT }
 val LocalRootBackdrop = compositionLocalOf<Backdrop?> { null }
 
@@ -295,6 +296,7 @@ fun PriceLensTheme(
     glassRefraction: UserPreferencesRepository.GlassRefraction = UserPreferencesRepository.GlassRefraction.STANDARD,
     glassDispersion: UserPreferencesRepository.GlassDispersion = UserPreferencesRepository.GlassDispersion.PRISM,
     iosSwitchEnabled: Boolean = false,
+    iosGlassIntensity: Float = 1.0f,
     appFont: AppFont = AppFont.DEFAULT,
     userPreferences: UserPreferencesRepository? = null,
     onToggleTheme: () -> Unit = {},
@@ -577,6 +579,7 @@ fun PriceLensTheme(
         LocalThemeIsDark provides darkTheme,
         LocalThemeAccent provides activeAccent,
         LocalIosSwitch provides iosSwitchEnabled,
+        LocalIosGlassIntensity provides iosGlassIntensity,
         LocalAppFont provides effectiveFont,
         LocalUserPreferences provides userPreferences,
         LocalThemeToggle provides onToggleTheme
@@ -601,6 +604,10 @@ object PriceLensTheme {
     val isIosSwitch: Boolean
         @Composable
         get() = LocalIosSwitch.current
+
+    val iosGlassIntensity: Float
+        @Composable
+        get() = LocalIosGlassIntensity.current
 
     val font: AppFont
         @Composable

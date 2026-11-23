@@ -107,6 +107,9 @@ class UserPreferencesRepository @Inject constructor(
     private val _iosSwitchFlow = MutableStateFlow(isIosSwitchEnabled())
     val iosSwitchFlow: StateFlow<Boolean> = _iosSwitchFlow.asStateFlow()
 
+    private val _iosGlassIntensityFlow = MutableStateFlow(getIosGlassIntensity())
+    val iosGlassIntensityFlow: StateFlow<Float> = _iosGlassIntensityFlow.asStateFlow()
+
     private val _appFontFlow = MutableStateFlow(getAppFont())
     val appFontFlow: StateFlow<AppFont> = _appFontFlow.asStateFlow()
 
@@ -122,6 +125,7 @@ class UserPreferencesRepository @Inject constructor(
             KEY_THEME_GLASS_REFRACTION -> _glassRefractionFlow.value = getGlassRefraction()
             KEY_THEME_GLASS_DISPERSION -> _glassDispersionFlow.value = getGlassDispersion()
             KEY_IOS_SWITCH -> _iosSwitchFlow.value = isIosSwitchEnabled()
+            KEY_IOS_GLASS_INTENSITY -> _iosGlassIntensityFlow.value = getIosGlassIntensity()
             KEY_APP_FONT -> _appFontFlow.value = getAppFont()
             KEY_EXP_MASTER,
             KEY_EXP_DEAL_AUTHENTICITY,
@@ -250,6 +254,16 @@ class UserPreferencesRepository @Inject constructor(
         _iosSwitchFlow.value = enabled
     }
 
+    fun getIosGlassIntensity(): Float {
+        return prefs.getFloat(KEY_IOS_GLASS_INTENSITY, 1.0f)
+    }
+
+    fun setIosGlassIntensity(intensity: Float) {
+        val clamped = intensity.coerceIn(0.2f, 2.0f)
+        prefs.edit().putFloat(KEY_IOS_GLASS_INTENSITY, clamped).apply()
+        _iosGlassIntensityFlow.value = clamped
+    }
+
     fun getAppFont(): AppFont {
         val id = prefs.getString(KEY_APP_FONT, AppFont.DEFAULT.id)
         return AppFont.fromId(id)
@@ -272,6 +286,7 @@ class UserPreferencesRepository @Inject constructor(
         _glowIntensityFlow.value = GlowIntensity.VIVID
         _contrastStyleFlow.value = ContrastStyle.PITCH_BLACK
         _iosSwitchFlow.value = false
+        _iosGlassIntensityFlow.value = 1.0f
     }
 
     companion object {
@@ -286,6 +301,7 @@ class UserPreferencesRepository @Inject constructor(
         const val KEY_THEME_GLASS_REFRACTION = "key_theme_glass_refraction"
         const val KEY_THEME_GLASS_DISPERSION = "key_theme_glass_dispersion"
         const val KEY_IOS_SWITCH = "key_ios_switch"
+        const val KEY_IOS_GLASS_INTENSITY = "key_ios_glass_intensity"
         const val KEY_APP_FONT = "key_app_font"
 
         const val KEY_EXP_MASTER = "key_exp_master"

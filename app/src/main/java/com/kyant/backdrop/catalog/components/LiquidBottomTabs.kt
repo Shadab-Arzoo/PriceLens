@@ -63,6 +63,7 @@ fun LiquidBottomTabs(
     backdrop: Backdrop,
     tabsCount: Int,
     modifier: Modifier = Modifier,
+    effectIntensity: Float = 1f,
     content: @Composable RowScope.() -> Unit
 ) {
     val isLightTheme = !isSystemInDarkTheme()
@@ -168,8 +169,8 @@ fun LiquidBottomTabs(
                     shape = { Capsule() },
                     effects = {
                         vibrancy()
-                        blur(8f.dp.toPx())
-                        lens(24f.dp.toPx(), 24f.dp.toPx())
+                        blur(8f.dp.toPx() * effectIntensity)
+                        lens(24f.dp.toPx() * effectIntensity, 24f.dp.toPx() * effectIntensity)
                     },
                     layerBlock = {
                         val progress = dampedDragAnimation.pressProgress
@@ -206,10 +207,10 @@ fun LiquidBottomTabs(
                         effects = {
                             val progress = dampedDragAnimation.pressProgress
                             vibrancy()
-                            blur(8f.dp.toPx())
+                            blur(8f.dp.toPx() * effectIntensity)
                             lens(
-                                24f.dp.toPx() * progress,
-                                24f.dp.toPx() * progress
+                                24f.dp.toPx() * progress * effectIntensity,
+                                24f.dp.toPx() * progress * effectIntensity
                             )
                         },
                         highlight = {
@@ -243,8 +244,8 @@ fun LiquidBottomTabs(
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
                         lens(
-                            10f.dp.toPx() * progress,
-                            14f.dp.toPx() * progress,
+                            10f.dp.toPx() * progress * effectIntensity,
+                            14f.dp.toPx() * progress * effectIntensity,
                             chromaticAberration = true
                         )
                     },

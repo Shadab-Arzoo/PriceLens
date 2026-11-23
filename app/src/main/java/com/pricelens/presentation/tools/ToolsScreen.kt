@@ -82,6 +82,7 @@ import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.ThemeAccent
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.catalog.components.LiquidSlider
 import com.kyant.backdrop.catalog.components.LiquidToggle
 import com.pricelens.core.designsystem.AppFont
 import com.pricelens.core.designsystem.components.GlassCard
@@ -273,6 +274,7 @@ fun ToolsScreen(
     val currentGlassRefraction by userPreferences.glassRefractionFlow.collectAsState()
     val currentGlassDispersion by userPreferences.glassDispersionFlow.collectAsState()
     val isIosSwitchEnabled by userPreferences.iosSwitchFlow.collectAsState()
+    val currentIosGlassIntensity by userPreferences.iosGlassIntensityFlow.collectAsState()
     val currentAppFont by userPreferences.appFontFlow.collectAsState()
 
     LazyColumn(
@@ -940,6 +942,68 @@ fun ToolsScreen(
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
                                         color = if (isIosSwitchEnabled) Color(0xFF5E5CE6) else PriceLensTheme.glassColors.textTertiary,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // ============================================================
+                    // Liquid Glass Effect Intensity Slider (Active in iOS Mode)
+                    // ============================================================
+                    if (isIosSwitchEnabled) {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color(0xFF007AFF).copy(alpha = if (PriceLensTheme.isDark) 0.14f else 0.08f),
+                            border = BorderStroke(1.dp, Color(0xFF0A84FF).copy(alpha = 0.40f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "LIQUID GLASS EFFECT INTENSITY",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF0A84FF),
+                                        letterSpacing = 0.8.sp
+                                    )
+                                    Text(
+                                        text = "${(currentIosGlassIntensity * 100).toInt()}%",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF0A84FF)
+                                    )
+                                }
+
+                                Text(
+                                    text = "Controls optical lens curvature, refraction depth & blur radius across iOS glass surfaces",
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                                    color = PriceLensTheme.glassColors.textSecondary
+                                )
+
+                                val sliderBackdrop = rememberLayerBackdrop()
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 4.dp, bottom = 4.dp)
+                                ) {
+                                    LiquidSlider(
+                                        value = { currentIosGlassIntensity },
+                                        onValueChange = { newIntensity ->
+                                            userPreferences.setIosGlassIntensity(newIntensity)
+                                        },
+                                        valueRange = 0.2f..2.0f,
+                                        visibilityThreshold = 0.01f,
+                                        backdrop = sliderBackdrop
                                     )
                                 }
                             }

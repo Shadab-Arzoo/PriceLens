@@ -101,6 +101,7 @@ fun LiquidGlassView(
     val effectiveBorderColor = borderColor ?: defaultBorderColor
 
     val defaultGlintBrush = PriceLensTheme.glassColors.specularTopGlintBrush
+    val effectIntensity = if (isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f
 
     // 2. QmDeve iOS-style touch physics: 3D tilt, spring scaling, and touch tracking
     val tiltRotationX = remember { Animatable(0f) }
@@ -209,15 +210,15 @@ fun LiquidGlassView(
                             width = size.width,
                             height = size.height,
                             cornerRadiusPx = with(density) { cornerRadius.toPx() },
-                            refractionHeightPx = with(density) { refractionHeight.toPx() },
-                            refractionAmountPx = with(density) { refractionOffset.toPx() },
-                            dispersion = dispersion,
+                            refractionHeightPx = with(density) { (refractionHeight * effectIntensity).toPx() },
+                            refractionAmountPx = with(density) { (refractionOffset * effectIntensity).toPx() },
+                            dispersion = (dispersion * effectIntensity).coerceIn(0f, 1f),
                             tintColor = effectiveTint,
                             specularAmount = specularAmount,
                             touchX = touchOffset.x,
                             touchY = touchOffset.y,
                             touchPressed = animatedTouchPressed,
-                            blurRadiusPx = with(density) { blurRadius.toPx() }
+                            blurRadiusPx = with(density) { (blurRadius * effectIntensity).toPx() }
                         )
                         renderEffect = effect.asComposeRenderEffect()
                     } catch (_: Throwable) {

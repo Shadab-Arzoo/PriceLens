@@ -229,4 +229,30 @@ class UserPreferencesRepositoryTest {
         assertFalse(preferencesRepository.isIosSwitchEnabled())
         assertFalse(preferencesRepository.iosSwitchFlow.value)
     }
+
+    @Test
+    fun iosGlassIntensity_defaultIsOne_andClampsBetweenPointTwoAndTwo() {
+        assertEquals(1.0f, preferencesRepository.getIosGlassIntensity(), 0.001f)
+        assertEquals(1.0f, preferencesRepository.iosGlassIntensityFlow.value, 0.001f)
+
+        // Set valid value
+        preferencesRepository.setIosGlassIntensity(1.5f)
+        assertEquals(1.5f, preferencesRepository.getIosGlassIntensity(), 0.001f)
+        assertEquals(1.5f, preferencesRepository.iosGlassIntensityFlow.value, 0.001f)
+
+        // Set value below minimum (0.2f) -> clamps to 0.2f
+        preferencesRepository.setIosGlassIntensity(0.05f)
+        assertEquals(0.2f, preferencesRepository.getIosGlassIntensity(), 0.001f)
+        assertEquals(0.2f, preferencesRepository.iosGlassIntensityFlow.value, 0.001f)
+
+        // Set value above maximum (2.0f) -> clamps to 2.0f
+        preferencesRepository.setIosGlassIntensity(3.5f)
+        assertEquals(2.0f, preferencesRepository.getIosGlassIntensity(), 0.001f)
+        assertEquals(2.0f, preferencesRepository.iosGlassIntensityFlow.value, 0.001f)
+
+        // ResetAll resets to 1.0f
+        preferencesRepository.resetAll()
+        assertEquals(1.0f, preferencesRepository.getIosGlassIntensity(), 0.001f)
+        assertEquals(1.0f, preferencesRepository.iosGlassIntensityFlow.value, 0.001f)
+    }
 }
