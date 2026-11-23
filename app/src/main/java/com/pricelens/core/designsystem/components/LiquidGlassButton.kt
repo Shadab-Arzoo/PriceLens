@@ -1,6 +1,7 @@
 package com.pricelens.core.designsystem.components
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -8,11 +9,14 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,19 +34,33 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastCoerceAtMost
+import androidx.compose.ui.util.lerp
 import com.pricelens.core.designsystem.PriceLensTheme
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.tanh
 
 /**
  * Modern Liquid Glass pill action button with:
@@ -139,10 +157,22 @@ fun LiquidGlassPrimaryButton(
             modifier = (if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier.wrapContentWidth())
                 .height(height)
                 .background(
-                    if (enabled) gradientBrush
-                    else Brush.horizontalGradient(
-                        listOf(Color.Gray.copy(alpha = 0.35f), Color.Gray.copy(alpha = 0.25f))
-                    )
+                    if (enabled) {
+                        if (isCupertino && gradientBrush == PriceLensTheme.glassColors.primaryGradientBrush) {
+                            Brush.verticalGradient(
+                                listOf(
+                                    if (isDark) Color(0xFF0091FF) else Color(0xFF0088FF),
+                                    if (isDark) Color(0xFF0077E6) else Color(0xFF006ED6)
+                                )
+                            )
+                        } else {
+                            gradientBrush
+                        }
+                    } else {
+                        Brush.horizontalGradient(
+                            listOf(Color.Gray.copy(alpha = 0.35f), Color.Gray.copy(alpha = 0.25f))
+                        )
+                    }
                 ),
             contentAlignment = Alignment.Center
         ) {
@@ -291,12 +321,12 @@ fun LiquidGlassSecondaryButton(
             ),
         shape = shape,
         color = if (isCupertino) {
-            if (isDark) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)
+            if (!isDark) Color(0xFFFAFAFA).copy(alpha = 0.65f) else Color(0xFF2C2C2E).copy(alpha = 0.60f)
         } else {
             PriceLensTheme.glassColors.surfaceGlass
         },
         border = if (isCupertino) {
-            BorderStroke(0.5.dp, if (isDark) Color(0x38FFFFFF) else Color(0x1F000000))
+            BorderStroke(0.75.dp, if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.08f))
         } else {
             BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
         }
@@ -317,7 +347,7 @@ fun LiquidGlassSecondaryButton(
             )
 
             val secondaryTextColor = if (isCupertino) {
-                if (isDark) Color(0xFF0A84FF) else Color(0xFF007AFF)
+                if (isDark) Color(0xFF0091FF) else Color(0xFF0088FF)
             } else {
                 PriceLensTheme.glassColors.textPrimary
             }
@@ -343,6 +373,178 @@ fun LiquidGlassSecondaryButton(
                     color = secondaryTextColor
                 )
             }
+        }
+    }
+}
+
+/**
+ * iOS Liquid Glass Button inspired by Kyant0/AndroidLiquidGlass.
+ *
+ * Implements fluid touch offset translation (via hyperbolic tangent damping)
+ * and interactive directional squash-and-stretch scaling (via trigonometric angle projection).
+ */
+@Composable
+fun LiquidButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isInteractive: Boolean = true,
+    tint: Color = Color.Unspecified,
+    surfaceColor: Color = Color.Unspecified,
+    content: @Composable RowScope.() -> Unit
+) {
+    val isCupertino = PriceLensTheme.isCupertino
+    val isDark = PriceLensTheme.isDark
+    val density = LocalDensity.current
+    val coroutineScope = rememberCoroutineScope()
+
+    val pressAnimatable = remember { Animatable(0f) }
+    val animatedOffsetX = remember { Animatable(0f) }
+    val animatedOffsetY = remember { Animatable(0f) }
+
+    val defaultSurfaceColor = if (isCupertino) {
+        if (!isDark) Color(0xFFFAFAFA).copy(alpha = 0.60f) else Color(0xFF1E1E1E).copy(alpha = 0.60f)
+    } else {
+        PriceLensTheme.glassColors.surfaceGlass
+    }
+    val resolvedSurfaceColor = if (surfaceColor.isSpecified) surfaceColor else defaultSurfaceColor
+
+    val borderStroke = if (isCupertino) {
+        BorderStroke(0.75.dp, if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.08f))
+    } else {
+        BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
+    }
+
+    Surface(
+        modifier = modifier
+            .graphicsLayer {
+                if (isInteractive) {
+                    val width = size.width
+                    val height = size.height
+
+                    val progress = pressAnimatable.value
+                    val scale = lerp(1f, 1f + with(density) { 4.dp.toPx() } / (if (size.height > 0) size.height else 1f), progress)
+
+                    val maxOffset = size.minDimension.coerceAtLeast(1f)
+                    val initialDerivative = 0.05f
+                    val offX = animatedOffsetX.value
+                    val offY = animatedOffsetY.value
+                    translationX = maxOffset * tanh(initialDerivative * offX / maxOffset)
+                    translationY = maxOffset * tanh(initialDerivative * offY / maxOffset)
+
+                    val maxDragScale = with(density) { 4.dp.toPx() } / (if (size.height > 0) size.height else 1f)
+                    val offsetAngle = atan2(offY, offX)
+                    val maxDim = size.maxDimension.coerceAtLeast(1f)
+                    scaleX = scale + maxDragScale * abs(cos(offsetAngle) * offX / maxDim) *
+                            (width / (if (height > 0) height else 1f)).fastCoerceAtMost(1f)
+                    scaleY = scale + maxDragScale * abs(sin(offsetAngle) * offY / maxDim) *
+                            (height / (if (width > 0) width else 1f)).fastCoerceAtMost(1f)
+                }
+            }
+            .clip(RoundedCornerShape(9999.dp))
+            .pointerInput(isInteractive) {
+                if (!isInteractive) return@pointerInput
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val pointerId = down.id
+                    val center = Offset(size.width / 2f, size.height / 2f)
+                    val initialOffset = down.position - center
+                    coroutineScope.launch {
+                        pressAnimatable.animateTo(
+                            1f,
+                            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+                        )
+                    }
+                    coroutineScope.launch {
+                        animatedOffsetX.animateTo(
+                            initialOffset.x,
+                            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+                        )
+                    }
+                    coroutineScope.launch {
+                        animatedOffsetY.animateTo(
+                            initialOffset.y,
+                            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+                        )
+                    }
+
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        val change = event.changes.firstOrNull { it.id == pointerId }
+                        if (change == null || !change.pressed) {
+                            break
+                        }
+                        val currentOffset = change.position - center
+                        coroutineScope.launch {
+                            animatedOffsetX.snapTo(currentOffset.x)
+                            animatedOffsetY.snapTo(currentOffset.y)
+                        }
+                        change.consume()
+                    }
+
+                    coroutineScope.launch {
+                        pressAnimatable.animateTo(
+                            0f,
+                            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+                        )
+                    }
+                    coroutineScope.launch {
+                        animatedOffsetX.animateTo(
+                            0f,
+                            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+                        )
+                        animatedOffsetY.animateTo(
+                            0f,
+                            spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+                        )
+                    }
+                }
+            }
+            .clickable(
+                role = Role.Button,
+                onClick = onClick
+            ),
+        shape = RoundedCornerShape(9999.dp),
+        color = resolvedSurfaceColor,
+        border = borderStroke
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            // Specular top rim light highlight
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .align(Alignment.TopCenter)
+                    .background(
+                        if (isCupertino) {
+                            Brush.horizontalGradient(
+                                listOf(
+                                    Color.Transparent,
+                                    (if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.65f)),
+                                    Color.Transparent
+                                )
+                            )
+                        } else {
+                            PriceLensTheme.glassColors.specularTopGlintBrush
+                        }
+                    )
+            )
+
+            if (tint.isSpecified) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(tint.copy(alpha = 0.75f))
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .height(48.dp)
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically,
+                content = content
+            )
         }
     }
 }
