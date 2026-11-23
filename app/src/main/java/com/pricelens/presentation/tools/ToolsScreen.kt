@@ -82,6 +82,7 @@ import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.ThemeAccent
 import com.pricelens.core.designsystem.components.GlassCard
+import com.pricelens.core.designsystem.components.LiquidGlassView
 import com.pricelens.core.designsystem.components.liquidGlass
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -706,24 +707,26 @@ fun ToolsScreen(
                     // NEW: iOS Switch (Dedicated Liquid Glass Setting Button/Toggle)
                     // Reference: QmDeve/AndroidLiquidGlassView & Kyant0/AndroidLiquidGlass
                     // ============================================================
-                    Surface(
-                        shape = RoundedCornerShape(18.dp),
-                        color = if (isIosSwitchEnabled) {
+                    LiquidGlassView(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                userPreferences.setIosSwitchEnabled(!isIosSwitchEnabled)
+                            },
+                        cornerRadius = 18.dp,
+                        refractionHeight = 24.dp,
+                        refractionOffset = 12.dp,
+                        dispersion = 0.25f,
+                        blurRadius = 16.dp,
+                        tintColor = if (isIosSwitchEnabled) {
                             Color(0xFF007AFF).copy(alpha = if (PriceLensTheme.isDark) 0.22f else 0.12f)
                         } else {
                             PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f)
                         },
-                        border = BorderStroke(
-                            if (isIosSwitchEnabled) 1.5.dp else 1.dp,
-                            if (isIosSwitchEnabled) Color(0xFF0A84FF) else PriceLensTheme.glassColors.specularBorder
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(18.dp))
-                            .clickable {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                userPreferences.setIosSwitchEnabled(!isIosSwitchEnabled)
-                            }
+                        borderWidth = if (isIosSwitchEnabled) 1.5.dp else 1.dp,
+                        borderColor = if (isIosSwitchEnabled) Color(0xFF0A84FF) else PriceLensTheme.glassColors.specularBorder,
+                        isInteractive = true
                     ) {
                         Column(
                             modifier = Modifier
