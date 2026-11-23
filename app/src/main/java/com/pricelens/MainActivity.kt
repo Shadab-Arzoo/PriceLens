@@ -93,7 +93,7 @@ class MainActivity : ComponentActivity() {
                     userPreferences.toggleTheme(isDark)
                 }
             ) {
-                val rootBackdrop = rememberLayerBackdrop()
+                val rootBackdrop = if (iosSwitchEnabled) rememberLayerBackdrop() else null
 
                 CompositionLocalProvider(LocalRootBackdrop provides rootBackdrop) {
                     val navController = rememberNavController()
@@ -177,7 +177,7 @@ class MainActivity : ComponentActivity() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .then(if (iosSwitchEnabled) Modifier.layerBackdrop(rootBackdrop) else Modifier)
+                            .then(if (iosSwitchEnabled && rootBackdrop != null) Modifier.layerBackdrop(rootBackdrop) else Modifier)
                     ) {
                         PriceLensNavGraph(
                             navController = navController,
