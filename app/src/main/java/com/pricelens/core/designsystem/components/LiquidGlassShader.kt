@@ -202,6 +202,7 @@ fun Modifier.liquidGlass(
     val effectiveTint = tintColor ?: PriceLensTheme.glassColors.surfaceGlass
     val effectiveBorderBrush = borderBrush ?: PriceLensTheme.glassColors.specularBorderBrush
     val isDark = PriceLensTheme.isDark
+    val isCupertino = PriceLensTheme.isCupertino
     val glowColor = PriceLensTheme.glassColors.ambientGlow
 
     var touchOffset by remember { mutableStateOf(Offset.Zero) }
@@ -239,8 +240,9 @@ fun Modifier.liquidGlass(
     // 1. On Android 13+, attach the AGSL runtime shader
     if (enableShader && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val cornerRadiusPx = with(density) { cornerRadius.toPx() }
-        val refractionHeightPx = with(density) { 22.dp.toPx() }
-        val refractionAmountPx = with(density) { 10.dp.toPx() }
+        val refractionHeightPx = with(density) { (if (isCupertino) 26.dp else 22.dp).toPx() }
+        val refractionAmountPx = with(density) { (if (isCupertino) 12.dp else 10.dp).toPx() }
+        val blurRadiusPx = if (isCupertino) with(density) { 14.dp.toPx() } else 0f
 
         modifier = modifier.graphicsLayer {
             if (size.width > 0 && size.height > 0) {
@@ -251,13 +253,13 @@ fun Modifier.liquidGlass(
                         cornerRadiusPx = cornerRadiusPx,
                         refractionHeightPx = refractionHeightPx,
                         refractionAmountPx = refractionAmountPx,
-                        dispersion = 0.35f,
+                        dispersion = if (isCupertino) 0.25f else 0.35f,
                         tintColor = effectiveTint,
-                        specularAmount = if (isDark) 0.65f else 0.50f,
+                        specularAmount = if (isDark) (if (isCupertino) 0.55f else 0.65f) else 0.50f,
                         touchX = touchOffset.x,
                         touchY = touchOffset.y,
                         touchPressed = animatedTouchPressed,
-                        blurRadiusPx = 0f
+                        blurRadiusPx = blurRadiusPx
                     )
                     renderEffect = effect.asComposeRenderEffect()
                 } catch (_: Throwable) {
@@ -279,16 +281,28 @@ fun Modifier.liquidGlass(
 
     // 3. Draw specular glint reflection on top edge & touch contact gleam
     modifier = modifier.drawWithCache {
-        val glintHeight = 1.5.dp.toPx()
-        val glintBrush = Brush.horizontalGradient(
-            listOf(
-                Color.Transparent,
-                (if (isDark) Color.White.copy(alpha = 0.50f) else Color.White.copy(alpha = 0.85f)),
-                (if (isDark) glowColor.copy(alpha = 0.40f) else Color.White),
-                (if (isDark) Color.White.copy(alpha = 0.50f) else Color.White.copy(alpha = 0.85f)),
-                Color.Transparent
+        val glintHeight = (if (isCupertino) 1.0.dp else 1.5.dp).toPx()
+        val glintBrush = if (isCupertino) {
+            Brush.horizontalGradient(
+                listOf(
+                    Color.Transparent,
+                    (if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.70f)),
+                    Color.White.copy(alpha = if (isDark) 0.50f else 0.85f),
+                    (if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.70f)),
+                    Color.Transparent
+                )
             )
-        )
+        } else {
+            Brush.horizontalGradient(
+                listOf(
+                    Color.Transparent,
+                    (if (isDark) Color.White.copy(alpha = 0.50f) else Color.White.copy(alpha = 0.85f)),
+                    (if (isDark) glowColor.copy(alpha = 0.40f) else Color.White),
+                    (if (isDark) Color.White.copy(alpha = 0.50f) else Color.White.copy(alpha = 0.85f)),
+                    Color.Transparent
+                )
+            )
+        }
         onDrawWithContent {
             drawContent()
             if (showTopGlint) {

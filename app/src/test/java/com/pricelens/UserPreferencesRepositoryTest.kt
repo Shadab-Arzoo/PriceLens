@@ -208,4 +208,25 @@ class UserPreferencesRepositoryTest {
         assertFalse(preferencesRepository.getExperimentalFlags().enableBankCardCalculator)
         assertFalse(preferencesRepository.experimentalFlagsFlow.value.enableBankCardCalculator)
     }
+
+    @Test
+    fun iosSwitch_defaultIsFalse_andCanUpdateAndPersist() {
+        assertFalse(preferencesRepository.isIosSwitchEnabled())
+        assertFalse(preferencesRepository.iosSwitchFlow.value)
+
+        preferencesRepository.setIosSwitchEnabled(true)
+        assertTrue(preferencesRepository.isIosSwitchEnabled())
+        assertTrue(preferencesRepository.iosSwitchFlow.value)
+
+        preferencesRepository.setIosSwitchEnabled(false)
+        assertFalse(preferencesRepository.isIosSwitchEnabled())
+        assertFalse(preferencesRepository.iosSwitchFlow.value)
+
+        // Test resetAll resets iOS Switch to false
+        preferencesRepository.setIosSwitchEnabled(true)
+        assertTrue(preferencesRepository.isIosSwitchEnabled())
+        preferencesRepository.resetAll()
+        assertFalse(preferencesRepository.isIosSwitchEnabled())
+        assertFalse(preferencesRepository.iosSwitchFlow.value)
+    }
 }

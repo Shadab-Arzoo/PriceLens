@@ -140,6 +140,19 @@ fun GlassCard(
                                     )
                                 )
                         )
+                    } else {
+                        // iOS Liquid Glass: Subtle frosted volume gleam & optical depth
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        0.0f to (if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)),
+                                        0.25f to (if (isDark) Color.White.copy(alpha = 0.02f) else Color.White.copy(alpha = 0.10f)),
+                                        1.0f to Color.Transparent
+                                    )
+                                )
+                        )
                     }
                     // Directional top rim specular reflection glint
                     Box(
@@ -181,6 +194,19 @@ fun GlassCard(
                                         0.0f to Color.White.copy(alpha = if (isDark) 0.05f else 0.12f),
                                         0.28f to Color.Transparent,
                                         1.0f to Color.Black.copy(alpha = if (isDark) 0.06f else 0.02f)
+                                    )
+                                )
+                        )
+                    } else {
+                        // iOS Liquid Glass: Subtle frosted volume gleam & optical depth
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        0.0f to (if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)),
+                                        0.25f to (if (isDark) Color.White.copy(alpha = 0.02f) else Color.White.copy(alpha = 0.10f)),
+                                        1.0f to Color.Transparent
                                     )
                                 )
                         )

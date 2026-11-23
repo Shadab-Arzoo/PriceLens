@@ -103,6 +103,9 @@ class UserPreferencesRepository @Inject constructor(
     private val _glassDispersionFlow = MutableStateFlow(getGlassDispersion())
     val glassDispersionFlow: StateFlow<GlassDispersion> = _glassDispersionFlow.asStateFlow()
 
+    private val _iosSwitchFlow = MutableStateFlow(isIosSwitchEnabled())
+    val iosSwitchFlow: StateFlow<Boolean> = _iosSwitchFlow.asStateFlow()
+
     private val _experimentalFlagsFlow = MutableStateFlow(getExperimentalFlags())
     val experimentalFlagsFlow: StateFlow<ExperimentalFlags> = _experimentalFlagsFlow.asStateFlow()
 
@@ -114,6 +117,7 @@ class UserPreferencesRepository @Inject constructor(
             KEY_THEME_CONTRAST_STYLE -> _contrastStyleFlow.value = getContrastStyle()
             KEY_THEME_GLASS_REFRACTION -> _glassRefractionFlow.value = getGlassRefraction()
             KEY_THEME_GLASS_DISPERSION -> _glassDispersionFlow.value = getGlassDispersion()
+            KEY_IOS_SWITCH -> _iosSwitchFlow.value = isIosSwitchEnabled()
             KEY_EXP_MASTER,
             KEY_EXP_DEAL_AUTHENTICITY,
             KEY_EXP_BUY_NOW_VERDICT,
@@ -232,6 +236,15 @@ class UserPreferencesRepository @Inject constructor(
         _glassDispersionFlow.value = dispersion
     }
 
+    fun isIosSwitchEnabled(): Boolean {
+        return prefs.getBoolean(KEY_IOS_SWITCH, false)
+    }
+
+    fun setIosSwitchEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_IOS_SWITCH, enabled).apply()
+        _iosSwitchFlow.value = enabled
+    }
+
     fun toggleTheme(currentIsDark: Boolean) {
         val next = if (currentIsDark) ThemeMode.LIGHT else ThemeMode.DARK
         setThemeMode(next)
@@ -243,6 +256,7 @@ class UserPreferencesRepository @Inject constructor(
         _themeAccentFlow.value = ThemeAccent.EMERALD_MINT
         _glowIntensityFlow.value = GlowIntensity.VIVID
         _contrastStyleFlow.value = ContrastStyle.PITCH_BLACK
+        _iosSwitchFlow.value = false
     }
 
     companion object {
@@ -256,6 +270,7 @@ class UserPreferencesRepository @Inject constructor(
         const val KEY_THEME_CONTRAST_STYLE = "key_theme_contrast_style"
         const val KEY_THEME_GLASS_REFRACTION = "key_theme_glass_refraction"
         const val KEY_THEME_GLASS_DISPERSION = "key_theme_glass_dispersion"
+        const val KEY_IOS_SWITCH = "key_ios_switch"
 
         const val KEY_EXP_MASTER = "key_exp_master"
         const val KEY_EXP_DEAL_AUTHENTICITY = "key_exp_deal_authenticity"

@@ -268,6 +268,7 @@ fun ToolsScreen(
     val currentContrastStyle by userPreferences.contrastStyleFlow.collectAsState()
     val currentGlassRefraction by userPreferences.glassRefractionFlow.collectAsState()
     val currentGlassDispersion by userPreferences.glassDispersionFlow.collectAsState()
+    val isIosSwitchEnabled by userPreferences.iosSwitchFlow.collectAsState()
 
     LazyColumn(
         modifier = modifier
@@ -696,6 +697,148 @@ fun ToolsScreen(
                                             maxLines = 1
                                         )
                                     }
+                                }
+                            }
+                        }
+                    }
+
+                    // ============================================================
+                    // NEW: iOS Switch (Dedicated Liquid Glass Setting Button/Toggle)
+                    // Reference: QmDeve/AndroidLiquidGlassView & Kyant0/AndroidLiquidGlass
+                    // ============================================================
+                    Surface(
+                        shape = RoundedCornerShape(18.dp),
+                        color = if (isIosSwitchEnabled) {
+                            Color(0xFF007AFF).copy(alpha = if (PriceLensTheme.isDark) 0.22f else 0.12f)
+                        } else {
+                            PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.6f)
+                        },
+                        border = BorderStroke(
+                            if (isIosSwitchEnabled) 1.5.dp else 1.dp,
+                            if (isIosSwitchEnabled) Color(0xFF0A84FF) else PriceLensTheme.glassColors.specularBorder
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(18.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                userPreferences.setIosSwitchEnabled(!isIosSwitchEnabled)
+                            }
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                if (isIosSwitchEnabled) {
+                                                    Brush.linearGradient(listOf(Color(0xFF0A84FF), Color(0xFF5E5CE6)))
+                                                } else {
+                                                    Brush.linearGradient(listOf(Color(0xFF3A3A3C), Color(0xFF2C2C2E)))
+                                                }
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.AutoAwesome,
+                                            contentDescription = null,
+                                            tint = if (isIosSwitchEnabled) Color.White else PriceLensTheme.glassColors.textSecondary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Text(
+                                                text = "iOS Switch",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isIosSwitchEnabled) Color(0xFF0A84FF) else PriceLensTheme.glassColors.textPrimary
+                                            )
+                                            Surface(
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = if (isIosSwitchEnabled) Color(0xFF007AFF) else PriceLensTheme.glassColors.textTertiary.copy(alpha = 0.25f)
+                                            ) {
+                                                Text(
+                                                    text = if (isIosSwitchEnabled) "ON" else "OFF",
+                                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                                    fontWeight = FontWeight.ExtraBold,
+                                                    color = if (isIosSwitchEnabled) Color.White else PriceLensTheme.glassColors.textSecondary,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
+                                        Text(
+                                            text = if (isIosSwitchEnabled) {
+                                                "iOS-inspired Liquid Glass active across the entire application"
+                                            } else {
+                                                "Enable iOS-inspired Liquid Glass design (translucency, refraction & blur)"
+                                            },
+                                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                                            color = PriceLensTheme.glassColors.textSecondary
+                                        )
+                                    }
+                                }
+
+                                Switch(
+                                    checked = isIosSwitchEnabled,
+                                    onCheckedChange = { checked ->
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        userPreferences.setIosSwitchEnabled(checked)
+                                    },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = Color.White,
+                                        checkedTrackColor = Color(0xFF007AFF),
+                                        uncheckedThumbColor = PriceLensTheme.glassColors.textSecondary,
+                                        uncheckedTrackColor = PriceLensTheme.glassColors.surfaceHighlight
+                                    )
+                                )
+                            }
+
+                            // Technical & visual reference tags
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (isIosSwitchEnabled) Color(0xFF007AFF).copy(alpha = 0.15f) else PriceLensTheme.glassColors.textTertiary.copy(alpha = 0.10f)
+                                ) {
+                                    Text(
+                                        text = "AndroidLiquidGlassView",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                        color = if (isIosSwitchEnabled) Color(0xFF0A84FF) else PriceLensTheme.glassColors.textTertiary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (isIosSwitchEnabled) Color(0xFF5E5CE6).copy(alpha = 0.15f) else PriceLensTheme.glassColors.textTertiary.copy(alpha = 0.10f)
+                                ) {
+                                    Text(
+                                        text = "Backdrop Optical Shaders",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                        color = if (isIosSwitchEnabled) Color(0xFF5E5CE6) else PriceLensTheme.glassColors.textTertiary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
                                 }
                             }
                         }
@@ -2401,6 +2544,38 @@ fun ToolsScreen(
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = PriceLensTheme.glassColors.textSecondary
+                        )
+                    }
+
+                    // Toggle 0: iOS Switch
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                            Text(
+                                text = "iOS Switch",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = PriceLensTheme.glassColors.textPrimary
+                            )
+                            Text(
+                                text = "Transforms entire app into iOS Liquid Glass with frosted blur & optical depth",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = PriceLensTheme.glassColors.textSecondary
+                            )
+                        }
+                        Switch(
+                            checked = isIosSwitchEnabled,
+                            onCheckedChange = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                userPreferences.setIosSwitchEnabled(it)
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color(0xFF007AFF)
+                            )
                         )
                     }
 
