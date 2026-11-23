@@ -207,36 +207,50 @@ fun PriceLensBottomDock(
         visible = isVisible,
         enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
         exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
-        modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = if (isCupertino) {
+            // Actual iOS Tab Bar: Locked flush to the bottom edge of the screen
+            modifier.fillMaxWidth()
+        } else {
+            // Original PriceLens Floating Pill Dock
+            modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        }
     ) {
         Box(
             modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
+            contentAlignment = if (isCupertino) Alignment.BottomCenter else Alignment.Center
         ) {
             Surface(
-                shape = RoundedCornerShape(if (isCupertino) 9999.dp else 30.dp),
+                shape = if (isCupertino) {
+                    RoundedCornerShape(0.dp) // Locked flush to screen edges like actual iOS
+                } else {
+                    RoundedCornerShape(30.dp)
+                },
                 color = if (isCupertino) {
-                    if (!isDark) Color(0xFFFAFAFA).copy(alpha = 0.55f) else Color(0xFF121212).copy(alpha = 0.50f)
+                    if (!isDark) Color(0xFFF9F9F9).copy(alpha = 0.88f) else Color(0xFF161618).copy(alpha = 0.88f)
                 } else {
                     PriceLensTheme.glassColors.surfaceGlass
                 },
                 border = if (isCupertino) {
-                    BorderStroke(0.75.dp, if (isDark) Color(0x38FFFFFF) else Color(0x1F000000))
+                    BorderStroke(0.5.dp, if (isDark) Color(0x38FFFFFF) else Color(0x29000000))
                 } else {
                     BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
                 },
-                shadowElevation = if (isCupertino) 12.dp else 20.dp,
-                modifier = Modifier
-                    .widthIn(max = 440.dp)
-                    .shadow(
-                        elevation = if (isCupertino) 16.dp else 28.dp,
-                        shape = RoundedCornerShape(if (isCupertino) 9999.dp else 30.dp),
-                        ambientColor = if (isCupertino) Color.Black.copy(alpha = if (isDark) 0.35f else 0.08f) else PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (isDark) 0.35f else 0.18f),
-                        spotColor = Color.Black.copy(alpha = if (isDark) 0.45f else 0.12f)
-                    )
+                shadowElevation = if (isCupertino) 0.dp else 20.dp,
+                modifier = if (isCupertino) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier
+                        .widthIn(max = 440.dp)
+                        .shadow(
+                            elevation = 28.dp,
+                            shape = RoundedCornerShape(30.dp),
+                            ambientColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (isDark) 0.35f else 0.18f),
+                            spotColor = Color.Black.copy(alpha = if (isDark) 0.45f else 0.12f)
+                        )
+                }
             ) {
                 Box {
                     if (!isCupertino) {
@@ -254,15 +268,23 @@ fun PriceLensBottomDock(
                         )
                     }
 
-                    Column {
-                        // Specular top rim light highlight
+                    Column(
+                        modifier = if (isCupertino) {
+                            Modifier
+                                .fillMaxWidth()
+                                .navigationBarsPadding() // Translucent glass locks to bottom bezel while tabs sit above home indicator
+                        } else {
+                            Modifier
+                        }
+                    ) {
+                        // Specular top rim light highlight / iOS hairline separator
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(if (isCupertino) 0.75.dp else 1.5.dp)
+                                .height(if (isCupertino) 0.5.dp else 1.5.dp)
                                 .background(
                                     if (isCupertino) {
-                                        SolidColor(if (isDark) Color(0x24FFFFFF) else Color(0x14000000))
+                                        SolidColor(if (isDark) Color(0x38FFFFFF) else Color(0x29000000))
                                     } else {
                                         PriceLensTheme.glassColors.specularTopGlintBrush
                                     }
@@ -272,7 +294,10 @@ fun PriceLensBottomDock(
                     BoxWithConstraints(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 6.dp, vertical = 6.dp)
+                            .padding(
+                                horizontal = if (isCupertino) 0.dp else 6.dp,
+                                vertical = if (isCupertino) 2.dp else 6.dp
+                            )
                     ) {
                         val totalWidth = maxWidth
                         val tabCount = DockTab.entries.size
@@ -374,12 +399,12 @@ fun PriceLensBottomDock(
                                         IntOffset((tabWidthPx * currentPillIndex).roundToInt(), 0)
                                     }
                                     .width(tabWidth)
-                                    .height(58.dp)
+                                    .height(if (isCupertino) 48.dp else 58.dp)
                                     .graphicsLayer {
                                         scaleX = iosPillScaleX
                                         scaleY = iosPillScaleY
                                     }
-                                    .padding(horizontal = 4.dp, vertical = 3.dp)
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
                                     .clip(RoundedCornerShape(9999.dp))
                                     .background(
                                         Brush.verticalGradient(
@@ -408,7 +433,7 @@ fun PriceLensBottomDock(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(58.dp),
+                                .height(if (isCupertino) 50.dp else 58.dp),
                             horizontalArrangement = Arrangement.SpaceAround,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
