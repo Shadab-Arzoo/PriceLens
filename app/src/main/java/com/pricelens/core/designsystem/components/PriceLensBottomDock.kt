@@ -86,6 +86,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.catalog.components.LiquidBottomTab
+import com.kyant.backdrop.catalog.components.LiquidBottomTabs
 import com.pricelens.core.designsystem.AmberAlert
 import com.pricelens.core.designsystem.CyanAccent
 import com.pricelens.core.designsystem.MintSuccess
@@ -169,7 +173,8 @@ fun PriceLensBottomDock(
     watchlistCount: Int = 0,
     hasActiveDeals: Boolean = true,
     hasLabsFeature: Boolean = true,
-    isVisible: Boolean = true
+    isVisible: Boolean = true,
+    backdrop: Backdrop? = null
 ) {
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
@@ -203,21 +208,86 @@ fun PriceLensBottomDock(
     val isCupertino = PriceLensTheme.isCupertino
     val isDark = PriceLensTheme.isDark
 
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
-        modifier = if (isCupertino) {
-            // Actual iOS Tab Bar: Locked flush to the bottom edge of the screen
-            modifier.fillMaxWidth()
-        } else {
-            // Original PriceLens Floating Pill Dock
-            modifier
+    if (isCupertino) {
+        val effectiveBackdrop = backdrop ?: rememberLayerBackdrop()
+        val currentTabIndex = if (selectedIndex >= 0) selectedIndex else 0
+        val tabsCount = DockTab.entries.size
+
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            LiquidBottomTabs(
+                selectedTabIndex = { currentTabIndex },
+                onTabSelected = { index ->
+                    val tab = DockTab.entries.getOrNull(index)
+                    if (tab != null) {
+                        if (tab == selectedTab) {
+                            onTabReselected?.invoke(tab)
+                        } else {
+                            onTabSelected(tab)
+                        }
+                    }
+                },
+                backdrop = effectiveBackdrop,
+                tabsCount = tabsCount,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                DockTab.entries.forEachIndexed { index, tab ->
+                    val isSelected = selectedIndex == index
+                    LiquidBottomTab(
+                        onClick = {
+                            if (isSelected) {
+                                onTabReselected?.invoke(tab)
+                            } else {
+                                onTabSelected(tab)
+                            }
+                        }
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
+                                contentDescription = tab.title,
+                                tint = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            if (tab == DockTab.WATCHLIST && watchlistCount > 0) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .offset(x = 6.dp, y = (-4).dp)
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(PriceLensTheme.glassColors.ambientGlow)
+                                )
+                            }
+                        }
+                        Text(
+                            text = tab.title,
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textTertiary,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+        }
+    } else {
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            modifier = modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
-        }
-    ) {
+        ) {
         Box(
             modifier = Modifier.fillMaxWidth(),
             contentAlignment = if (isCupertino) Alignment.BottomCenter else Alignment.Center
@@ -701,6 +771,7 @@ fun PriceLensBottomDock(
             }
         }
     }
+}
 }
 }
 

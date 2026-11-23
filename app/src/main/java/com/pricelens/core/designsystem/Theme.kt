@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.kyant.backdrop.Backdrop
 import com.pricelens.core.preferences.UserPreferencesRepository
 
 /**
@@ -241,6 +242,7 @@ val LocalThemeToggle = staticCompositionLocalOf<() -> Unit> { {} }
 val LocalUserPreferences = compositionLocalOf<UserPreferencesRepository?> { null }
 val LocalIosSwitch = compositionLocalOf { false }
 val LocalAppFont = compositionLocalOf { AppFont.DEFAULT }
+val LocalRootBackdrop = compositionLocalOf<Backdrop?> { null }
 
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF0F172A),
@@ -603,6 +605,10 @@ object PriceLensTheme {
     val font: AppFont
         @Composable
         get() = LocalAppFont.current
+
+    val rootBackdrop: Backdrop?
+        @Composable
+        get() = LocalRootBackdrop.current
 
     val isCupertino: Boolean
         @Composable

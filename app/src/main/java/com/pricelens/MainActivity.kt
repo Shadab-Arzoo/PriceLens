@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +24,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.pricelens.core.designsystem.LocalRootBackdrop
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.DockTab
 import com.pricelens.core.designsystem.components.PriceLensBottomDock
@@ -86,7 +91,10 @@ class MainActivity : ComponentActivity() {
                     userPreferences.toggleTheme(isDark)
                 }
             ) {
-                val navController = rememberNavController()
+                val rootBackdrop = rememberLayerBackdrop()
+
+                CompositionLocalProvider(LocalRootBackdrop provides rootBackdrop) {
+                    val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
@@ -164,12 +172,18 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    PriceLensNavGraph(
-                        navController = navController,
-                        userPreferences = userPreferences,
-                        sharedUrl = sharedUrl,
-                        sharedProductId = sharedProductId
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(if (iosSwitchEnabled) Modifier.layerBackdrop(rootBackdrop) else Modifier)
+                    ) {
+                        PriceLensNavGraph(
+                            navController = navController,
+                            userPreferences = userPreferences,
+                            sharedUrl = sharedUrl,
+                            sharedProductId = sharedProductId
+                        )
+                    }
 
                     val onTabSelected = remember(navController) {
                         { tab: DockTab ->
@@ -245,11 +259,13 @@ class MainActivity : ComponentActivity() {
                         onTabReselected = onTabReselected,
                         onTabLongClick = onTabLongClick,
                         isVisible = isDockVisible,
+                        backdrop = if (iosSwitchEnabled) rootBackdrop else null,
                         modifier = Modifier.align(Alignment.BottomCenter)
                     )
                 }
             }
         }
+    }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -280,6 +296,7 @@ private fun MainActivityBottomDock(
     onTabReselected: (DockTab) -> Unit,
     onTabLongClick: (DockTab) -> Unit,
     isVisible: Boolean,
+    backdrop: Backdrop? = null,
     modifier: Modifier = Modifier
 ) {
     val watchlistCountFlow = remember(dashboardRepository) {
@@ -296,6 +313,7 @@ private fun MainActivityBottomDock(
         onTabLongClick = onTabLongClick,
         watchlistCount = watchlistCount,
         isVisible = isVisible,
+        backdrop = backdrop,
         modifier = modifier
     )
 }

@@ -81,6 +81,8 @@ import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.ThemeAccent
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.catalog.components.LiquidToggle
 import com.pricelens.core.designsystem.AppFont
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassView
@@ -886,19 +888,31 @@ fun ToolsScreen(
                                     }
                                 }
 
-                                Switch(
-                                    checked = isIosSwitchEnabled,
-                                    onCheckedChange = { checked ->
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        userPreferences.setIosSwitchEnabled(checked)
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color.White,
-                                        checkedTrackColor = Color(0xFF007AFF),
-                                        uncheckedThumbColor = PriceLensTheme.glassColors.textSecondary,
-                                        uncheckedTrackColor = PriceLensTheme.glassColors.surfaceHighlight
+                                if (isIosSwitchEnabled) {
+                                    val toggleBackdrop = rememberLayerBackdrop()
+                                    LiquidToggle(
+                                        selected = { isIosSwitchEnabled },
+                                        onSelect = { checked ->
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            userPreferences.setIosSwitchEnabled(checked)
+                                        },
+                                        backdrop = toggleBackdrop
                                     )
-                                )
+                                } else {
+                                    Switch(
+                                        checked = isIosSwitchEnabled,
+                                        onCheckedChange = { checked ->
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            userPreferences.setIosSwitchEnabled(checked)
+                                        },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = Color.White,
+                                            checkedTrackColor = Color(0xFF007AFF),
+                                            uncheckedThumbColor = PriceLensTheme.glassColors.textSecondary,
+                                            uncheckedTrackColor = PriceLensTheme.glassColors.surfaceHighlight
+                                        )
+                                    )
+                                }
                             }
 
                             // Technical & visual reference tags
