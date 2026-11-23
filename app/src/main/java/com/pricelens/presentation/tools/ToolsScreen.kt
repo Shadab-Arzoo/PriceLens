@@ -81,6 +81,7 @@ import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.ThemeAccent
+import com.pricelens.core.designsystem.AppFont
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassView
 import com.pricelens.core.designsystem.components.liquidGlass
@@ -270,6 +271,7 @@ fun ToolsScreen(
     val currentGlassRefraction by userPreferences.glassRefractionFlow.collectAsState()
     val currentGlassDispersion by userPreferences.glassDispersionFlow.collectAsState()
     val isIosSwitchEnabled by userPreferences.iosSwitchFlow.collectAsState()
+    val currentAppFont by userPreferences.appFontFlow.collectAsState()
 
     LazyColumn(
         modifier = modifier
@@ -695,6 +697,89 @@ fun ToolsScreen(
                                             text = dispersion.subtitle,
                                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.5.sp),
                                             color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.8f) else PriceLensTheme.glassColors.textTertiary,
+                                            maxLines = 1
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ============================================================
+                    // App Typography & Font Selection
+                    // ============================================================
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "APP TYPOGRAPHY & FONT",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                fontWeight = FontWeight.Bold,
+                                color = PriceLensTheme.glassColors.textTertiary,
+                                letterSpacing = 0.8.sp
+                            )
+                            Text(
+                                text = currentAppFont.displayName,
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                fontWeight = FontWeight.SemiBold,
+                                color = PriceLensTheme.glassColors.ambientGlow
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            AppFont.entries.forEach { fontOption ->
+                                val isSelected = currentAppFont == fontOption
+                                Surface(
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = if (isSelected) {
+                                        PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.18f)
+                                    } else {
+                                        PriceLensTheme.glassColors.surfaceHighlight
+                                    },
+                                    border = BorderStroke(
+                                        if (isSelected) 1.5.dp else 1.dp,
+                                        if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder
+                                    ),
+                                    modifier = Modifier
+                                        .width(112.dp)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            userPreferences.setAppFont(fontOption)
+                                        }
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 10.dp),
+                                        horizontalAlignment = Alignment.Start,
+                                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                                    ) {
+                                        Text(
+                                            text = fontOption.samplePreview,
+                                            fontFamily = fontOption.getFontFamily(),
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary
+                                        )
+                                        Text(
+                                            text = fontOption.displayName,
+                                            fontFamily = fontOption.getFontFamily(),
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary,
+                                            maxLines = 1
+                                        )
+                                        Text(
+                                            text = fontOption.subtitle,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.85f) else PriceLensTheme.glassColors.textTertiary,
                                             maxLines = 1
                                         )
                                     }

@@ -3,6 +3,7 @@ package com.pricelens.core.preferences
 import android.content.Context
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import com.pricelens.core.designsystem.AppFont
 import com.pricelens.core.designsystem.ThemeAccent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -106,6 +107,9 @@ class UserPreferencesRepository @Inject constructor(
     private val _iosSwitchFlow = MutableStateFlow(isIosSwitchEnabled())
     val iosSwitchFlow: StateFlow<Boolean> = _iosSwitchFlow.asStateFlow()
 
+    private val _appFontFlow = MutableStateFlow(getAppFont())
+    val appFontFlow: StateFlow<AppFont> = _appFontFlow.asStateFlow()
+
     private val _experimentalFlagsFlow = MutableStateFlow(getExperimentalFlags())
     val experimentalFlagsFlow: StateFlow<ExperimentalFlags> = _experimentalFlagsFlow.asStateFlow()
 
@@ -118,6 +122,7 @@ class UserPreferencesRepository @Inject constructor(
             KEY_THEME_GLASS_REFRACTION -> _glassRefractionFlow.value = getGlassRefraction()
             KEY_THEME_GLASS_DISPERSION -> _glassDispersionFlow.value = getGlassDispersion()
             KEY_IOS_SWITCH -> _iosSwitchFlow.value = isIosSwitchEnabled()
+            KEY_APP_FONT -> _appFontFlow.value = getAppFont()
             KEY_EXP_MASTER,
             KEY_EXP_DEAL_AUTHENTICITY,
             KEY_EXP_BUY_NOW_VERDICT,
@@ -245,6 +250,16 @@ class UserPreferencesRepository @Inject constructor(
         _iosSwitchFlow.value = enabled
     }
 
+    fun getAppFont(): AppFont {
+        val id = prefs.getString(KEY_APP_FONT, AppFont.DEFAULT.id)
+        return AppFont.fromId(id)
+    }
+
+    fun setAppFont(font: AppFont) {
+        prefs.edit().putString(KEY_APP_FONT, font.id).apply()
+        _appFontFlow.value = font
+    }
+
     fun toggleTheme(currentIsDark: Boolean) {
         val next = if (currentIsDark) ThemeMode.LIGHT else ThemeMode.DARK
         setThemeMode(next)
@@ -271,6 +286,7 @@ class UserPreferencesRepository @Inject constructor(
         const val KEY_THEME_GLASS_REFRACTION = "key_theme_glass_refraction"
         const val KEY_THEME_GLASS_DISPERSION = "key_theme_glass_dispersion"
         const val KEY_IOS_SWITCH = "key_ios_switch"
+        const val KEY_APP_FONT = "key_app_font"
 
         const val KEY_EXP_MASTER = "key_exp_master"
         const val KEY_EXP_DEAL_AUTHENTICITY = "key_exp_deal_authenticity"

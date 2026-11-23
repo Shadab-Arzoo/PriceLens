@@ -240,6 +240,7 @@ val LocalThemeAccent = staticCompositionLocalOf { ThemeAccent.EMERALD_MINT }
 val LocalThemeToggle = staticCompositionLocalOf<() -> Unit> { {} }
 val LocalUserPreferences = compositionLocalOf<UserPreferencesRepository?> { null }
 val LocalIosSwitch = compositionLocalOf { false }
+val LocalAppFont = compositionLocalOf { AppFont.DEFAULT }
 
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF0F172A),
@@ -292,6 +293,7 @@ fun PriceLensTheme(
     glassRefraction: UserPreferencesRepository.GlassRefraction = UserPreferencesRepository.GlassRefraction.STANDARD,
     glassDispersion: UserPreferencesRepository.GlassDispersion = UserPreferencesRepository.GlassDispersion.PRISM,
     iosSwitchEnabled: Boolean = false,
+    appFont: AppFont = AppFont.DEFAULT,
     userPreferences: UserPreferencesRepository? = null,
     onToggleTheme: () -> Unit = {},
     content: @Composable () -> Unit
@@ -559,17 +561,27 @@ fun PriceLensTheme(
         }
     }
 
+    val effectiveFont = if (iosSwitchEnabled && appFont == AppFont.DEFAULT) {
+        AppFont.INTER
+    } else {
+        appFont
+    }
+    val typography = remember(effectiveFont) {
+        createPriceLensTypography(effectiveFont)
+    }
+
     CompositionLocalProvider(
         LocalGlassColors provides glassColors,
         LocalThemeIsDark provides darkTheme,
         LocalThemeAccent provides activeAccent,
         LocalIosSwitch provides iosSwitchEnabled,
+        LocalAppFont provides effectiveFont,
         LocalUserPreferences provides userPreferences,
         LocalThemeToggle provides onToggleTheme
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = PriceLensTypography,
+            typography = typography,
             content = content
         )
     }
@@ -587,6 +599,10 @@ object PriceLensTheme {
     val isIosSwitch: Boolean
         @Composable
         get() = LocalIosSwitch.current
+
+    val font: AppFont
+        @Composable
+        get() = LocalAppFont.current
 
     val isCupertino: Boolean
         @Composable

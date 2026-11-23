@@ -64,6 +64,7 @@ class MainActivity : ComponentActivity() {
             val glassRefraction by userPreferences.glassRefractionFlow.collectAsStateWithLifecycle()
             val glassDispersion by userPreferences.glassDispersionFlow.collectAsStateWithLifecycle()
             val iosSwitchEnabled by userPreferences.iosSwitchFlow.collectAsStateWithLifecycle()
+            val appFont by userPreferences.appFontFlow.collectAsStateWithLifecycle()
             val systemDark = isSystemInDarkTheme()
             val isDark = when (themeMode) {
                 UserPreferencesRepository.ThemeMode.DARK -> true
@@ -79,6 +80,7 @@ class MainActivity : ComponentActivity() {
                 glassRefraction = glassRefraction,
                 glassDispersion = glassDispersion,
                 iosSwitchEnabled = iosSwitchEnabled,
+                appFont = appFont,
                 userPreferences = userPreferences,
                 onToggleTheme = {
                     userPreferences.toggleTheme(isDark)
