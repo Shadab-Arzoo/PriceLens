@@ -3,6 +3,7 @@ package com.kyant.backdrop.effects
 import androidx.annotation.FloatRange
 import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.ui.geometry.isUnspecified
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.util.fastCoerceAtLeast
 import androidx.compose.ui.util.fastCoerceAtMost
@@ -20,6 +21,7 @@ fun BackdropEffectScope.lens(
 ) {
     if (!isRuntimeShaderSupported()) return
     if (refractionHeight <= 0f || refractionAmount <= 0f) return
+    if (size.isUnspecified || size.width <= 0f || size.height <= 0f) return
 
     if (padding > 0f) {
         padding = (padding - refractionHeight).fastCoerceAtLeast(0f)
@@ -59,7 +61,10 @@ fun BackdropEffectScope.lens(
 }
 
 private val BackdropEffectScope.cornerRadii: FloatArray?
-    get() = when (val shape = shape) {
+    get() {
+        val size = size
+        if (size.isUnspecified || size.width <= 0f || size.height <= 0f) return null
+        return when (val shape = shape) {
         is AbsoluteRoundedCornerShape -> {
             val size = size
             val maxRadius = size.minDimension / 2f
@@ -100,6 +105,7 @@ private val BackdropEffectScope.cornerRadii: FloatArray?
         }
 
         else -> null
+        }
     }
 
 private fun throwUnsupportedSDFException(): Nothing {

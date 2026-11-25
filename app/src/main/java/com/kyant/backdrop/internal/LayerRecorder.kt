@@ -13,6 +13,7 @@ internal fun DrawScope.recordLayer(
     size: IntSize = this.size.toIntSize(),
     block: DrawScope.() -> Unit
 ) {
+    if (size.width <= 0 || size.height <= 0) return
     val density = node.requireDensity()
     layer.record(size) {
         val prevDensity = drawContext.density

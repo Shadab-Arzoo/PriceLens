@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.isUnspecified
 import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
@@ -284,23 +285,24 @@ private class DrawBackdropNode(
 
     private val drawBackdropLayer: DrawScope.() -> Unit = {
         val layer = graphicsLayer
-        if (layer != null) {
+        if (layer != null && size.width > 0f && size.height > 0f) {
             val padding = padding
+            val w = size.width.toInt() + padding.toInt() * 2
+            val h = size.height.toInt() + padding.toInt() * 2
 
-            recordLayer(
-                this@DrawBackdropNode,
-                layer,
-                size = IntSize(
-                    size.width.toInt() + padding.toInt() * 2,
-                    size.height.toInt() + padding.toInt() * 2
-                ),
-                block = recordBackdropBlock
-            )
+            if (w > 0 && h > 0) {
+                recordLayer(
+                    this@DrawBackdropNode,
+                    layer,
+                    size = IntSize(w, h),
+                    block = recordBackdropBlock
+                )
 
-            layer.topLeft =
-                if (padding != 0f) IntOffset(-padding.toInt(), -padding.toInt())
-                else IntOffset.Zero
-            drawLayer(layer)
+                layer.topLeft =
+                    if (padding != 0f) IntOffset(-padding.toInt(), -padding.toInt())
+                    else IntOffset.Zero
+                drawLayer(layer)
+            }
         }
     }
 
@@ -316,7 +318,7 @@ private class DrawBackdropNode(
 
     override fun ContentDrawScope.draw() {
         if (effectScope.update(this)) {
-            updateEffects()
+            observeEffects()
         }
 
         onDrawBehind?.invoke(this)
@@ -326,11 +328,13 @@ private class DrawBackdropNode(
         onDrawFront?.invoke(this)
 
         exportedBackdrop?.graphicsLayer?.let { layer ->
-            recordLayer(this@DrawBackdropNode, layer) {
-                onDrawBehind?.invoke(this)
-                drawBackdropLayer()
-                onDrawSurface?.invoke(this)
-                onDrawFront?.invoke(this)
+            if (size.width > 0f && size.height > 0f) {
+                recordLayer(this@DrawBackdropNode, layer) {
+                    onDrawBehind?.invoke(this)
+                    drawBackdropLayer()
+                    onDrawSurface?.invoke(this)
+                    onDrawFront?.invoke(this)
+                }
             }
         }
     }
@@ -362,6 +366,11 @@ private class DrawBackdropNode(
 
     private fun updateEffects() {
         if (!isRenderEffectSupported()) return
+        if (effectScope.size.isUnspecified || effectScope.size.width <= 0f || effectScope.size.height <= 0f) {
+            graphicsLayer?.renderEffect = null
+            padding = 0f
+            return
+        }
 
         effectScope.apply(effects)
         graphicsLayer?.renderEffect = effectScope.renderEffect

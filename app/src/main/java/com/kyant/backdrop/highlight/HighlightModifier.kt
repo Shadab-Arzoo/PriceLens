@@ -1,6 +1,7 @@
 package com.kyant.backdrop.highlight
 
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.isUnspecified
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
@@ -93,7 +94,7 @@ internal class HighlightNode(
         drawContent()
 
         val highlightLayer = highlightLayer
-        if (highlightLayer != null) {
+        if (highlightLayer != null && !size.isUnspecified && size.width > 0f && size.height > 0f) {
             val size = size
             val density: Density = this
             val layoutDirection = layoutDirection

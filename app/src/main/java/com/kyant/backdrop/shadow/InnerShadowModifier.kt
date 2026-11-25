@@ -1,6 +1,7 @@
 package com.kyant.backdrop.shadow
 
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.isUnspecified
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Outline
@@ -83,7 +84,7 @@ internal class InnerShadowNode(
         val shadow = shadow() ?: return
 
         val shadowLayer = shadowLayer
-        if (shadowLayer != null) {
+        if (shadowLayer != null && !size.isUnspecified && size.width > 0f && size.height > 0f) {
             val size = size
             val density: Density = this
             val layoutDirection = layoutDirection

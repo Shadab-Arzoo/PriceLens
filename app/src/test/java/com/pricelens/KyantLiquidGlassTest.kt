@@ -1,6 +1,9 @@
 package com.pricelens
 
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.geometry.Size
+import com.kyant.backdrop.BackdropEffectScopeImpl
+import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.isRenderEffectSupported
 import com.kyant.backdrop.isRuntimeShaderSupported
 import com.kyant.shapes.Capsule
@@ -36,5 +39,16 @@ class KyantLiquidGlassTest {
         val runtimeShaderSupported = isRuntimeShaderSupported()
         assertNotNull(renderEffectSupported)
         assertNotNull(runtimeShaderSupported)
+    }
+
+    @Test
+    fun backdropEffectScope_lensWithUnspecifiedOrZeroSize_doesNotThrow() {
+        val scope = object : BackdropEffectScopeImpl() {
+            override val shape = Capsule()
+        }
+        scope.size = Size.Unspecified
+        scope.lens(24f, 24f)
+        scope.size = Size.Zero
+        scope.lens(24f, 24f)
     }
 }

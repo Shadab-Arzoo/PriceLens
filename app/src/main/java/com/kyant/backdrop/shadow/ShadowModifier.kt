@@ -1,6 +1,7 @@
 package com.kyant.backdrop.shadow
 
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.isUnspecified
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawOutline
@@ -74,7 +75,7 @@ internal class ShadowNode(
         val shadow = shadow() ?: return drawContent()
 
         val shadowLayer = shadowLayer
-        if (shadowLayer != null) {
+        if (shadowLayer != null && !size.isUnspecified && size.width > 0f && size.height > 0f) {
             val size = size
             val density: Density = this
             val layoutDirection = layoutDirection

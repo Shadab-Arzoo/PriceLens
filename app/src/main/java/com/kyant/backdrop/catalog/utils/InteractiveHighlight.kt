@@ -40,8 +40,9 @@ class InteractiveHighlight(
 
     private val shader =
         if (isRuntimeShaderSupported()) {
-            RuntimeShader(
-                """
+            try {
+                RuntimeShader(
+                    """
 uniform float2 size;
 layout(color) uniform half4 color;
 uniform float radius;
@@ -52,7 +53,10 @@ half4 main(float2 coord) {
     float intensity = smoothstep(radius, radius * 0.5, dist);
     return color * intensity;
 }"""
-            )
+                )
+            } catch (_: Throwable) {
+                null
+            }
         } else {
             null
         }
@@ -60,7 +64,7 @@ half4 main(float2 coord) {
     val modifier: Modifier =
         Modifier.drawWithContent {
             val progress = pressProgressAnimation.value
-            if (progress > 0f) {
+            if (progress > 0f && size.width > 0f && size.height > 0f) {
                 if (shader != null) {
                     drawRect(
                         Color.White.copy(0.08f * progress),

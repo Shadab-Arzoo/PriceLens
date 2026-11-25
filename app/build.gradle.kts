@@ -14,8 +14,8 @@ android {
         applicationId = "com.pricelens"
         minSdk = 26
         targetSdk = 35
-        versionCode = 38
-        versionName = "2.4.8"
+        versionCode = 39
+        versionName = "2.4.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

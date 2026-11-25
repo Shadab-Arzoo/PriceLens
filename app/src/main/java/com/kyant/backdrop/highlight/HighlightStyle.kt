@@ -4,6 +4,7 @@ import androidx.annotation.FloatRange
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.geometry.isUnspecified
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -114,6 +115,7 @@ interface HighlightStyle {
 
 private fun DrawScope.getCornerRadii(shape: Shape): FloatArray {
     val size = size
+    if (size.isUnspecified || size.width <= 0f || size.height <= 0f) return FloatArray(4) { 0f }
     val maxRadius = size.minDimension / 2f
     val shape = shape as? CornerBasedShape ?: return FloatArray(4) { maxRadius }
     val isLtr = layoutDirection == LayoutDirection.Ltr

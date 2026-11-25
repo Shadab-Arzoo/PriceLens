@@ -174,7 +174,7 @@ fun LiquidBottomTabs(
                     },
                     layerBlock = {
                         val progress = dampedDragAnimation.pressProgress
-                        val scale = lerp(1f, 1f + 16f.dp.toPx() / size.width, progress)
+                        val scale = if (size.width > 0f) lerp(1f, 1f + 16f.dp.toPx() / size.width, progress) else 1f
                         scaleX = scale
                         scaleY = scale
                     },
