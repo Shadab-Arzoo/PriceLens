@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.ui.text.font.FontFamily
 import com.pricelens.core.designsystem.AppFont
+import com.pricelens.core.designsystem.createPriceLensTypography
 import com.pricelens.core.preferences.UserPreferencesRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -70,27 +71,40 @@ class AppFontTest {
     }
 
     @Test
-    fun appFont_persistsSelectedOption() {
+    fun appFont_persistsSelectedOption_includingTimesNewRoman() {
+        preferencesRepository.setAppFont(AppFont.TIMES_NEW_ROMAN)
+        assertEquals(AppFont.TIMES_NEW_ROMAN, preferencesRepository.getAppFont())
+        assertEquals(AppFont.TIMES_NEW_ROMAN, preferencesRepository.appFontFlow.value)
+
         preferencesRepository.setAppFont(AppFont.INTER)
         assertEquals(AppFont.INTER, preferencesRepository.getAppFont())
         assertEquals(AppFont.INTER, preferencesRepository.appFontFlow.value)
 
         preferencesRepository.setAppFont(AppFont.PLUS_JAKARTA)
         assertEquals(AppFont.PLUS_JAKARTA, preferencesRepository.getAppFont())
-        assertEquals(AppFont.PLUS_JAKARTA, preferencesRepository.appFontFlow.value)
+
+        preferencesRepository.setAppFont(AppFont.EDITORIAL_QUATTRO)
+        assertEquals(AppFont.EDITORIAL_QUATTRO, preferencesRepository.getAppFont())
 
         preferencesRepository.setAppFont(AppFont.SERIF)
         assertEquals(AppFont.SERIF, preferencesRepository.getAppFont())
 
         preferencesRepository.setAppFont(AppFont.MONOSPACE)
         assertEquals(AppFont.MONOSPACE, preferencesRepository.getAppFont())
+
+        // Reset restores Default Font
+        preferencesRepository.resetAll()
+        assertEquals(AppFont.DEFAULT, preferencesRepository.getAppFont())
+        assertEquals(AppFont.DEFAULT, preferencesRepository.appFontFlow.value)
     }
 
     @Test
-    fun appFont_fromId_handlesUnknownAndCaseInsensitive() {
+    fun appFont_fromId_handlesAllOptionsAndUnknown() {
+        assertEquals(AppFont.TIMES_NEW_ROMAN, AppFont.fromId("times_new_roman"))
+        assertEquals(AppFont.TIMES_NEW_ROMAN, AppFont.fromId("TIMES_NEW_ROMAN"))
         assertEquals(AppFont.INTER, AppFont.fromId("inter"))
-        assertEquals(AppFont.INTER, AppFont.fromId("INTER"))
         assertEquals(AppFont.PLUS_JAKARTA, AppFont.fromId("plus_jakarta"))
+        assertEquals(AppFont.EDITORIAL_QUATTRO, AppFont.fromId("editorial_quattro"))
         assertEquals(AppFont.SERIF, AppFont.fromId("serif"))
         assertEquals(AppFont.MONOSPACE, AppFont.fromId("monospace"))
         assertEquals(AppFont.DEFAULT, AppFont.fromId("unknown_font_id"))
@@ -98,11 +112,21 @@ class AppFontTest {
     }
 
     @Test
-    fun appFont_familyResolvesCorrectly() {
+    fun appFont_familyAndTypographySlotsResolveCorrectly() {
         assertEquals(FontFamily.Default, AppFont.DEFAULT.getFontFamily())
         assertEquals(FontFamily.Serif, AppFont.SERIF.getFontFamily())
-        assertEquals(FontFamily.Monospace, AppFont.MONOSPACE.getFontFamily())
+        assertNotNull(AppFont.TIMES_NEW_ROMAN.getFontFamily())
         assertNotNull(AppFont.INTER.getFontFamily())
         assertNotNull(AppFont.PLUS_JAKARTA.getFontFamily())
+        assertNotNull(AppFont.EDITORIAL_QUATTRO.getFontFamily())
+        assertNotNull(AppFont.MONOSPACE.getFontFamily())
+
+        val romanType = createPriceLensTypography(AppFont.TIMES_NEW_ROMAN)
+        val expectedFamily = AppFont.TIMES_NEW_ROMAN.getFontFamily()
+        assertEquals(expectedFamily, romanType.displayLarge.fontFamily)
+        assertEquals(expectedFamily, romanType.displaySmall.fontFamily)
+        assertEquals(expectedFamily, romanType.headlineSmall.fontFamily)
+        assertEquals(expectedFamily, romanType.bodyLarge.fontFamily)
+        assertEquals(expectedFamily, romanType.labelSmall.fontFamily)
     }
 }

@@ -565,13 +565,8 @@ fun PriceLensTheme(
         }
     }
 
-    val effectiveFont = if (iosSwitchEnabled && appFont == AppFont.DEFAULT) {
-        AppFont.INTER
-    } else {
-        appFont
-    }
-    val typography = remember(effectiveFont) {
-        createPriceLensTypography(effectiveFont)
+    val typography = remember(appFont) {
+        createPriceLensTypography(appFont)
     }
 
     CompositionLocalProvider(
@@ -580,7 +575,7 @@ fun PriceLensTheme(
         LocalThemeAccent provides activeAccent,
         LocalIosSwitch provides iosSwitchEnabled,
         LocalIosGlassIntensity provides iosGlassIntensity,
-        LocalAppFont provides effectiveFont,
+        LocalAppFont provides appFont,
         LocalUserPreferences provides userPreferences,
         LocalThemeToggle provides onToggleTheme
     ) {

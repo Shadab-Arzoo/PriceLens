@@ -287,6 +287,7 @@ class UserPreferencesRepository @Inject constructor(
         _contrastStyleFlow.value = ContrastStyle.PITCH_BLACK
         _iosSwitchFlow.value = false
         _iosGlassIntensityFlow.value = 1.0f
+        _appFontFlow.value = AppFont.DEFAULT
     }
 
     companion object {

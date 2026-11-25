@@ -1,25 +1,83 @@
 package com.pricelens.core.designsystem
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.pricelens.R
 
+@OptIn(ExperimentalTextApi::class)
 val InterFontFamily = FontFamily(
-    Font(R.font.inter, FontWeight.Normal),
-    Font(R.font.inter, FontWeight.Medium),
-    Font(R.font.inter, FontWeight.SemiBold),
-    Font(R.font.inter, FontWeight.Bold)
+    Font(
+        resId = R.font.inter,
+        weight = FontWeight.Normal,
+        variationSettings = FontVariation.Settings(FontVariation.weight(400))
+    ),
+    Font(
+        resId = R.font.inter,
+        weight = FontWeight.Medium,
+        variationSettings = FontVariation.Settings(FontVariation.weight(500))
+    ),
+    Font(
+        resId = R.font.inter,
+        weight = FontWeight.SemiBold,
+        variationSettings = FontVariation.Settings(FontVariation.weight(600))
+    ),
+    Font(
+        resId = R.font.inter,
+        weight = FontWeight.Bold,
+        variationSettings = FontVariation.Settings(FontVariation.weight(700))
+    )
 )
 
+@OptIn(ExperimentalTextApi::class)
 val PlusJakartaFontFamily = FontFamily(
-    Font(R.font.plus_jakarta_sans, FontWeight.Normal),
-    Font(R.font.plus_jakarta_sans, FontWeight.Medium),
-    Font(R.font.plus_jakarta_sans, FontWeight.SemiBold),
-    Font(R.font.plus_jakarta_sans, FontWeight.Bold)
+    Font(
+        resId = R.font.plus_jakarta_sans,
+        weight = FontWeight.Normal,
+        variationSettings = FontVariation.Settings(FontVariation.weight(400))
+    ),
+    Font(
+        resId = R.font.plus_jakarta_sans,
+        weight = FontWeight.Medium,
+        variationSettings = FontVariation.Settings(FontVariation.weight(500))
+    ),
+    Font(
+        resId = R.font.plus_jakarta_sans,
+        weight = FontWeight.SemiBold,
+        variationSettings = FontVariation.Settings(FontVariation.weight(600))
+    ),
+    Font(
+        resId = R.font.plus_jakarta_sans,
+        weight = FontWeight.Bold,
+        variationSettings = FontVariation.Settings(FontVariation.weight(700))
+    )
+)
+
+/** Metric-compatible Times New Roman typeface family (Regular, Italic, Bold, Bold Italic). */
+val TimesNewRomanFontFamily = FontFamily(
+    Font(R.font.times_new_roman_regular, FontWeight.Normal, FontStyle.Normal),
+    Font(R.font.times_new_roman_italic, FontWeight.Normal, FontStyle.Italic),
+    Font(R.font.times_new_roman_bold, FontWeight.Bold, FontStyle.Normal),
+    Font(R.font.times_new_roman_bold_italic, FontWeight.Bold, FontStyle.Italic)
+)
+
+/** Editorial humanist proportional sans-serif typeface family. */
+val EditorialQuattroFontFamily = FontFamily(
+    Font(R.font.quattro_regular, FontWeight.Normal, FontStyle.Normal),
+    Font(R.font.quattro_italic, FontWeight.Normal, FontStyle.Italic),
+    Font(R.font.quattro_bold, FontWeight.Bold, FontStyle.Normal)
+)
+
+/** Crisp tabular monospace typeface family for numbers and specs. */
+val PrecisionMonoFontFamily = FontFamily(
+    Font(R.font.precision_mono_regular, FontWeight.Normal, FontStyle.Normal),
+    Font(R.font.precision_mono_bold, FontWeight.Bold, FontStyle.Normal)
 )
 
 enum class AppFont(
@@ -28,18 +86,22 @@ enum class AppFont(
     val subtitle: String,
     val samplePreview: String
 ) {
-    DEFAULT("default", "System Default", "Default Android Roboto", "Aa 123"),
-    INTER("inter", "Inter Pro", "Apple & Fintech clean sans", "Aa 123"),
-    PLUS_JAKARTA("plus_jakarta", "Plus Jakarta", "Geometric rounded modern", "Aa 123"),
-    SERIF("serif", "New York Serif", "Editorial luxury serif", "Aa 123"),
-    MONOSPACE("monospace", "JetBrains Mono", "Precision tech monospace", "Aa 123");
+    DEFAULT("default", "Default Font", "System Android Roboto", "Aa ₹1,999"),
+    TIMES_NEW_ROMAN("times_new_roman", "Times New Roman", "Classic Roman serif", "Aa ₹1,999"),
+    INTER("inter", "Inter Pro", "Apple & Fintech clean sans", "Aa ₹1,999"),
+    PLUS_JAKARTA("plus_jakarta", "Plus Jakarta", "Geometric rounded modern", "Aa ₹1,999"),
+    EDITORIAL_QUATTRO("editorial_quattro", "Editorial Quattro", "Refined reading sans", "Aa ₹1,999"),
+    SERIF("serif", "System Serif", "Built-in Noto serif", "Aa ₹1,999"),
+    MONOSPACE("monospace", "Precision Mono", "Crisp tabular monospace", "Aa ₹1,999");
 
     fun getFontFamily(): FontFamily = when (this) {
         DEFAULT -> FontFamily.Default
+        TIMES_NEW_ROMAN -> TimesNewRomanFontFamily
         INTER -> InterFontFamily
         PLUS_JAKARTA -> PlusJakartaFontFamily
+        EDITORIAL_QUATTRO -> EditorialQuattroFontFamily
         SERIF -> FontFamily.Serif
-        MONOSPACE -> FontFamily.Monospace
+        MONOSPACE -> PrecisionMonoFontFamily
     }
 
     companion object {
@@ -65,6 +127,13 @@ fun createPriceLensTypography(appFont: AppFont = AppFont.DEFAULT): Typography {
             lineHeight = 32.sp,
             letterSpacing = (-0.4).sp
         ),
+        displaySmall = TextStyle(
+            fontFamily = family,
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp,
+            lineHeight = 30.sp,
+            letterSpacing = (-0.3).sp
+        ),
         headlineLarge = TextStyle(
             fontFamily = family,
             fontWeight = FontWeight.Bold,
@@ -78,6 +147,13 @@ fun createPriceLensTypography(appFont: AppFont = AppFont.DEFAULT): Typography {
             fontSize = 18.sp,
             lineHeight = 24.sp,
             letterSpacing = (-0.2).sp
+        ),
+        headlineSmall = TextStyle(
+            fontFamily = family,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 17.sp,
+            lineHeight = 22.sp,
+            letterSpacing = (-0.15).sp
         ),
         titleLarge = TextStyle(
             fontFamily = family,

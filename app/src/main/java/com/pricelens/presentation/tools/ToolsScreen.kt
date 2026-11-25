@@ -725,12 +725,38 @@ fun ToolsScreen(
                                 color = PriceLensTheme.glassColors.textTertiary,
                                 letterSpacing = 0.8.sp
                             )
-                            Text(
-                                text = currentAppFont.displayName,
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                fontWeight = FontWeight.SemiBold,
-                                color = PriceLensTheme.glassColors.ambientGlow
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = currentAppFont.displayName,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = PriceLensTheme.glassColors.ambientGlow
+                                )
+                                if (currentAppFont != AppFont.DEFAULT) {
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = PriceLensTheme.glassColors.surfaceHighlight,
+                                        border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable {
+                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                userPreferences.setAppFont(AppFont.DEFAULT)
+                                            }
+                                    ) {
+                                        Text(
+                                            text = "Default",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                            fontWeight = FontWeight.Bold,
+                                            color = PriceLensTheme.glassColors.textSecondary,
+                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                         Row(
@@ -753,7 +779,7 @@ fun ToolsScreen(
                                         if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.specularBorder
                                     ),
                                     modifier = Modifier
-                                        .width(112.dp)
+                                        .width(126.dp)
                                         .clip(RoundedCornerShape(14.dp))
                                         .clickable {
                                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -765,29 +791,92 @@ fun ToolsScreen(
                                         horizontalAlignment = Alignment.Start,
                                         verticalArrangement = Arrangement.spacedBy(3.dp)
                                     ) {
-                                        Text(
-                                            text = fontOption.samplePreview,
-                                            fontFamily = fontOption.getFontFamily(),
-                                            fontSize = 15.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary
-                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = fontOption.samplePreview,
+                                                fontFamily = fontOption.getFontFamily(),
+                                                fontSize = 15.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary
+                                            )
+                                            if (fontOption == AppFont.DEFAULT) {
+                                                Surface(
+                                                    shape = RoundedCornerShape(6.dp),
+                                                    color = PriceLensTheme.glassColors.textTertiary.copy(alpha = 0.18f)
+                                                ) {
+                                                    Text(
+                                                        text = "DEFAULT",
+                                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.sp),
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = PriceLensTheme.glassColors.textSecondary,
+                                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
                                         Text(
                                             text = fontOption.displayName,
                                             fontFamily = fontOption.getFontFamily(),
-                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.5.sp),
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                                             color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textPrimary,
                                             maxLines = 1
                                         )
                                         Text(
                                             text = fontOption.subtitle,
-                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                            fontFamily = fontOption.getFontFamily(),
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.5.sp),
                                             color = if (isSelected) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.85f) else PriceLensTheme.glassColors.textTertiary,
                                             maxLines = 1
                                         )
                                     }
                                 }
+                            }
+                        }
+
+                        // Live Font Preview Banner
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = PriceLensTheme.glassColors.surfaceHighlight.copy(alpha = 0.65f),
+                            border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder.copy(alpha = 0.7f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Text(
+                                        text = "Smart Price Comparison",
+                                        fontFamily = currentAppFont.getFontFamily(),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.textPrimary
+                                    )
+                                    Text(
+                                        text = "Track deals, specs & live drops cleanly",
+                                        fontFamily = currentAppFont.getFontFamily(),
+                                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                                        color = PriceLensTheme.glassColors.textSecondary
+                                    )
+                                }
+                                Text(
+                                    text = "₹24,999",
+                                    fontFamily = currentAppFont.getFontFamily(),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PriceLensTheme.glassColors.ambientGlow
+                                )
                             }
                         }
                     }
@@ -2846,6 +2935,72 @@ fun ToolsScreen(
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = PriceLensTheme.glassColors.ambientGlow
+                                )
+                            }
+                        }
+                    }
+
+                    // Toggle 4: Quick App Font Switcher (Default Font + Font Options)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                            Text(
+                                text = "App Font",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = PriceLensTheme.glassColors.textPrimary
+                            )
+                            Text(
+                                text = "${currentAppFont.displayName} • ${currentAppFont.subtitle}",
+                                fontFamily = currentAppFont.getFontFamily(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = PriceLensTheme.glassColors.textSecondary
+                            )
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (currentAppFont != AppFont.DEFAULT) {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = PriceLensTheme.glassColors.surfaceHighlight,
+                                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
+                                    modifier = Modifier.clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        userPreferences.setAppFont(AppFont.DEFAULT)
+                                    }
+                                ) {
+                                    Text(
+                                        text = "Default",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = PriceLensTheme.glassColors.textSecondary,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                                    )
+                                }
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = PriceLensTheme.glassColors.surfaceHighlight,
+                                border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
+                                modifier = Modifier.clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    val entries = AppFont.entries
+                                    val nextFont = entries[(entries.indexOf(currentAppFont) + 1) % entries.size]
+                                    userPreferences.setAppFont(nextFont)
+                                }
+                            ) {
+                                Text(
+                                    text = currentAppFont.displayName,
+                                    fontFamily = currentAppFont.getFontFamily(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PriceLensTheme.glassColors.ambientGlow,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                                 )
                             }
                         }
