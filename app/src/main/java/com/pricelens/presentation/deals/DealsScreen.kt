@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -62,14 +63,24 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
+import com.kyant.backdrop.shadow.Shadow
+import com.kyant.shapes.Capsule
 import com.pricelens.core.designsystem.AmberAlert
 import com.pricelens.core.designsystem.CyanAccent
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
+import com.pricelens.core.designsystem.components.PinnedHeaderSurface
 import com.pricelens.core.util.rememberInrCurrencyFormatter
 import kotlinx.coroutines.delay
 import java.text.NumberFormat
@@ -134,74 +145,160 @@ fun DealsScreen(
         }
     }
 
+    val isCupertino = PriceLensTheme.isCupertino
+    val isDark = PriceLensTheme.isDark
+    val canvasBackdrop = PriceLensTheme.canvasBackdrop
+    val activeBackdrop = if (isCupertino) canvasBackdrop else null
+    val effectIntensity = if (isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f
+    val surfaceGlass = PriceLensTheme.glassColors.surfaceGlass
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(AmberAlert)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Deals Radar",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = PriceLensTheme.glassColors.textPrimary
-                        )
-                    }
-                    Text(
-                        text = "Live Price Cuts & Cross-Store Drops",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = PriceLensTheme.glassColors.textSecondary
-                    )
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = PriceLensTheme.glassColors.surfaceHighlight,
-                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
-                    modifier = Modifier.clickable {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onRefresh()
-                    }
+            PinnedHeaderSurface {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 12.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh deals",
-                            tint = PriceLensTheme.glassColors.ambientGlow,
-                            modifier = Modifier.size(14.dp)
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(AmberAlert)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Deals Radar",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = PriceLensTheme.glassColors.textPrimary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                         Text(
-                            text = "SYNC",
+                            text = "Live Price Cuts & Cross-Store Drops",
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = PriceLensTheme.glassColors.ambientGlow
+                            color = PriceLensTheme.glassColors.textSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
+                    }
+
+                    Surface(
+                        shape = if (isCupertino) Capsule() else RoundedCornerShape(12.dp),
+                        color = if (activeBackdrop != null) Color.Transparent else PriceLensTheme.glassColors.surfaceHighlight,
+                        border = BorderStroke(if (isCupertino) 0.75.dp else 1.dp, PriceLensTheme.glassColors.specularBorderBrush),
+                        modifier = Modifier
+                            .then(
+                                if (activeBackdrop != null) {
+                                    Modifier.drawBackdrop(
+                                        backdrop = activeBackdrop,
+                                        shape = { Capsule() },
+                                        effects = {
+                                            vibrancy()
+                                            blur((6f * effectIntensity).dp.toPx())
+                                            lens(
+                                                refractionHeight = (7f * effectIntensity).dp.toPx(),
+                                                refractionAmount = (10f * effectIntensity).dp.toPx(),
+                                                depthEffect = true,
+                                                chromaticAberration = true
+                                            )
+                                        },
+                                        highlight = {
+                                            Highlight.Default.copy(
+                                                width = 0.75.dp,
+                                                alpha = if (isDark) 0.58f else 0.80f
+                                            )
+                                        },
+                                        onDrawSurface = { drawRect(surfaceGlass) }
+                                    )
+                                } else {
+                                    Modifier
+                                }
+                            )
+                            .clip(if (isCupertino) Capsule() else RoundedCornerShape(12.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onRefresh()
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Refresh deals",
+                                tint = PriceLensTheme.glassColors.ambientGlow,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "SYNC",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = PriceLensTheme.glassColors.ambientGlow
+                            )
+                        }
                     }
                 }
             }
 
             // In-page search bar
-            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)) {
+            Box(
+                modifier = Modifier
+                    .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 6.dp)
+                    .then(
+                        if (activeBackdrop != null) {
+                            Modifier
+                                .drawBackdrop(
+                                    backdrop = activeBackdrop,
+                                    shape = { RoundedCornerShape(14.dp) },
+                                    effects = {
+                                        vibrancy()
+                                        blur((8f * effectIntensity).dp.toPx())
+                                        lens(
+                                            refractionHeight = (7f * effectIntensity).dp.toPx(),
+                                            refractionAmount = (11f * effectIntensity).dp.toPx(),
+                                            depthEffect = true,
+                                            chromaticAberration = true
+                                        )
+                                    },
+                                    highlight = {
+                                        Highlight.Default.copy(
+                                            width = 0.75.dp,
+                                            alpha = if (isDark) 0.52f else 0.76f
+                                        )
+                                    },
+                                    innerShadow = {
+                                        InnerShadow(
+                                            radius = (4f * effectIntensity).dp,
+                                            offset = DpOffset(0.dp, 1.5.dp),
+                                            color = Color.White.copy(alpha = if (isDark) 0.10f else 0.42f),
+                                            alpha = 0.72f
+                                        )
+                                    },
+                                    onDrawSurface = { drawRect(surfaceGlass) }
+                                )
+                                .clip(RoundedCornerShape(14.dp))
+                        } else {
+                            Modifier
+                        }
+                    )
+            ) {
                 OutlinedTextField(
                     value = uiState.searchQuery,
                     onValueChange = onSearchQueryChanged,
@@ -209,7 +306,9 @@ fun DealsScreen(
                         Text(
                             text = "Filter active deals (e.g. iPhone, Sony, M3)...",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PriceLensTheme.glassColors.textTertiary
+                            color = PriceLensTheme.glassColors.textTertiary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     },
                     leadingIcon = {
@@ -233,14 +332,16 @@ fun DealsScreen(
                         }
                     },
                     singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(if (isCupertino) 14.dp else 12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AmberAlert,
+                        focusedContainerColor = if (activeBackdrop != null) Color.Transparent else PriceLensTheme.glassColors.surfaceGlass,
+                        unfocusedContainerColor = if (activeBackdrop != null) Color.Transparent else PriceLensTheme.glassColors.surfaceGlass,
+                        focusedBorderColor = PriceLensTheme.glassColors.ambientGlow,
                         unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
                         focusedTextColor = PriceLensTheme.glassColors.textPrimary,
                         unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
                     ),
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 50.dp)
                 )
             }
 
@@ -397,20 +498,94 @@ fun DealsScreen(
                     }
 
                     // Deal Items
-                    items(
-                        items = uiState.deals,
-                        key = { it.productId }
-                    ) { deal ->
-                        DealCard(
-                            deal = deal,
-                            currencyFormatter = currencyFormatter,
-                            onCompare = { onNavigateToComparison(deal.productId, deal.title) },
-                            onQuickAlert = {
-                                val target = (deal.currentPrice * 0.95).toInt().toDouble()
-                                onQuickAlert(deal, target)
-                            },
-                            onOpenStore = { onOpenStoreUrl(deal.storeUrl) }
-                        )
+                    if (uiState.deals.isEmpty()) {
+                        item(key = "deals_empty_state") {
+                            GlassCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(18.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 20.dp, vertical = 28.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(44.dp)
+                                            .clip(CircleShape)
+                                            .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.14f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.LocalOffer,
+                                            contentDescription = null,
+                                            tint = PriceLensTheme.glassColors.ambientGlow,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                    Text(
+                                        text = "No matching live deals right now",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = PriceLensTheme.glassColors.textPrimary
+                                    )
+                                    Text(
+                                        text = "Try resetting filters or sync again when you're online.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = PriceLensTheme.glassColors.textSecondary,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.16f),
+                                        border = BorderStroke(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.45f)),
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .clickable {
+                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                onRefresh()
+                                            }
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Refresh,
+                                                contentDescription = null,
+                                                tint = PriceLensTheme.glassColors.ambientGlow,
+                                                modifier = Modifier.size(15.dp)
+                                            )
+                                            Text(
+                                                text = "Sync Deals",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = PriceLensTheme.glassColors.ambientGlow
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        items(
+                            items = uiState.deals,
+                            key = { it.productId }
+                        ) { deal ->
+                            DealCard(
+                                deal = deal,
+                                currencyFormatter = currencyFormatter,
+                                onCompare = { onNavigateToComparison(deal.productId, deal.title) },
+                                onQuickAlert = {
+                                    val target = (deal.currentPrice * 0.95).toInt().toDouble()
+                                    onQuickAlert(deal, target)
+                                },
+                                onOpenStore = { onOpenStoreUrl(deal.storeUrl) }
+                            )
+                        }
                     }
                 }
             }
@@ -426,10 +601,33 @@ fun DealsScreen(
                 .statusBarsPadding()
                 .padding(top = 60.dp, start = 20.dp, end = 20.dp)
         ) {
+            val toastGlow = PriceLensTheme.glassColors.ambientGlow
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.95f),
-                shadowElevation = 8.dp
+                shape = RoundedCornerShape(if (isCupertino) 16.dp else 12.dp),
+                color = if (activeBackdrop != null) Color.Transparent else toastGlow.copy(alpha = 0.95f),
+                border = if (isCupertino) BorderStroke(0.75.dp, toastGlow.copy(alpha = 0.55f)) else null,
+                shadowElevation = if (activeBackdrop != null) 0.dp else 8.dp,
+                modifier = if (activeBackdrop != null) {
+                    Modifier.drawBackdrop(
+                        backdrop = activeBackdrop,
+                        shape = { RoundedCornerShape(16.dp) },
+                        effects = {
+                            vibrancy()
+                            blur((10f * effectIntensity).dp.toPx())
+                            lens(
+                                refractionHeight = (8f * effectIntensity).dp.toPx(),
+                                refractionAmount = (12f * effectIntensity).dp.toPx(),
+                                depthEffect = true,
+                                chromaticAberration = true
+                            )
+                        },
+                        highlight = { Highlight.Default.copy(width = 0.75.dp, alpha = 0.8f) },
+                        shadow = { Shadow(radius = 12.dp, color = Color.Black.copy(alpha = 0.22f)) },
+                        onDrawSurface = { drawRect(toastGlow.copy(alpha = 0.88f)) }
+                    )
+                } else {
+                    Modifier
+                }
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),

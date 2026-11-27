@@ -97,6 +97,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -135,6 +136,7 @@ import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
 import com.pricelens.core.designsystem.components.LiquidGlassSecondaryButton
 import com.pricelens.core.designsystem.components.SkeletonBox
 import com.pricelens.core.designsystem.components.ThemeToggleSwitch
+import com.pricelens.core.designsystem.components.rememberCupertinoCircleGlassModifier
 import com.pricelens.core.preferences.UserPreferencesRepository
 import com.pricelens.core.util.PriceLensFormatters
 import com.pricelens.core.util.rememberInrCurrencyFormatter
@@ -196,85 +198,135 @@ fun ProductComparisonScreen(
         modifier = modifier.fillMaxSize()
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
+            modifier = Modifier.fillMaxSize()
         ) {
             // Top App Bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            val topCircleGlass = rememberCupertinoCircleGlassModifier()
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = PriceLensTheme.glassColors.surfaceGlass.copy(alpha = if (PriceLensTheme.isCupertino) 0.55f else 0.72f)
             ) {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Navigate back",
-                        tint = PriceLensTheme.glassColors.textPrimary
-                    )
-                }
-
-                Text(
-                    text = uiState.productName.ifBlank { stringResource(R.string.comparison_title) },
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = PriceLensTheme.glassColors.textPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
-                )
-
-                // Light / Dark Mode Toggle
-                ThemeToggleSwitch(
-                    isDark = PriceLensTheme.isDark,
-                    onToggle = LocalThemeToggle.current
-                )
-
-                // Watchlist Bookmark Toggle
-                IconButton(onClick = { onEvent(ProductComparisonUiEvent.ToggleWatchlist) }) {
-                    Icon(
-                        imageVector = if (uiState.isSavedInWatchlist) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                        contentDescription = if (uiState.isSavedInWatchlist) "Remove from Watchlist" else "Save to Watchlist",
-                        tint = if (uiState.isSavedInWatchlist) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary
-                    )
-                }
-
-                // Share Deal Button
-                val context = LocalContext.current
-                IconButton(
-                    onClick = {
-                        val details = uiState.comparisonDetails
-                        val lowestOffer = details?.lowestPriceOffer
-                        val productName = details?.name ?: uiState.productName
-                        val currencyFormat = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
-                        val shareText = if (lowestOffer != null && lowestOffer.price != null) {
-                            "🔥 PriceLens Deal: $productName is available at the lowest price of ${currencyFormat.format(lowestOffer.price)} on ${lowestOffer.retailerName}!\nCheck offer: ${lowestOffer.productUrl}"
-                        } else {
-                            "🔍 Compare prices for $productName across Amazon, Flipkart, Croma & more on PriceLens!"
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .statusBarsPadding()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        IconButton(
+                            onClick = onNavigateBack,
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .then(topCircleGlass)
+                                .border(1.dp, PriceLensTheme.glassColors.specularBorder, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Navigate back",
+                                tint = PriceLensTheme.glassColors.textPrimary,
+                                modifier = Modifier.size(19.dp)
+                            )
                         }
-                        val sendIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, shareText)
-                            type = "text/plain"
+
+                        Text(
+                            text = uiState.productName.ifBlank { stringResource(R.string.comparison_title) },
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = PriceLensTheme.glassColors.textPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 4.dp)
+                        )
+
+                        // Light / Dark Mode Toggle
+                        ThemeToggleSwitch(
+                            isDark = PriceLensTheme.isDark,
+                            onToggle = LocalThemeToggle.current,
+                            modifier = Modifier.size(38.dp)
+                        )
+
+                        // Watchlist Bookmark Toggle
+                        IconButton(
+                            onClick = { onEvent(ProductComparisonUiEvent.ToggleWatchlist) },
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .then(topCircleGlass)
+                                .border(
+                                    1.dp,
+                                    if (uiState.isSavedInWatchlist) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.55f)
+                                    else PriceLensTheme.glassColors.specularBorder,
+                                    CircleShape
+                                )
+                        ) {
+                            Icon(
+                                imageVector = if (uiState.isSavedInWatchlist) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                                contentDescription = if (uiState.isSavedInWatchlist) "Remove from Watchlist" else "Save to Watchlist",
+                                tint = if (uiState.isSavedInWatchlist) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
-                        val shareIntent = Intent.createChooser(sendIntent, "Share Price Comparison")
-                        context.startActivity(shareIntent)
+
+                        // Share Deal Button
+                        val context = LocalContext.current
+                        IconButton(
+                            onClick = {
+                                val details = uiState.comparisonDetails
+                                val lowestOffer = details?.lowestPriceOffer
+                                val productName = details?.name ?: uiState.productName
+                                val currencyFormat = NumberFormat.getCurrencyInstance(Locale("en", "IN"))
+                                val shareText = if (lowestOffer != null && lowestOffer.price != null) {
+                                    "🔥 PriceLens Deal: $productName is available at the lowest price of ${currencyFormat.format(lowestOffer.price)} on ${lowestOffer.retailerName}!\nCheck offer: ${lowestOffer.productUrl}"
+                                } else {
+                                    "🔍 Compare prices for $productName across Amazon, Flipkart, Croma & more on PriceLens!"
+                                }
+                                val sendIntent = Intent().apply {
+                                    action = Intent.ACTION_SEND
+                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                    type = "text/plain"
+                                }
+                                val shareIntent = Intent.createChooser(sendIntent, "Share Price Comparison")
+                                context.startActivity(shareIntent)
+                            },
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .then(topCircleGlass)
+                                .border(1.dp, PriceLensTheme.glassColors.specularBorder, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share deal",
+                                tint = PriceLensTheme.glassColors.textSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        // Refresh Button
+                        IconButton(
+                            onClick = { onEvent(ProductComparisonUiEvent.RefreshOffers) },
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .then(topCircleGlass)
+                                .border(1.dp, PriceLensTheme.glassColors.specularBorder, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Refresh offers",
+                                tint = PriceLensTheme.glassColors.textPrimary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "Share deal",
-                        tint = PriceLensTheme.glassColors.textSecondary
-                    )
-                }
-
-                // Refresh Button
-                IconButton(onClick = { onEvent(ProductComparisonUiEvent.RefreshOffers) }) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Refresh offers",
-                        tint = PriceLensTheme.glassColors.textPrimary
+                    HorizontalDivider(
+                        thickness = 0.75.dp,
+                        color = PriceLensTheme.glassColors.specularBorder
                     )
                 }
             }

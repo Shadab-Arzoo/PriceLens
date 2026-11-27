@@ -19,6 +19,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.kyant.backdrop.Backdrop
@@ -202,7 +203,9 @@ data class GlassColors(
     val chromaticBorderBrush: Brush = specularBorderBrush,
     val specularTopGlintBrush: Brush = SolidColor(Color.White),
     val glassRefraction: UserPreferencesRepository.GlassRefraction = UserPreferencesRepository.GlassRefraction.STANDARD,
-    val glassDispersion: UserPreferencesRepository.GlassDispersion = UserPreferencesRepository.GlassDispersion.PRISM
+    val glassDispersion: UserPreferencesRepository.GlassDispersion = UserPreferencesRepository.GlassDispersion.PRISM,
+    val headerScrim: Color = surfaceGlass,
+    val headerDivider: Color = specularBorder
 )
 
 private val LightGlassColors = GlassColors(
@@ -244,6 +247,7 @@ val LocalIosSwitch = compositionLocalOf { false }
 val LocalIosGlassIntensity = compositionLocalOf { 1.0f }
 val LocalAppFont = compositionLocalOf { AppFont.DEFAULT }
 val LocalRootBackdrop = compositionLocalOf<Backdrop?> { null }
+val LocalCanvasBackdrop = compositionLocalOf<Backdrop?> { null }
 
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF0F172A),
@@ -351,21 +355,21 @@ fun PriceLensTheme(
         if (darkTheme) {
             when (activeContrastStyle) {
                 UserPreferencesRepository.ContrastStyle.PITCH_BLACK -> {
-                    val canopyAlpha = (0.09f * activeGlowIntensity.multiplier).coerceIn(0.04f, 0.22f)
+                    val canopyAlpha = (0.10f * activeGlowIntensity.multiplier).coerceIn(0.04f, 0.22f)
                     val secondaryAlpha = (0.05f * activeGlowIntensity.multiplier).coerceIn(0.02f, 0.14f)
                     Brush.verticalGradient(
-                        0.0f to animatedAccent.copy(alpha = canopyAlpha),
-                        0.18f to animatedSecondary.copy(alpha = secondaryAlpha),
+                        0.0f to animatedAccent.copy(alpha = canopyAlpha).compositeOver(DarkBackgroundStart),
+                        0.18f to animatedSecondary.copy(alpha = secondaryAlpha).compositeOver(DarkBackgroundStart),
                         0.48f to DarkBackgroundStart,
                         1.0f to DarkBackgroundEnd
                     )
                 }
                 UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT -> {
-                    val canopyAlpha = (0.13f * activeGlowIntensity.multiplier).coerceIn(0.06f, 0.28f)
-                    val secondaryAlpha = (0.08f * activeGlowIntensity.multiplier).coerceIn(0.03f, 0.18f)
+                    val canopyAlpha = (0.14f * activeGlowIntensity.multiplier).coerceIn(0.06f, 0.26f)
+                    val secondaryAlpha = (0.08f * activeGlowIntensity.multiplier).coerceIn(0.03f, 0.16f)
                     Brush.verticalGradient(
-                        0.0f to animatedAccent.copy(alpha = canopyAlpha),
-                        0.22f to animatedSecondary.copy(alpha = secondaryAlpha),
+                        0.0f to animatedAccent.copy(alpha = canopyAlpha).compositeOver(Color(0xFF0A1120)),
+                        0.22f to animatedSecondary.copy(alpha = secondaryAlpha).compositeOver(Color(0xFF080E1A)),
                         0.52f to Color(0xFF070C16),
                         1.0f to Color(0xFF030508)
                     )
@@ -384,11 +388,11 @@ fun PriceLensTheme(
                     1.0f to AppleGroupedBackgroundLight
                 )
             } else {
-                val canopyAlpha = (0.08f * activeGlowIntensity.multiplier).coerceIn(0.03f, 0.18f)
-                val secondaryAlpha = (0.04f * activeGlowIntensity.multiplier).coerceIn(0.015f, 0.12f)
+                val canopyAlpha = (0.07f * activeGlowIntensity.multiplier).coerceIn(0.03f, 0.14f)
+                val secondaryAlpha = (0.04f * activeGlowIntensity.multiplier).coerceIn(0.015f, 0.09f)
                 Brush.verticalGradient(
-                    0.0f to animatedAccent.copy(alpha = canopyAlpha),
-                    0.20f to animatedSecondary.copy(alpha = secondaryAlpha),
+                    0.0f to animatedAccent.copy(alpha = canopyAlpha).compositeOver(LightBackgroundStart),
+                    0.22f to animatedSecondary.copy(alpha = secondaryAlpha).compositeOver(LightBackgroundStart),
                     0.55f to LightBackgroundStart,
                     1.0f to LightBackgroundEnd
                 )
@@ -400,47 +404,61 @@ fun PriceLensTheme(
         if (activeContrastStyle == UserPreferencesRepository.ContrastStyle.APPLE_CUPERTINO) {
             if (darkTheme) {
                 Brush.verticalGradient(
-                    0.0f to Color.White.copy(alpha = 0.38f),
-                    0.20f to animatedAccent.copy(alpha = 0.22f),
-                    0.60f to AppleGlassBorderDark,
-                    1.0f to Color(0x18FFFFFF)
+                    0.0f to Color.White.copy(alpha = 0.52f),
+                    0.18f to animatedAccent.copy(alpha = 0.28f),
+                    0.45f to Color(0x3364D2FF),
+                    0.75f to AppleGlassBorderDark,
+                    1.0f to Color.White.copy(alpha = 0.16f)
                 )
             } else {
                 Brush.verticalGradient(
-                    0.0f to Color.White.copy(alpha = 0.85f),
-                    0.25f to animatedAccent.copy(alpha = 0.18f),
-                    0.70f to AppleGlassBorderLight,
-                    1.0f to Color(0x10000000)
+                    0.0f to Color.White.copy(alpha = 0.94f),
+                    0.22f to animatedAccent.copy(alpha = 0.24f),
+                    0.50f to Color(0x2E38BDF8),
+                    0.78f to AppleGlassBorderLight,
+                    1.0f to Color.White.copy(alpha = 0.55f)
                 )
             }
-        } else {
-            val topAlpha = (if (darkTheme) 0.65f else 0.80f) * activeGlowIntensity.multiplier
-            val dispersionAlpha = (if (darkTheme) 0.45f else 0.50f) * activeGlowIntensity.multiplier
-            val baseHairline = if (darkTheme) DarkHairline else LightHairline
-            val dispersionColor = if (darkTheme) DarkGlassDispersionCyan else LightGlassDispersionCyan
+        } else if (darkTheme) {
+            val topAlpha = (0.20f * activeGlowIntensity.multiplier).coerceIn(0.10f, 0.34f)
+            val accentAlpha = (0.20f * activeGlowIntensity.multiplier).coerceIn(0.10f, 0.36f)
             Brush.verticalGradient(
-                0.0f to Color.White.copy(alpha = topAlpha.coerceIn(0.35f, 0.95f)),
-                0.22f to animatedAccent.copy(alpha = dispersionAlpha.coerceIn(0.20f, 0.70f)),
-                0.45f to dispersionColor.copy(alpha = dispersionAlpha.coerceIn(0.15f, 0.60f)),
-                0.75f to baseHairline,
-                1.0f to (if (darkTheme) DarkGlassSpecularBottom else LightGlassSpecularBottom)
+                0.0f to Color.White.copy(alpha = topAlpha),
+                0.24f to animatedAccent.copy(alpha = accentAlpha),
+                0.60f to DarkGlassBorder,
+                1.0f to DarkGlassSpecularBottom
+            )
+        } else {
+            val accentAlpha = (0.18f * activeGlowIntensity.multiplier).coerceIn(0.08f, 0.30f)
+            Brush.verticalGradient(
+                0.0f to Color.White.copy(alpha = 0.92f),
+                0.28f to animatedAccent.copy(alpha = accentAlpha).compositeOver(LightGlassBorder),
+                0.65f to LightGlassBorder,
+                1.0f to LightGlassSpecularBottom
             )
         }
     }
 
     val chromaticBorderBrush = remember(darkTheme, animatedAccent, animatedSecondary, activeGlowIntensity, activeContrastStyle) {
         if (activeContrastStyle == UserPreferencesRepository.ContrastStyle.APPLE_CUPERTINO) {
-            SolidColor(if (darkTheme) AppleGlassBorderDark else AppleGlassBorderLight)
-        } else {
-            val topAlpha = (if (darkTheme) 0.70f else 0.85f) * activeGlowIntensity.multiplier
-            val accentAlpha = (if (darkTheme) 0.50f else 0.55f) * activeGlowIntensity.multiplier
             Brush.sweepGradient(
-                0.0f to Color.White.copy(alpha = topAlpha.coerceIn(0.35f, 0.95f)),
-                0.20f to animatedAccent.copy(alpha = accentAlpha.coerceIn(0.20f, 0.75f)),
-                0.40f to (if (darkTheme) DarkGlassDispersionCyan else LightGlassDispersionCyan),
+                0.0f to Color.White.copy(alpha = if (darkTheme) 0.52f else 0.92f),
+                0.18f to animatedAccent.copy(alpha = if (darkTheme) 0.34f else 0.30f),
+                0.42f to Color(if (darkTheme) 0x4464D2FF else 0x38007AFF),
+                0.65f to (if (darkTheme) AppleGlassBorderDark else AppleGlassBorderLight),
+                0.85f to animatedSecondary.copy(alpha = if (darkTheme) 0.30f else 0.24f),
+                1.0f to Color.White.copy(alpha = if (darkTheme) 0.52f else 0.92f)
+            )
+        } else {
+            val topAlpha = (if (darkTheme) 0.24f else 0.72f) * activeGlowIntensity.multiplier
+            val accentAlpha = (if (darkTheme) 0.26f else 0.36f) * activeGlowIntensity.multiplier
+            Brush.sweepGradient(
+                0.0f to Color.White.copy(alpha = topAlpha.coerceIn(0.12f, 0.78f)),
+                0.20f to animatedAccent.copy(alpha = accentAlpha.coerceIn(0.12f, 0.48f)),
+                0.40f to (if (darkTheme) DarkGlassBorder else LightGlassBorder),
                 0.65f to (if (darkTheme) DarkHairline else LightHairline),
-                0.85f to animatedSecondary.copy(alpha = accentAlpha.coerceIn(0.15f, 0.65f)),
-                1.0f to Color.White.copy(alpha = topAlpha.coerceIn(0.35f, 0.95f))
+                0.85f to animatedSecondary.copy(alpha = accentAlpha.coerceIn(0.10f, 0.40f)),
+                1.0f to Color.White.copy(alpha = topAlpha.coerceIn(0.12f, 0.78f))
             )
         }
     }
@@ -458,9 +476,9 @@ fun PriceLensTheme(
             Brush.horizontalGradient(
                 listOf(
                     Color.Transparent,
-                    Color.White.copy(alpha = if (darkTheme) 0.45f else 0.75f),
-                    animatedAccent.copy(alpha = if (darkTheme) 0.40f else 0.55f),
-                    Color.White.copy(alpha = if (darkTheme) 0.45f else 0.75f),
+                    Color.White.copy(alpha = if (darkTheme) 0.16f else 0.65f),
+                    animatedAccent.copy(alpha = if (darkTheme) 0.20f else 0.28f),
+                    Color.White.copy(alpha = if (darkTheme) 0.16f else 0.65f),
                     Color.Transparent
                 )
             )
@@ -544,7 +562,17 @@ fun PriceLensTheme(
         glowIntensity = activeGlowIntensity,
         contrastStyle = activeContrastStyle,
         glassRefraction = activeGlassRefraction,
-        glassDispersion = activeGlassDispersion
+        glassDispersion = activeGlassDispersion,
+        headerScrim = if (isCupertino) {
+            if (darkTheme) AppleGlassSurfaceDark else AppleGlassSurfaceLight
+        } else {
+            if (darkTheme) DarkBackgroundStart.copy(alpha = 0.92f) else LightBackgroundStart.copy(alpha = 0.92f)
+        },
+        headerDivider = if (isCupertino) {
+            if (darkTheme) AppleGlassBorderDark else AppleGlassBorderLight
+        } else {
+            if (darkTheme) DarkHairline.copy(alpha = 0.55f) else LightHairline.copy(alpha = 0.70f)
+        }
     )
 
     val baseScheme = if (darkTheme) DarkColorScheme else LightColorScheme
@@ -611,6 +639,10 @@ object PriceLensTheme {
     val rootBackdrop: Backdrop?
         @Composable
         get() = LocalRootBackdrop.current
+
+    val canvasBackdrop: Backdrop?
+        @Composable
+        get() = LocalCanvasBackdrop.current
 
     val isCupertino: Boolean
         @Composable

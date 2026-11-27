@@ -69,9 +69,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
+import com.kyant.backdrop.shadow.Shadow
 import com.pricelens.core.designsystem.AmberAlert
 import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.LocalThemeToggle
@@ -81,6 +89,7 @@ import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
 import com.pricelens.core.designsystem.components.SkeletonBox
 import com.pricelens.core.designsystem.components.ThemeToggleSwitch
+import com.pricelens.core.designsystem.components.rememberCupertinoCircleGlassModifier
 import com.pricelens.domain.model.WatchlistItem
 import java.text.NumberFormat
 import java.util.Locale
@@ -149,13 +158,52 @@ fun WatchlistScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.Transparent,
         snackbarHost = {
+            val isCupertino = PriceLensTheme.isCupertino
+            val isDark = PriceLensTheme.isDark
+            val snackBackdrop = if (isCupertino) PriceLensTheme.canvasBackdrop else null
+            val snackIntensity = if (isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f
+            val snackSurface = PriceLensTheme.glassColors.surfaceGlass
             SnackbarHost(hostState = snackbarHostState) { data ->
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = PriceLensTheme.glassColors.surfaceGlass,
-                    border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder),
-                    shadowElevation = 8.dp,
-                    modifier = Modifier.padding(16.dp)
+                    shape = RoundedCornerShape(if (isCupertino) 16.dp else 12.dp),
+                    color = if (snackBackdrop != null) Color.Transparent else snackSurface,
+                    border = BorderStroke(if (isCupertino) 0.75.dp else 1.dp, PriceLensTheme.glassColors.specularBorderBrush),
+                    shadowElevation = if (snackBackdrop != null) 0.dp else 8.dp,
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .then(
+                            if (snackBackdrop != null) {
+                                Modifier.drawBackdrop(
+                                    backdrop = snackBackdrop,
+                                    shape = { RoundedCornerShape(16.dp) },
+                                    effects = {
+                                        vibrancy()
+                                        blur((10f * snackIntensity).dp.toPx())
+                                        lens(
+                                            refractionHeight = (8f * snackIntensity).dp.toPx(),
+                                            refractionAmount = (12f * snackIntensity).dp.toPx(),
+                                            depthEffect = true,
+                                            chromaticAberration = true
+                                        )
+                                    },
+                                    highlight = {
+                                        Highlight.Default.copy(
+                                            width = 0.75.dp,
+                                            alpha = if (isDark) 0.60f else 0.82f
+                                        )
+                                    },
+                                    shadow = {
+                                        Shadow(
+                                            radius = 12.dp,
+                                            color = Color.Black.copy(alpha = if (isDark) 0.28f else 0.10f)
+                                        )
+                                    },
+                                    onDrawSurface = { drawRect(snackSurface) }
+                                )
+                            } else {
+                                Modifier
+                            }
+                        )
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -319,45 +367,92 @@ fun WatchlistScreen(
                     // Search Filter
                     if (uiState.totalTrackedCount > 2) {
                         item(key = "search_filter") {
-                            OutlinedTextField(
-                                value = uiState.searchQuery,
-                                onValueChange = { onEvent(WatchlistUiEvent.SearchQueryChanged(it)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                placeholder = {
-                                    Text(
-                                        text = "Filter saved items...",
-                                        color = PriceLensTheme.glassColors.textSecondary
-                                    )
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Search,
-                                        contentDescription = null,
-                                        tint = PriceLensTheme.glassColors.textSecondary
-                                    )
-                                },
-                                trailingIcon = {
-                                    if (uiState.searchQuery.isNotBlank()) {
-                                        IconButton(onClick = { onEvent(WatchlistUiEvent.SearchQueryChanged("")) }) {
-                                            Icon(
-                                                imageVector = Icons.Default.Close,
-                                                contentDescription = "Clear",
-                                                tint = PriceLensTheme.glassColors.textSecondary
-                                            )
+                            val isCupertino = PriceLensTheme.isCupertino
+                            val isDark = PriceLensTheme.isDark
+                            val filterBackdrop = if (isCupertino) PriceLensTheme.canvasBackdrop else null
+                            val filterIntensity = if (isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f
+                            val filterSurface = PriceLensTheme.glassColors.surfaceGlass
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .then(
+                                        if (filterBackdrop != null) {
+                                            Modifier
+                                                .drawBackdrop(
+                                                    backdrop = filterBackdrop,
+                                                    shape = { RoundedCornerShape(16.dp) },
+                                                    effects = {
+                                                        vibrancy()
+                                                        blur((8f * filterIntensity).dp.toPx())
+                                                        lens(
+                                                            refractionHeight = (7f * filterIntensity).dp.toPx(),
+                                                            refractionAmount = (11f * filterIntensity).dp.toPx(),
+                                                            depthEffect = true,
+                                                            chromaticAberration = true
+                                                        )
+                                                    },
+                                                    highlight = {
+                                                        Highlight.Default.copy(
+                                                            width = 0.75.dp,
+                                                            alpha = if (isDark) 0.52f else 0.76f
+                                                        )
+                                                    },
+                                                    innerShadow = {
+                                                        InnerShadow(
+                                                            radius = (4f * filterIntensity).dp,
+                                                            offset = DpOffset(0.dp, 1.5.dp),
+                                                            color = Color.White.copy(alpha = if (isDark) 0.10f else 0.42f),
+                                                            alpha = 0.72f
+                                                        )
+                                                    },
+                                                    onDrawSurface = { drawRect(filterSurface) }
+                                                )
+                                                .clip(RoundedCornerShape(16.dp))
+                                        } else {
+                                            Modifier
                                         }
-                                    }
-                                },
-                                singleLine = true,
-                                shape = RoundedCornerShape(16.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
-                                    unfocusedContainerColor = PriceLensTheme.glassColors.surfaceGlass,
-                                    focusedBorderColor = ElectricBlue,
-                                    unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
-                                    focusedTextColor = PriceLensTheme.glassColors.textPrimary,
-                                    unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
+                                    )
+                            ) {
+                                OutlinedTextField(
+                                    value = uiState.searchQuery,
+                                    onValueChange = { onEvent(WatchlistUiEvent.SearchQueryChanged(it)) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = {
+                                        Text(
+                                            text = "Filter saved items...",
+                                            color = PriceLensTheme.glassColors.textSecondary
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Search,
+                                            contentDescription = null,
+                                            tint = PriceLensTheme.glassColors.textSecondary
+                                        )
+                                    },
+                                    trailingIcon = {
+                                        if (uiState.searchQuery.isNotBlank()) {
+                                            IconButton(onClick = { onEvent(WatchlistUiEvent.SearchQueryChanged("")) }) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Close,
+                                                    contentDescription = "Clear",
+                                                    tint = PriceLensTheme.glassColors.textSecondary
+                                                )
+                                            }
+                                        }
+                                    },
+                                    singleLine = true,
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedContainerColor = if (filterBackdrop != null) Color.Transparent else filterSurface,
+                                        unfocusedContainerColor = if (filterBackdrop != null) Color.Transparent else filterSurface,
+                                        focusedBorderColor = if (isCupertino) PriceLensTheme.glassColors.ambientGlow else ElectricBlue,
+                                        unfocusedBorderColor = PriceLensTheme.glassColors.specularBorder,
+                                        focusedTextColor = PriceLensTheme.glassColors.textPrimary,
+                                        unfocusedTextColor = PriceLensTheme.glassColors.textPrimary
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
 
@@ -451,12 +546,14 @@ private fun WatchlistTopBar(
                 .padding(horizontal = 10.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val topCircleGlass = rememberCupertinoCircleGlassModifier()
             IconButton(
                 onClick = onNavigateBack,
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(PriceLensTheme.glassColors.surfaceGlass)
+                    .then(topCircleGlass)
+                    .border(1.dp, PriceLensTheme.glassColors.specularBorder, CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -467,17 +564,32 @@ private fun WatchlistTopBar(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(PriceLensTheme.glassColors.ambientGlow)
+                    )
+                    Text(
+                        text = "Tracked Watchlist",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 Text(
-                    text = "Tracked Watchlist",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = PriceLensTheme.glassColors.textPrimary
-                )
-                Text(
-                    text = if (itemCount == 1) "1 item tracked" else "$itemCount items tracked",
+                    text = if (itemCount == 1) "1 item tracked • Live" else "$itemCount items tracked • Live",
                     style = MaterialTheme.typography.bodySmall,
-                    color = PriceLensTheme.glassColors.textSecondary
+                    color = PriceLensTheme.glassColors.textSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
@@ -491,45 +603,17 @@ private fun WatchlistTopBar(
             IconButton(
                 onClick = onSyncClick,
                 modifier = Modifier
-                    .size(34.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(PriceLensTheme.glassColors.surfaceGlass)
+                    .then(topCircleGlass)
+                    .border(1.dp, PriceLensTheme.glassColors.specularBorder, CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
                     contentDescription = "Sync Watchlist",
                     tint = ElectricBlue,
-                    modifier = Modifier.size(17.dp)
+                    modifier = Modifier.size(18.dp)
                 )
-            }
-
-            Spacer(modifier = Modifier.width(6.dp))
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(9999.dp))
-                    .background(PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.12f))
-                    .border(1.dp, PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.3f), RoundedCornerShape(9999.dp))
-                    .padding(horizontal = 10.dp, vertical = 5.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(7.dp)
-                            .clip(CircleShape)
-                            .background(PriceLensTheme.glassColors.ambientGlow)
-                    )
-                    Text(
-                        text = "LIVE",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = PriceLensTheme.glassColors.ambientGlow,
-                        letterSpacing = 0.5.sp
-                    )
-                }
             }
         }
     }
@@ -875,7 +959,7 @@ private fun WatchlistItemCard(
 
             // Price Drop Notification Banner
             if (isPriceDrop) {
-                val savings = target!! - current!!
+                val savings = (target ?: 0.0) - (current ?: 0.0)
                 Spacer(modifier = Modifier.height(12.dp))
                 Box(
                     modifier = Modifier

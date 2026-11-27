@@ -10,7 +10,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,8 +17,10 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -34,9 +35,11 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,10 +48,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
 import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.PriceLensTheme
 
@@ -64,8 +74,20 @@ fun PriceLensTopBar(
     isLabsActive: Boolean = false
 ) {
     val isDark = PriceLensTheme.isDark
+    val isCupertino = PriceLensTheme.isCupertino
+    val canvasBackdrop = PriceLensTheme.canvasBackdrop
+    val effectIntensity = if (isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f
+    val surfaceGlassColor = PriceLensTheme.glassColors.surfaceGlass
     val defaultToggle = LocalThemeToggle.current
     val toggleAction = onToggleTheme ?: defaultToggle
+
+    val glassCircleModifier: Modifier = rememberCupertinoCircleGlassModifier(
+        isCupertino = isCupertino,
+        isDark = isDark,
+        canvasBackdrop = canvasBackdrop,
+        effectIntensity = effectIntensity,
+        surfaceColor = surfaceGlassColor
+    )
 
     Column(
         modifier = modifier
@@ -78,7 +100,11 @@ fun PriceLensTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 10.dp)
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
@@ -91,7 +117,10 @@ fun PriceLensTopBar(
                         text = title,
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
-                        color = PriceLensTheme.glassColors.textPrimary
+                        color = PriceLensTheme.glassColors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
@@ -105,7 +134,9 @@ fun PriceLensTopBar(
                             text = "LIVE",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = PriceLensTheme.glassColors.ambientGlow
+                            color = PriceLensTheme.glassColors.ambientGlow,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }
@@ -114,14 +145,16 @@ fun PriceLensTopBar(
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = PriceLensTheme.glassColors.textSecondary
+                        color = PriceLensTheme.glassColors.textSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 // PriceLens Labs (Experimental Features) Button
                 if (onLabsClick != null) {
@@ -164,7 +197,7 @@ fun PriceLensTopBar(
                                     scaleY = labsScale
                                 }
                                 .clip(CircleShape)
-                                .background(PriceLensTheme.glassColors.surfaceGlass)
+                                .then(glassCircleModifier)
                                 .border(
                                     1.dp,
                                     if (isLabsActive) PriceLensTheme.glassColors.ambientGlow.copy(alpha = 0.6f)
@@ -183,7 +216,7 @@ fun PriceLensTopBar(
                         if (isLabsActive) {
                             Box(
                                 modifier = Modifier
-                                    .offset(x = 2.dp, y = (-2).dp)
+                                    .offset(x = (-1).dp, y = 1.dp)
                                     .size(8.dp)
                                     .graphicsLayer {
                                         scaleX = dotScale
@@ -226,7 +259,7 @@ fun PriceLensTopBar(
                                 scaleY = bookmarkScale
                             }
                             .clip(CircleShape)
-                            .background(PriceLensTheme.glassColors.surfaceGlass)
+                            .then(glassCircleModifier)
                             .border(1.dp, PriceLensTheme.glassColors.specularBorder, CircleShape)
                     ) {
                         Icon(
@@ -241,10 +274,10 @@ fun PriceLensTopBar(
                         Box(
                             modifier = Modifier
                                 .offset(x = 3.dp, y = (-2).dp)
+                                .defaultMinSize(minWidth = 17.dp, minHeight = 17.dp)
                                 .clip(CircleShape)
                                 .background(PriceLensTheme.glassColors.ambientGlow)
-                                .padding(horizontal = if (watchlistCount > 9) 4.dp else 0.dp)
-                                .size(if (watchlistCount > 9) 18.dp else 16.dp),
+                                .padding(horizontal = if (watchlistCount > 9) 4.dp else 0.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -252,13 +285,52 @@ fun PriceLensTopBar(
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color(0xFF040404),
                                 fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+internal fun rememberCupertinoCircleGlassModifier(
+    isCupertino: Boolean = PriceLensTheme.isCupertino,
+    isDark: Boolean = PriceLensTheme.isDark,
+    canvasBackdrop: com.kyant.backdrop.Backdrop? = PriceLensTheme.canvasBackdrop,
+    effectIntensity: Float = if (isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f,
+    surfaceColor: Color = PriceLensTheme.glassColors.surfaceGlass
+): Modifier {
+    return if (isCupertino && canvasBackdrop != null) {
+        Modifier.drawBackdrop(
+            backdrop = canvasBackdrop,
+            shape = { CircleShape },
+            effects = {
+                vibrancy()
+                blur((6f * effectIntensity).dp.toPx())
+                lens(
+                    refractionHeight = (8f * effectIntensity).dp.toPx(),
+                    refractionAmount = (12f * effectIntensity).dp.toPx(),
+                    depthEffect = true,
+                    chromaticAberration = true
+                )
+            },
+            highlight = {
+                Highlight.Default.copy(
+                    width = 0.75.dp,
+                    alpha = if (isDark) 0.60f else 0.82f
+                )
+            },
+            onDrawSurface = {
+                drawRect(surfaceColor)
+            }
+        )
+    } else {
+        Modifier.background(surfaceColor)
     }
 }
 
@@ -287,6 +359,14 @@ fun ThemeToggleSwitch(
         label = "themeToggleRotation"
     )
 
+    val circleGlassModifier = rememberCupertinoCircleGlassModifier(
+        isCupertino = PriceLensTheme.isCupertino,
+        isDark = isDark,
+        canvasBackdrop = PriceLensTheme.canvasBackdrop,
+        effectIntensity = if (PriceLensTheme.isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f,
+        surfaceColor = PriceLensTheme.glassColors.surfaceGlass
+    )
+
     IconButton(
         onClick = onToggle,
         interactionSource = interactionSource,
@@ -298,7 +378,7 @@ fun ThemeToggleSwitch(
                 rotationZ = rotation
             }
             .clip(CircleShape)
-            .background(PriceLensTheme.glassColors.surfaceGlass)
+            .then(circleGlassModifier)
             .border(1.dp, PriceLensTheme.glassColors.specularBorder, CircleShape)
     ) {
         Crossfade(
@@ -311,6 +391,52 @@ fun ThemeToggleSwitch(
                 contentDescription = if (dark) "Switch to Light Mode" else "Switch to Dark Mode",
                 tint = if (dark) PriceLensTheme.glassColors.ambientGlow else Color(0xFFF59E0B),
                 modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+/**
+ * Shared pinned top-bar container with Liquid Glass backdrop in iOS mode
+ * and a clean subtle translucent scrim + hairline divider in normal mode.
+ */
+@Composable
+fun PinnedHeaderSurface(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val isCupertino = PriceLensTheme.isCupertino
+    val headerBackdrop = if (isCupertino) PriceLensTheme.canvasBackdrop else null
+    val effectIntensity = if (isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f
+    val scrimColor = PriceLensTheme.glassColors.headerScrim
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (headerBackdrop != null) {
+                    Modifier.drawBackdrop(
+                        backdrop = headerBackdrop,
+                        shape = { RectangleShape },
+                        effects = {
+                            vibrancy()
+                            blur((12f * effectIntensity).dp.toPx())
+                        },
+                        highlight = null,
+                        shadow = null,
+                        onDrawSurface = { drawRect(scrimColor) }
+                    )
+                } else {
+                    Modifier
+                }
+            ),
+        color = if (headerBackdrop != null) Color.Transparent else scrimColor
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            content()
+            HorizontalDivider(
+                thickness = if (isCupertino) 0.75.dp else 0.5.dp,
+                color = PriceLensTheme.glassColors.headerDivider
             )
         }
     }

@@ -51,9 +51,9 @@ val LightTextSecondary = Color(0xFF475569)   // Slate 600
 val LightTextTertiary = Color(0xFF94A3B8)    // Slate 400
 
 // Liquid Glass Surface Tokens (Light)
-val LightGlassSurface = Color(0xD0FFFFFF)    // Translucent crystalline frosted glass
-val LightGlassSurfaceElevated = Color(0xEBFFFFFF)
-val LightGlassBorder = Color(0x80FFFFFF)     // Crisp specular border
+val LightGlassSurface = Color(0xD8FFFFFF)    // Translucent crystalline frosted glass
+val LightGlassSurfaceElevated = Color(0xF0FFFFFF)
+val LightGlassBorder = Color(0x99CBD5E1)     // Crisp slate hairline for light canvas contrast
 val LightGlassHighlight = Color(0x4DFFFFFF)
 val LightGlassSpecularTop = Color(0xCCFFFFFF) // Crisp top glint
 val LightGlassSpecularBottom = Color(0x3394A3B8)
@@ -80,11 +80,11 @@ val AppleGroupedBackgroundLight = Color(0xFFF2F2F7)
 val AppleSecondaryGroupedLight = Color(0xFFFFFFFF)
 val AppleTertiaryGroupedLight = Color(0xFFE5E5EA)
 
-// Apple System Materials & Translucent Glass (visionOS / iOS Frosted Material)
-val AppleGlassSurfaceDark = Color(0xCC1C1C1E)      // ~80% Apple Dark Material
-val AppleGlassSurfaceLight = Color(0xE6FFFFFF)     // ~90% Apple Light Material
-val AppleGlassBorderDark = Color(0x38FFFFFF)       // Apple Specular Hairline (0.5dp)
-val AppleGlassBorderLight = Color(0x24000000)      // Apple Subtle Inset Separator
+// Apple System Materials & Translucent Glass (visionOS / iOS Liquid Glass Material)
+val AppleGlassSurfaceDark = Color(0xB81C1C1E)      // ~72% Apple Dark Liquid Material
+val AppleGlassSurfaceLight = Color(0xCCFFFFFF)     // ~80% Apple Light Liquid Material
+val AppleGlassBorderDark = Color(0x47FFFFFF)       // Apple Specular Hairline
+val AppleGlassBorderLight = Color(0x2E000000)      // Apple Subtle Inset Separator
 val AppleSeparatorDark = Color(0x54545899)
 val AppleSeparatorLight = Color(0x3C3C4349)
 val AppleSystemGray = Color(0xFF8E8E93)

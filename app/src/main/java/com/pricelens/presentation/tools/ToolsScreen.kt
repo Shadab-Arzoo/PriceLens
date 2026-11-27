@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -73,6 +74,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pricelens.core.designsystem.AmberAlert
@@ -81,12 +83,14 @@ import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.ThemeAccent
+import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.catalog.components.LiquidSlider
 import com.kyant.backdrop.catalog.components.LiquidToggle
 import com.pricelens.core.designsystem.AppFont
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassView
+import com.pricelens.core.designsystem.components.PinnedHeaderSurface
 import com.pricelens.core.designsystem.components.liquidGlass
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -277,20 +281,14 @@ fun ToolsScreen(
     val currentIosGlassIntensity by userPreferences.iosGlassIntensityFlow.collectAsState()
     val currentAppFont by userPreferences.appFontFlow.collectAsState()
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(brush = PriceLensTheme.glassColors.backgroundBrush),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 100.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // 1. Header
-        item {
+    Column(modifier = modifier.fillMaxSize()) {
+        // 1. Pinned Top Header with status bar protection & bottom hairline
+        PinnedHeaderSurface {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(vertical = 8.dp)
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
@@ -304,16 +302,29 @@ fun ToolsScreen(
                         text = "Power Tools & Labs",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = PriceLensTheme.glassColors.textPrimary
+                        color = PriceLensTheme.glassColors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Theme Studio, Live Web Inspector, Store Diagnostics, EMI Planner & PriceLens Labs",
+                    text = "Theme Studio, Live Web Inspector, Store Diagnostics & Labs",
                     style = MaterialTheme.typography.labelSmall,
-                    color = PriceLensTheme.glassColors.textSecondary
+                    color = PriceLensTheme.glassColors.textSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
+
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 100.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
 
         // Interactive Intro & Feature Walkthrough Replay
         item {
@@ -386,7 +397,12 @@ fun ToolsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
+                        ) {
                             Box(
                                 modifier = Modifier
                                     .size(34.dp)
@@ -402,17 +418,21 @@ fun ToolsScreen(
                                 )
                             }
                             Spacer(modifier = Modifier.width(10.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Theme & Appearance Studio",
+                                    text = "Theme Studio",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = PriceLensTheme.glassColors.textPrimary
+                                    color = PriceLensTheme.glassColors.textPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "Personalize colors, mode & liquid glass glow",
+                                    text = "Colors, mode & glass glow",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = PriceLensTheme.glassColors.textSecondary
+                                    color = PriceLensTheme.glassColors.textSecondary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -449,7 +469,9 @@ fun ToolsScreen(
                                         text = "SHUFFLE",
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                         fontWeight = FontWeight.Bold,
-                                        color = PriceLensTheme.glassColors.ambientGlow
+                                        color = PriceLensTheme.glassColors.ambientGlow,
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
                             }
@@ -471,10 +493,12 @@ fun ToolsScreen(
                                             .background(PriceLensTheme.glassColors.ambientGlow)
                                     )
                                     Text(
-                                        text = currentThemeAccent.displayName.uppercase(),
+                                        text = currentThemeAccent.displayName.substringBefore(" ").uppercase(),
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                         fontWeight = FontWeight.ExtraBold,
-                                        color = PriceLensTheme.glassColors.ambientGlow
+                                        color = PriceLensTheme.glassColors.ambientGlow,
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
                             }
@@ -516,42 +540,49 @@ fun ToolsScreen(
                     // Interactive Liquid Glass Lens Preview Playground
                     val playgroundAccent = PriceLensTheme.glassColors.ambientGlow
                     val playgroundSecondary = PriceLensTheme.glassColors.accentSecondary
+                    val playgroundBackdrop = rememberLayerBackdrop()
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(115.dp)
-                            .clip(RoundedCornerShape(18.dp))
-                            .drawBehind {
-                                // Dynamic colorful backdrop pattern behind glass
-                                drawRect(
-                                    brush = Brush.linearGradient(
-                                        listOf(
-                                            playgroundAccent.copy(alpha = 0.35f),
-                                            playgroundSecondary.copy(alpha = 0.30f),
-                                            Color(0xFF38BDF8).copy(alpha = 0.25f),
-                                            Color(0xFFA855F7).copy(alpha = 0.25f)
-                                        ),
-                                        start = Offset(0f, 0f),
-                                        end = Offset(size.width, size.height)
-                                    )
-                                )
-                                drawCircle(
-                                    brush = Brush.radialGradient(
-                                        listOf(playgroundAccent.copy(alpha = 0.45f), Color.Transparent)
-                                    ),
-                                    center = Offset(size.width * 0.25f, size.height * 0.5f),
-                                    radius = size.height * 0.8f
-                                )
-                                drawCircle(
-                                    brush = Brush.radialGradient(
-                                        listOf(playgroundSecondary.copy(alpha = 0.40f), Color.Transparent)
-                                    ),
-                                    center = Offset(size.width * 0.75f, size.height * 0.5f),
-                                    radius = size.height * 0.7f
-                                )
-                            },
+                            .clip(RoundedCornerShape(18.dp)),
                         contentAlignment = Alignment.Center
                     ) {
+                        // Recorded vibrant background layer so the floating lens card refracts & blurs real colors
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .layerBackdrop(playgroundBackdrop)
+                                .drawBehind {
+                                    // Dynamic colorful backdrop pattern behind glass
+                                    drawRect(
+                                        brush = Brush.linearGradient(
+                                            listOf(
+                                                playgroundAccent.copy(alpha = 0.35f),
+                                                playgroundSecondary.copy(alpha = 0.30f),
+                                                Color(0xFF38BDF8).copy(alpha = 0.25f),
+                                                Color(0xFFA855F7).copy(alpha = 0.25f)
+                                            ),
+                                            start = Offset(0f, 0f),
+                                            end = Offset(size.width, size.height)
+                                        )
+                                    )
+                                    drawCircle(
+                                        brush = Brush.radialGradient(
+                                            listOf(playgroundAccent.copy(alpha = 0.48f), Color.Transparent)
+                                        ),
+                                        center = Offset(size.width * 0.25f, size.height * 0.5f),
+                                        radius = size.height * 0.8f
+                                    )
+                                    drawCircle(
+                                        brush = Brush.radialGradient(
+                                            listOf(playgroundSecondary.copy(alpha = 0.42f), Color.Transparent)
+                                        ),
+                                        center = Offset(size.width * 0.75f, size.height * 0.5f),
+                                        radius = size.height * 0.7f
+                                    )
+                                }
+                        )
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth(0.92f)
@@ -560,7 +591,8 @@ fun ToolsScreen(
                                     shape = RoundedCornerShape(16.dp),
                                     cornerRadius = 16.dp,
                                     showTopGlint = true,
-                                    interactiveTouch = true
+                                    interactiveTouch = true,
+                                    backdrop = playgroundBackdrop
                                 )
                                 .padding(12.dp),
                             contentAlignment = Alignment.Center
@@ -980,14 +1012,15 @@ fun ToolsScreen(
                                 }
 
                                 if (isIosSwitchEnabled) {
-                                    val toggleBackdrop = rememberLayerBackdrop()
+                                    val toggleBackdrop = PriceLensTheme.canvasBackdrop ?: rememberLayerBackdrop()
                                     LiquidToggle(
                                         selected = { isIosSwitchEnabled },
                                         onSelect = { checked ->
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                             userPreferences.setIosSwitchEnabled(checked)
                                         },
-                                        backdrop = toggleBackdrop
+                                        backdrop = toggleBackdrop,
+                                        isLightTheme = !PriceLensTheme.isDark
                                     )
                                 } else {
                                     Switch(
@@ -1079,7 +1112,7 @@ fun ToolsScreen(
                                     color = PriceLensTheme.glassColors.textSecondary
                                 )
 
-                                val sliderBackdrop = rememberLayerBackdrop()
+                                val sliderBackdrop = PriceLensTheme.canvasBackdrop ?: rememberLayerBackdrop()
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -1092,7 +1125,8 @@ fun ToolsScreen(
                                         },
                                         valueRange = 0.2f..2.0f,
                                         visibilityThreshold = 0.01f,
-                                        backdrop = sliderBackdrop
+                                        backdrop = sliderBackdrop,
+                                        isLightTheme = !PriceLensTheme.isDark
                                     )
                                 }
                             }
@@ -3007,6 +3041,7 @@ fun ToolsScreen(
                     }
                 }
             }
+        }
         }
     }
 }

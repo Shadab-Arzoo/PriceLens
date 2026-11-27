@@ -61,6 +61,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,6 +78,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pricelens.R
 import com.pricelens.core.designsystem.ElectricBlue
@@ -85,6 +89,7 @@ import com.pricelens.core.designsystem.components.DashboardSkeleton
 import com.pricelens.core.designsystem.components.EmptyStateCard
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
+import com.pricelens.core.designsystem.components.PinnedHeaderSurface
 import com.pricelens.core.designsystem.components.PriceLensSearchBar
 import com.pricelens.core.designsystem.components.PriceLensTopBar
 import com.pricelens.domain.model.RecentSearch
@@ -117,6 +122,29 @@ fun DashboardRoute(
 
 private val ClipboardUrlRegex = Regex("""https?://[^\s<>"{}|\\^`]+""", RegexOption.IGNORE_CASE)
 
+private val SupportedClipboardDomains = listOf(
+    "amazon.",
+    "amzn.",
+    "amzn.to",
+    "flipkart.",
+    "fkrt.it",
+    "myntra.",
+    "ajio.",
+    "croma.",
+    "tatacliq.",
+    "jiomart."
+)
+
+internal fun extractSupportedClipboardUrl(rawText: String?): String? {
+    val trimmed = rawText?.trim().orEmpty()
+    if (trimmed.isEmpty()) return null
+    val foundUrl = ClipboardUrlRegex.find(trimmed)?.value
+        ?: if (trimmed.contains(".") && !trimmed.contains(" ")) trimmed else null
+    if (foundUrl == null) return null
+    val lower = foundUrl.lowercase(Locale.US)
+    return if (SupportedClipboardDomains.any { lower.contains(it) }) foundUrl else null
+}
+
 @Composable
 fun DashboardScreen(
     uiState: DashboardUiState,
@@ -128,32 +156,39 @@ fun DashboardScreen(
     modifier: Modifier = Modifier
 ) {
     val clipboardManager = LocalClipboardManager.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     var dismissedClipboardUrl by rememberSaveable { mutableStateOf<String?>(null) }
-    val clipboardText = remember(clipboardManager) {
-        clipboardManager.getText()?.text?.trim().orEmpty()
+    var detectedClipboardUrl by remember {
+        mutableStateOf(
+            if (clipboardManager.hasText()) {
+                extractSupportedClipboardUrl(clipboardManager.getText()?.text)
+            } else {
+                null
+            }
+        )
     }
-    val detectedClipboardUrl = remember(clipboardText) {
-        val foundUrl = ClipboardUrlRegex.find(clipboardText)?.value
-            ?: if (clipboardText.contains(".") && !clipboardText.contains(" ")) clipboardText else null
-        if (foundUrl != null) {
-            val lower = foundUrl.lowercase()
-            val isSupported = lower.contains("amazon.") || lower.contains("amzn.") || lower.contains("amzn.to") ||
-                lower.contains("flipkart.") || lower.contains("fkrt.it") || lower.contains("myntra.") ||
-                lower.contains("ajio.") || lower.contains("croma.") ||
-                lower.contains("tatacliq.") || lower.contains("jiomart.")
-            if (isSupported) foundUrl else null
-        } else null
+
+    DisposableEffect(lifecycleOwner, clipboardManager) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                detectedClipboardUrl = if (clipboardManager.hasText()) {
+                    extractSupportedClipboardUrl(clipboardManager.getText()?.text)
+                } else {
+                    null
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        // 1. Pinned Top Bar with status bar protection
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = PriceLensTheme.glassColors.surfaceGlass,
-            border = BorderStroke(1.dp, PriceLensTheme.glassColors.specularBorder)
-        ) {
+        // 1. Pinned Top Bar with status bar protection & bottom hairline
+        PinnedHeaderSurface {
             PriceLensTopBar(
                 title = stringResource(R.string.dashboard_title),
                 subtitle = "",
@@ -188,15 +223,16 @@ fun DashboardScreen(
             }
 
             // 2b. Auto-Detected Clipboard URL Banner
-            if (detectedClipboardUrl != null && detectedClipboardUrl != dismissedClipboardUrl) {
+            val clipboardUrl = detectedClipboardUrl
+            if (clipboardUrl != null && clipboardUrl != dismissedClipboardUrl) {
                 item(key = "clipboard_detected_banner") {
                     ClipboardDetectedBanner(
-                        url = detectedClipboardUrl,
+                        url = clipboardUrl,
                         onCompare = {
                             onEvent(DashboardUiEvent.OpenPasteUrlSheet)
-                            onEvent(DashboardUiEvent.PasteUrlInputChanged(detectedClipboardUrl))
+                            onEvent(DashboardUiEvent.PasteUrlInputChanged(clipboardUrl))
                         },
-                        onDismiss = { dismissedClipboardUrl = detectedClipboardUrl }
+                        onDismiss = { dismissedClipboardUrl = clipboardUrl }
                     )
                 }
             }
@@ -1102,7 +1138,7 @@ private fun FlashDealsTicker(
             items(flashDeals, key = { it.first }) { (id, name, pricing) ->
                 val (currentPrice, originalPrice, store) = pricing
                 val dropAmount = originalPrice - currentPrice
-                val dropPercent = ((dropAmount / originalPrice) * 100).toInt()
+                val dropPercent = if (originalPrice > 0) ((dropAmount / originalPrice) * 100).toInt() else 0
                 val storeColor = when (store) {
                     "Amazon" -> Color(0xFFFF9900)
                     "Flipkart" -> Color(0xFF2874F0)

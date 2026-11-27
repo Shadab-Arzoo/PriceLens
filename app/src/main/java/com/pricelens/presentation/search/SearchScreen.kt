@@ -66,9 +66,11 @@ import com.pricelens.core.designsystem.LocalThemeToggle
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.EmptyStateCard
 import com.pricelens.core.designsystem.components.GlassCard
+import com.pricelens.core.designsystem.components.PinnedHeaderSurface
 import com.pricelens.core.designsystem.components.PriceLensSearchBar
 import com.pricelens.core.designsystem.components.SkeletonBox
 import com.pricelens.core.designsystem.components.ThemeToggleSwitch
+import com.pricelens.core.designsystem.components.rememberCupertinoCircleGlassModifier
 import com.pricelens.core.util.PriceLensFormatters
 import com.pricelens.domain.model.ProductSummary
 import java.text.NumberFormat
@@ -114,44 +116,57 @@ fun SearchScreen(
         modifier = modifier.fillMaxSize()
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
+            modifier = Modifier.fillMaxSize()
         ) {
             // Header with Back Button
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onNavigateBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Navigate back",
-                        tint = PriceLensTheme.glassColors.textPrimary
+            PinnedHeaderSurface {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val backCircleGlass = rememberCupertinoCircleGlassModifier()
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .then(backCircleGlass)
+                            .border(1.dp, PriceLensTheme.glassColors.specularBorder, CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Navigate back",
+                            tint = PriceLensTheme.glassColors.textPrimary
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = stringResource(R.string.search_screen_title),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = PriceLensTheme.glassColors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    ThemeToggleSwitch(
+                        isDark = PriceLensTheme.isDark,
+                        onToggle = LocalThemeToggle.current
                     )
                 }
-                Text(
-                    text = stringResource(R.string.search_screen_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = PriceLensTheme.glassColors.textPrimary,
-                    modifier = Modifier.weight(1f)
-                )
-
-                ThemeToggleSwitch(
-                    isDark = PriceLensTheme.isDark,
-                    onToggle = LocalThemeToggle.current
-                )
             }
 
             // Search Bar
-            Box(modifier = Modifier.padding(bottom = 12.dp)) {
+            Box(modifier = Modifier.padding(top = 12.dp, bottom = 12.dp)) {
                 PriceLensSearchBar(
                     query = uiState.query,
                     onQueryChange = { onEvent(SearchUiEvent.QueryChanged(it)) },
-                    onSearch = { onEvent(SearchUiEvent.SubmitSearch(it)) }
+                    onSearch = { onEvent(SearchUiEvent.SubmitSearch(it)) },
+                    onClear = { onEvent(SearchUiEvent.ClearQuery) }
                 )
             }
 

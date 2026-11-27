@@ -27,6 +27,9 @@ import androidx.navigation.compose.rememberNavController
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.pricelens.core.designsystem.DarkBackgroundStart
+import com.pricelens.core.designsystem.LightBackgroundStart
+import com.pricelens.core.designsystem.LocalCanvasBackdrop
 import com.pricelens.core.designsystem.LocalRootBackdrop
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.DockTab
@@ -94,8 +97,12 @@ class MainActivity : ComponentActivity() {
                 }
             ) {
                 val rootBackdrop = if (iosSwitchEnabled) rememberLayerBackdrop() else null
+                val canvasBackdrop = if (iosSwitchEnabled) rememberLayerBackdrop() else null
 
-                CompositionLocalProvider(LocalRootBackdrop provides rootBackdrop) {
+                CompositionLocalProvider(
+                    LocalRootBackdrop provides rootBackdrop,
+                    LocalCanvasBackdrop provides canvasBackdrop
+                ) {
                     val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
@@ -119,71 +126,105 @@ class MainActivity : ComponentActivity() {
                 }
 
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(brush = PriceLensTheme.glassColors.backgroundBrush)
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     val accent = PriceLensTheme.glassColors.ambientGlow
                     val secondary = PriceLensTheme.glassColors.accentSecondary
                     val isDark = PriceLensTheme.isDark
-
                     val isCupertino = PriceLensTheme.isCupertino
-
-                    // Ambient liquid glass backdrop orbs (active only for non-Apple themes; Apple uses pure neutral canvas)
-                    if (!isCupertino) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .drawBehind {
-                                    // Top-right radiant orb
-                                    drawCircle(
-                                        brush = Brush.radialGradient(
-                                            colors = listOf(
-                                                accent.copy(alpha = if (isDark) 0.16f else 0.08f),
-                                                Color.Transparent
-                                            ),
-                                            center = Offset(size.width * 0.85f, size.height * 0.10f),
-                                            radius = size.width * 0.70f
-                                        )
-                                    )
-
-                                    // Middle-left secondary orb
-                                    drawCircle(
-                                        brush = Brush.radialGradient(
-                                            colors = listOf(
-                                                secondary.copy(alpha = if (isDark) 0.12f else 0.06f),
-                                                Color.Transparent
-                                            ),
-                                            center = Offset(size.width * 0.10f, size.height * 0.42f),
-                                            radius = size.width * 0.65f
-                                        )
-                                    )
-
-                                    // Bottom floating orb behind dock
-                                    drawCircle(
-                                        brush = Brush.radialGradient(
-                                            colors = listOf(
-                                                accent.copy(alpha = if (isDark) 0.18f else 0.09f),
-                                                Color.Transparent
-                                            ),
-                                            center = Offset(size.width * 0.50f, size.height * 0.92f),
-                                            radius = size.width * 0.60f
-                                        )
-                                    )
-                                }
-                        )
-                    }
 
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .then(if (iosSwitchEnabled && rootBackdrop != null) Modifier.layerBackdrop(rootBackdrop) else Modifier)
                     ) {
+                        // Leaf atmospheric canvas layer captured into canvasBackdrop for intra-screen liquid glass refraction
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(if (isDark) DarkBackgroundStart else LightBackgroundStart)
+                                .background(brush = PriceLensTheme.glassColors.backgroundBrush)
+                                .then(if (iosSwitchEnabled && canvasBackdrop != null) Modifier.layerBackdrop(canvasBackdrop) else Modifier)
+                                .drawBehind {
+                                    if (isCupertino) {
+                                        val topOrbAlpha = if (isDark) 0.16f else 0.11f
+                                        val midOrbAlpha = if (isDark) 0.12f else 0.08f
+                                        val botOrbAlpha = if (isDark) 0.10f else 0.09f
+                                        // Subtle Cupertino liquid light blooms so frosted glass cards & controls refract living depth
+                                        drawRect(
+                                            brush = Brush.radialGradient(
+                                                0.0f to accent.copy(alpha = topOrbAlpha),
+                                                0.55f to accent.copy(alpha = topOrbAlpha * 0.35f),
+                                                1.0f to accent.copy(alpha = 0f),
+                                                center = Offset(size.width * 0.88f, size.height * 0.08f),
+                                                radius = size.width * 0.72f
+                                            )
+                                        )
+                                        drawRect(
+                                            brush = Brush.radialGradient(
+                                                0.0f to secondary.copy(alpha = midOrbAlpha),
+                                                0.55f to secondary.copy(alpha = midOrbAlpha * 0.35f),
+                                                1.0f to secondary.copy(alpha = 0f),
+                                                center = Offset(size.width * 0.12f, size.height * 0.44f),
+                                                radius = size.width * 0.68f
+                                            )
+                                        )
+                                        drawRect(
+                                            brush = Brush.radialGradient(
+                                                0.0f to Color(0xFF64D2FF).copy(alpha = botOrbAlpha),
+                                                0.55f to Color(0xFF64D2FF).copy(alpha = botOrbAlpha * 0.35f),
+                                                1.0f to Color(0xFF64D2FF).copy(alpha = 0f),
+                                                center = Offset(size.width * 0.55f, size.height * 0.88f),
+                                                radius = size.width * 0.65f
+                                            )
+                                        )
+                                    } else {
+                                        val topOrbAlpha = if (isDark) 0.14f else 0.07f
+                                        val midOrbAlpha = if (isDark) 0.10f else 0.05f
+                                        val botOrbAlpha = if (isDark) 0.14f else 0.07f
+                                        // Top-right radiant orb (drawRect prevents default DrawScope centered-circle clip)
+                                        drawRect(
+                                            brush = Brush.radialGradient(
+                                                0.0f to accent.copy(alpha = topOrbAlpha),
+                                                0.55f to accent.copy(alpha = topOrbAlpha * 0.35f),
+                                                1.0f to accent.copy(alpha = 0f),
+                                                center = Offset(size.width * 0.85f, size.height * 0.10f),
+                                                radius = size.width * 0.70f
+                                            )
+                                        )
+
+                                        // Middle-left secondary orb
+                                        drawRect(
+                                            brush = Brush.radialGradient(
+                                                0.0f to secondary.copy(alpha = midOrbAlpha),
+                                                0.55f to secondary.copy(alpha = midOrbAlpha * 0.35f),
+                                                1.0f to secondary.copy(alpha = 0f),
+                                                center = Offset(size.width * 0.10f, size.height * 0.42f),
+                                                radius = size.width * 0.65f
+                                            )
+                                        )
+
+                                        // Bottom floating orb behind dock
+                                        drawRect(
+                                            brush = Brush.radialGradient(
+                                                0.0f to accent.copy(alpha = botOrbAlpha),
+                                                0.55f to accent.copy(alpha = botOrbAlpha * 0.35f),
+                                                1.0f to accent.copy(alpha = 0f),
+                                                center = Offset(size.width * 0.50f, size.height * 0.92f),
+                                                radius = size.width * 0.60f
+                                            )
+                                        )
+                                    }
+                                }
+                        )
+
                         PriceLensNavGraph(
                             navController = navController,
                             userPreferences = userPreferences,
                             sharedUrl = sharedUrl,
-                            sharedProductId = sharedProductId
+                            sharedProductId = sharedProductId,
+                            onConsumeSharedUrl = { sharedUrl = null },
+                            onConsumeSharedProductId = { sharedProductId = null }
                         )
                     }
 
