@@ -233,4 +233,20 @@ class SearchViewModelTest {
         assertEquals(1, filtered.size)
         assertEquals("Sony Budget", filtered.first().name)
     }
+
+    @Test
+    fun `clear query cancels in-flight search and resets loading state`() = runTest {
+        val viewModel = SearchViewModel(searchUseCase, SavedStateHandle())
+        viewModel.onEvent(SearchUiEvent.SubmitSearch("Sony"))
+        assertTrue(viewModel.uiState.value.isLoading)
+
+        viewModel.onEvent(SearchUiEvent.ClearQuery)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals("", state.query)
+        assertFalse(state.isLoading)
+        assertFalse(state.isSubmitted)
+        assertTrue(state.products.isEmpty())
+    }
 }

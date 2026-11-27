@@ -247,14 +247,26 @@ class DashboardViewModel @Inject constructor(
     }
 
     private suspend fun importWatchlistFromJson(json: String) {
+        if (json.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Watchlist import data is empty.") }
+            return
+        }
         try {
             val gson = Gson()
             val type = object : TypeToken<List<WatchlistItem>>() {}.type
-            val items: List<WatchlistItem> = gson.fromJson(json, type)
+            val items: List<WatchlistItem>? = gson.fromJson(json, type)
+            if (items == null) {
+                _uiState.update { it.copy(errorMessage = "Invalid watchlist JSON format.") }
+                return
+            }
             for (item in items) {
                 dashboardRepository.addToWatchlist(item)
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            _uiState.update {
+                it.copy(errorMessage = "Failed to import watchlist: ${e.message ?: "Invalid JSON"}")
+            }
+        }
     }
 
     private fun loadDashboardData() {

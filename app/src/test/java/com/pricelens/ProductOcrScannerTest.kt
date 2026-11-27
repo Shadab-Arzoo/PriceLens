@@ -94,4 +94,12 @@ class ProductOcrScannerTest {
         val resultBlank = useCase("   ")
         assertTrue(resultBlank.isFailure)
     }
+
+    @Test
+    fun `ocr prefers most specific signature so Bose QC Ultra does not misidentify as QC45`() {
+        val identity = useCase("Bose QC Ultra Wireless Noise Cancelling Headphones").getOrThrow()
+
+        assertEquals("prod_bose_qc_ultra", identity.resolvedProductId)
+        assertEquals("Bose", identity.suggestedBrand)
+    }
 }

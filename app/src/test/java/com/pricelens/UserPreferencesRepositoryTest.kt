@@ -177,6 +177,9 @@ class UserPreferencesRepositoryTest {
         preferencesRepository.hasRequestedCameraPermission = true
         preferencesRepository.setGlowIntensity(UserPreferencesRepository.GlowIntensity.ULTRA)
         preferencesRepository.setContrastStyle(UserPreferencesRepository.ContrastStyle.OBSIDIAN_TINT)
+        preferencesRepository.setGlassRefraction(UserPreferencesRepository.GlassRefraction.INTENSE)
+        preferencesRepository.setGlassDispersion(UserPreferencesRepository.GlassDispersion.SPECTRUM)
+        preferencesRepository.setExperimentalMasterEnabled(false)
         preferencesRepository.setThemeAccent(ThemeAccent.GLACIER_FROST)
 
         preferencesRepository.resetAll()
@@ -185,6 +188,9 @@ class UserPreferencesRepositoryTest {
         assertFalse(preferencesRepository.hasRequestedCameraPermission)
         assertEquals(UserPreferencesRepository.GlowIntensity.VIVID, preferencesRepository.getGlowIntensity())
         assertEquals(UserPreferencesRepository.ContrastStyle.PITCH_BLACK, preferencesRepository.getContrastStyle())
+        assertEquals(UserPreferencesRepository.GlassRefraction.STANDARD, preferencesRepository.glassRefractionFlow.value)
+        assertEquals(UserPreferencesRepository.GlassDispersion.PRISM, preferencesRepository.glassDispersionFlow.value)
+        assertTrue(preferencesRepository.experimentalFlagsFlow.value.isMasterEnabled)
         assertEquals(ThemeAccent.EMERALD_MINT, preferencesRepository.getThemeAccent())
     }
 

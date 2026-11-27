@@ -150,7 +150,7 @@ class ProductCatalogRemoteDataSourceImpl @Inject constructor(
         val altResult = pricingAdapter.getProductAlternatives(targetDto.productId)
         val candidateDtos = if (altResult is AdapterResult.Success) altResult.data else emptyList()
 
-        val lowestOffer = targetDto.offers.filter { it.isAvailable && it.price != null }.minByOrNull { it.price!! }
+        val lowestOffer = targetDto.offers.filter { it.isAvailable && it.price != null }.minByOrNull { it.price ?: Double.MAX_VALUE }
         val candidates = candidateDtos.map { it.toCandidateProduct() }
 
         val alternatives = alternativesService.findAlternatives(
@@ -165,7 +165,7 @@ class ProductCatalogRemoteDataSourceImpl @Inject constructor(
     }
 
     private fun ProductOffersDto.toCandidateProduct(): AlternativesService.CandidateProduct {
-        val lowestOffer = offers.filter { it.isAvailable && it.price != null }.minByOrNull { it.price!! }
+        val lowestOffer = offers.filter { it.isAvailable && it.price != null }.minByOrNull { it.price ?: Double.MAX_VALUE }
         return AlternativesService.CandidateProduct(
             id = productId,
             title = productTitle,

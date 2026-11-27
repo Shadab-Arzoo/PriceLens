@@ -12,6 +12,7 @@ import com.pricelens.domain.usecase.UrlValidationResult
 import com.pricelens.domain.usecase.ValidateProductUrlUseCase
 import com.pricelens.presentation.dashboard.DashboardUiEvent
 import com.pricelens.presentation.dashboard.DashboardViewModel
+import com.pricelens.presentation.dashboard.extractSupportedClipboardUrl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -159,5 +160,42 @@ class DashboardViewModelTest {
 
         viewModel.onEvent(DashboardUiEvent.ClosePasteUrlSheet)
         assertFalse(viewModel.uiState.value.isPasteUrlSheetOpen)
+    }
+
+    @Test
+    fun `importing invalid or empty watchlist json sets errorMessage instead of failing silently`() = runTest {
+        val dashboardRepo = TestDashboardRepository()
+        val catalogRepo = TestProductCatalogRepository()
+        val viewModel = DashboardViewModel(
+            getDashboardDataUseCase = GetDashboardDataUseCase(dashboardRepo, catalogRepo),
+            saveRecentSearchUseCase = SaveRecentSearchUseCase(dashboardRepo),
+            validateProductUrlUseCase = ValidateProductUrlUseCase(),
+            dashboardRepository = dashboardRepo
+        )
+
+        advanceUntilIdle()
+
+        viewModel.onEvent(DashboardUiEvent.ImportWatchlist("   "))
+        advanceUntilIdle()
+        assertEquals("Watchlist import data is empty.", viewModel.uiState.value.errorMessage)
+
+        viewModel.onEvent(DashboardUiEvent.ImportWatchlist("{not-valid-json"))
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.errorMessage?.startsWith("Failed to import watchlist:") == true)
+    }
+
+    @Test
+    fun `extractSupportedClipboardUrl detects retailer links and rejects unrelated text`() {
+        assertEquals(
+            "https://www.amazon.in/dp/B0CHX1W1XY",
+            extractSupportedClipboardUrl("Check this deal https://www.amazon.in/dp/B0CHX1W1XY out!")
+        )
+        assertEquals(
+            "fkrt.it/abc123",
+            extractSupportedClipboardUrl("  fkrt.it/abc123  ")
+        )
+        assertNull(extractSupportedClipboardUrl("Hello world"))
+        assertNull(extractSupportedClipboardUrl("https://example.com/item"))
+        assertNull(extractSupportedClipboardUrl("   "))
     }
 }

@@ -6,11 +6,14 @@ import com.pricelens.domain.model.TargetPriceAlert
 import com.pricelens.domain.repository.ProductCatalogRepository
 import com.pricelens.domain.repository.TargetPriceAlertRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.math.roundToInt
@@ -25,13 +28,15 @@ class DealsViewModel @Inject constructor(
     val uiState: StateFlow<DealsUiState> = _uiState.asStateFlow()
 
     private var allDealsCache: List<DealItem> = emptyList()
+    private var loadDealsJob: Job? = null
 
     init {
         loadDeals()
     }
 
     fun loadDeals() {
-        viewModelScope.launch {
+        loadDealsJob?.cancel()
+        loadDealsJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val result = productCatalogRepository.searchProducts("")
             result.onSuccess { summaries ->
@@ -93,7 +98,7 @@ class DealsViewModel @Inject constructor(
                         discountPercent = discountPercent,
                         lowestRetailer = store,
                         retailerCount = summary.retailerCount.coerceAtLeast(3),
-                        storeUrl = "https://www.google.com/search?q=${summary.name}",
+                        storeUrl = "https://www.google.com/search?q=${URLEncoder.encode(summary.name, StandardCharsets.UTF_8.name())}",
                         imageUrl = summary.imageUrl,
                         dealBadge = badge,
                         highlightPromo = promo

@@ -285,9 +285,12 @@ class UserPreferencesRepository @Inject constructor(
         _themeAccentFlow.value = ThemeAccent.EMERALD_MINT
         _glowIntensityFlow.value = GlowIntensity.VIVID
         _contrastStyleFlow.value = ContrastStyle.PITCH_BLACK
+        _glassRefractionFlow.value = GlassRefraction.STANDARD
+        _glassDispersionFlow.value = GlassDispersion.PRISM
         _iosSwitchFlow.value = false
         _iosGlassIntensityFlow.value = 1.0f
         _appFontFlow.value = AppFont.DEFAULT
+        _experimentalFlagsFlow.value = ExperimentalFlags()
     }
 
     companion object {

@@ -195,4 +195,27 @@ class DealsViewModelTest {
         assertEquals(1, state.deals.size)
         assertEquals("prod_sony_xm5", state.deals.first().productId)
     }
+
+    @Test
+    fun `deal storeUrl properly URL-encodes product names with spaces and special characters`() = runTest {
+        val catalogRepo = FakeProductCatalogRepository().apply {
+            products = listOf(
+                ProductSummary(
+                    id = "prod_special",
+                    name = "Phone 16 Pro & Case+",
+                    brand = "Brand",
+                    lowestPrice = 49999.0,
+                    highestPrice = 59999.0,
+                    lowestPriceRetailer = "Amazon India",
+                    retailerCount = 3
+                )
+            )
+        }
+        val viewModel = DealsViewModel(catalogRepo)
+
+        advanceUntilIdle()
+
+        val deal = viewModel.uiState.value.deals.first()
+        assertEquals("https://www.google.com/search?q=Phone+16+Pro+%26+Case%2B", deal.storeUrl)
+    }
 }

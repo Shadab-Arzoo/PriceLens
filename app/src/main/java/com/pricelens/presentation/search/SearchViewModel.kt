@@ -53,9 +53,11 @@ class SearchViewModel @Inject constructor(
                 performSearch(_uiState.value.query)
             }
             SearchUiEvent.ClearQuery -> {
+                searchJob?.cancel()
                 _uiState.update {
                     it.copy(
                         query = "",
+                        isLoading = false,
                         products = emptyList(),
                         errorMessage = null,
                         isSubmitted = false

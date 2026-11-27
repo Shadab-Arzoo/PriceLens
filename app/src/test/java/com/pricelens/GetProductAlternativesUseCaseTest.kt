@@ -181,4 +181,35 @@ class GetProductAlternativesUseCaseTest {
 
         assertTrue(alternatives.isEmpty())
     }
+
+    @Test
+    fun `cheaper alternative with zero target price does not throw when percentageDiff is unavailable`() {
+        val candidates = listOf(
+            AlternativesService.CandidateProduct(
+                id = "prod_alt",
+                title = "Alternative Item",
+                brand = "BrandA",
+                modelNumber = "M-1",
+                imageUrl = null,
+                category = "Accessories",
+                lowestPrice = -10.0,
+                specifications = emptyMap()
+            )
+        )
+
+        val alternatives = service.findAlternatives(
+            targetId = "prod_target",
+            targetTitle = "Target Item",
+            targetCategory = "Accessories",
+            targetPrice = 0.0,
+            targetSpecs = emptyMap(),
+            candidates = candidates
+        )
+
+        assertEquals(1, alternatives.size)
+        val priceDiff = alternatives.first().meaningfulDifferences.firstOrNull { it.category == "Price" }
+        assertNotNull(priceDiff)
+        assertTrue(priceDiff!!.explanation.startsWith("Cheaper by"))
+        assertFalse(priceDiff.explanation.contains("savings"))
+    }
 }

@@ -178,6 +178,8 @@ class ProductComparisonViewModel @Inject constructor(
         viewModelScope.launch {
             if (state.isSavedInWatchlist) {
                 dashboardRepository.removeFromWatchlist(productId)
+                val activeAlerts = targetPriceAlertRepository.getActiveAlerts(productId)
+                activeAlerts.forEach { targetPriceAlertRepository.deleteAlert(it.id) }
                 _uiState.update {
                     it.copy(
                         isSavedInWatchlist = false,

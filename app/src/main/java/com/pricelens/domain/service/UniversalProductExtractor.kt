@@ -29,7 +29,8 @@ class UniversalProductExtractor @Inject constructor() {
 
     companion object {
         private val EmbeddedUrlRegex = Regex("""https?://[^\s<>"{}|\\^`]+""", RegexOption.IGNORE_CASE)
-        private val PriceRegex = Regex("""(?:₹|Rs\.?|INR|\$|€|£)?\s*([\d]+(?:\.\d{1,2})?)""")
+        private val CurrencyPriceRegex = Regex("""(?:₹|Rs\.?|INR|\$|€|£)\s*([\d]+(?:\.\d{1,2})?)""", RegexOption.IGNORE_CASE)
+        private val PriceRegex = Regex("""([\d]+(?:\.\d{1,2})?)""")
         private val JsonLdScriptPattern = Pattern.compile(
             """<script[^>]*type=["']application/ld\+json["'][^>]*>(.*?)</script>""",
             Pattern.DOTALL or Pattern.CASE_INSENSITIVE
@@ -166,7 +167,7 @@ class UniversalProductExtractor @Inject constructor() {
 
     fun parsePrice(raw: String): Double? {
         val cleaned = raw.replace(",", "").trim()
-        val match = PriceRegex.find(cleaned)
+        val match = CurrencyPriceRegex.find(cleaned) ?: PriceRegex.find(cleaned)
         return match?.groupValues?.get(1)?.toDoubleOrNull()
     }
 
@@ -238,9 +239,10 @@ class UniversalProductExtractor @Inject constructor() {
     }
 
     private fun cleanTitle(title: String, retailerName: String): String {
+        val escapedRetailer = Regex.escape(retailerName)
         return title
             .replace(SuffixCleaningRegex1, "")
-            .replace(Regex("""\s*[\|\-–—]\s*$retailerName.*$""", RegexOption.IGNORE_CASE), "")
+            .replace(Regex("""\s*[\|\-–—]\s*$escapedRetailer.*$""", RegexOption.IGNORE_CASE), "")
             .trim()
     }
 
@@ -277,45 +279,57 @@ class UniversalProductExtractor @Inject constructor() {
         var redirects = 0
         while (redirects < 5) {
             val url = URL(currentUrl)
-            val conn = url.openConnection() as HttpURLConnection
-            conn.connectTimeout = 6000
-            conn.readTimeout = 6000
-            conn.instanceFollowRedirects = true
-            conn.setRequestProperty(
-                "User-Agent",
-                "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
-            )
-            conn.setRequestProperty(
-                "Accept",
-                "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
-            )
-            conn.setRequestProperty("Accept-Language", "en-US,en;q=0.9")
-
-            val status = conn.responseCode
-            if (status in 300..399) {
-                val location = conn.getHeaderField("Location")
-                if (!location.isNullOrBlank()) {
-                    currentUrl = if (location.startsWith("http")) location else URL(url, location).toString()
-                    redirects++
-                    continue
-                }
+            val protocol = url.protocol.lowercase(Locale.US)
+            if (protocol != "http" && protocol != "https") {
+                throw IllegalArgumentException("Unsupported URL scheme: $protocol")
             }
+            val conn = url.openConnection() as HttpURLConnection
+            try {
+                conn.connectTimeout = 6000
+                conn.readTimeout = 6000
+                conn.instanceFollowRedirects = true
+                conn.setRequestProperty(
+                    "User-Agent",
+                    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+                )
+                conn.setRequestProperty(
+                    "Accept",
+                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+                )
+                conn.setRequestProperty("Accept-Language", "en-US,en;q=0.9")
 
-            if (status in 200..299) {
-                val reader = BufferedReader(InputStreamReader(conn.inputStream))
-                val sb = StringBuilder()
-                var line: String?
-                var bytesRead = 0
-                val maxBytes = 400 * 1024 // 400 KB limit
-                while (reader.readLine().also { line = it } != null) {
-                    sb.appendLine(line)
-                    bytesRead += (line?.length ?: 0)
-                    if (bytesRead >= maxBytes) break
+                val status = conn.responseCode
+                if (status in 300..399) {
+                    val location = conn.getHeaderField("Location")
+                    if (!location.isNullOrBlank()) {
+                        currentUrl = if (location.startsWith("http", ignoreCase = true)) {
+                            location
+                        } else {
+                            URL(url, location).toString()
+                        }
+                        redirects++
+                        continue
+                    }
                 }
-                reader.close()
-                return sb.toString()
-            } else {
-                throw IllegalStateException("HTTP $status")
+
+                if (status in 200..299) {
+                    BufferedReader(InputStreamReader(conn.inputStream)).use { reader ->
+                        val sb = StringBuilder()
+                        var line: String?
+                        var bytesRead = 0
+                        val maxBytes = 400 * 1024 // 400 KB limit
+                        while (reader.readLine().also { line = it } != null) {
+                            sb.appendLine(line)
+                            bytesRead += (line?.length ?: 0)
+                            if (bytesRead >= maxBytes) break
+                        }
+                        return sb.toString()
+                    }
+                } else {
+                    throw IllegalStateException("HTTP $status")
+                }
+            } finally {
+                conn.disconnect()
             }
         }
         throw IllegalStateException("Too many redirects")

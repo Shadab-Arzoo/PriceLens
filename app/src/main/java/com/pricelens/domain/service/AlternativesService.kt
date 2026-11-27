@@ -75,19 +75,22 @@ class AlternativesService @Inject constructor() {
         val differences = mutableListOf<MeaningfulDifference>()
 
         // 1. Price Difference Explanation
-        if (targetPrice != null && candidatePrice != null) {
+        if (targetPrice != null && candidatePrice != null && priceDiff != null) {
             if (isCheaper) {
-                val savings = kotlin.math.abs(priceDiff!!)
+                val savings = kotlin.math.abs(priceDiff)
+                val pctSuffix = percentageDiff?.let {
+                    " (${String.format(Locale.US, "%.1f", kotlin.math.abs(it))}% savings)"
+                }.orEmpty()
                 differences.add(
                     MeaningfulDifference(
                         category = "Price",
                         currentProductValue = currencyFormatter.format(targetPrice),
                         alternativeValue = currencyFormatter.format(candidatePrice),
-                        explanation = "Cheaper by ${currencyFormatter.format(savings)} (${String.format(Locale.US, "%.1f", kotlin.math.abs(percentageDiff!!))}% savings)",
+                        explanation = "Cheaper by ${currencyFormatter.format(savings)}$pctSuffix",
                         isAdvantage = true
                     )
                 )
-            } else if (priceDiff != null && priceDiff > 0.0) {
+            } else if (priceDiff > 0.0) {
                 val extra = priceDiff
                 differences.add(
                     MeaningfulDifference(

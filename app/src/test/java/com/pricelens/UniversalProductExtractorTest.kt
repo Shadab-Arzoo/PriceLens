@@ -46,6 +46,8 @@ class UniversalProductExtractorTest {
         assertEquals(99.0, extractor.parsePrice("$99.00")!!, 0.01)
         assertEquals(3490.0, extractor.parsePrice("INR 3,490")!!, 0.01)
         assertEquals(499.0, extractor.parsePrice("499")!!, 0.01)
+        assertEquals(19999.0, extractor.parsePrice("4.5 ★ (1,200) ₹19,999")!!, 0.01)
+        assertEquals(2499.0, extractor.parsePrice("2025 Edition - Save 15% Rs. 2,499")!!, 0.01)
     }
 
     @Test

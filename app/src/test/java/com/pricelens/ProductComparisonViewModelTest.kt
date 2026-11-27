@@ -332,4 +332,32 @@ class ProductComparisonViewModelTest {
         assertTrue(viewModel.uiState.value.isSavedInWatchlist)
         assertEquals("Added to Watchlist & tracking price alerts", viewModel.uiState.value.userNotificationBanner)
     }
+
+    @Test
+    fun `untoggling watchlist removes orphaned active alerts for that product`() = runTest {
+        val savedStateHandle = SavedStateHandle(mapOf("productId" to "prod_sony_wh1000xm5"))
+        val viewModel = ProductComparisonViewModel(
+            getComparisonUseCase, alertRepo, evaluator, savedStateHandle
+        )
+        advanceUntilIdle()
+
+        // Toggle watchlist ON, then create an active alert
+        viewModel.onEvent(ProductComparisonUiEvent.ToggleWatchlist)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.isSavedInWatchlist)
+
+        viewModel.onEvent(ProductComparisonUiEvent.OpenTrackPriceDialog(retailerName = "Amazon India", currentPrice = 26990.0))
+        viewModel.onEvent(ProductComparisonUiEvent.TargetPriceChanged("25000"))
+        viewModel.onEvent(ProductComparisonUiEvent.SubmitTrackPrice)
+        advanceUntilIdle()
+
+        assertEquals(1, alertRepo.getActiveAlerts("prod_sony_wh1000xm5").size)
+
+        // Untoggle watchlist
+        viewModel.onEvent(ProductComparisonUiEvent.ToggleWatchlist)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isSavedInWatchlist)
+        assertTrue(alertRepo.getActiveAlerts("prod_sony_wh1000xm5").isEmpty())
+    }
 }

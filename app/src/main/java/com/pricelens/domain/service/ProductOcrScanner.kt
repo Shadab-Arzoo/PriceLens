@@ -2,6 +2,7 @@ package com.pricelens.domain.service
 
 import com.pricelens.domain.model.ConfirmedProductIdentity
 import com.pricelens.domain.model.DiscoverySource
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -113,26 +114,31 @@ class ProductOcrScanner @Inject constructor() {
             return null
         }
 
-        val lower = trimmed.lowercase()
+        val lower = trimmed.lowercase(Locale.US)
 
-        // 1. Check known signatures for high confidence match
-        for (sig in knownSignatures) {
-            val matchedKeyword = sig.keywords.any { lower.contains(it) }
-            if (matchedKeyword) {
-                return ConfirmedProductIdentity(
-                    source = source,
-                    rawInput = trimmed,
-                    suggestedName = sig.title,
-                    suggestedBrand = sig.brand,
-                    suggestedModel = sig.model,
-                    resolvedProductId = sig.productId,
-                    confidenceScore = 0.96,
-                    isUserConfirmed = false,
-                    editedName = sig.title,
-                    editedBrand = sig.brand,
-                    editedModel = sig.model
-                )
+        // 1. Check all known signatures and pick the longest/most specific matching keyword
+        val bestSignatureMatch = knownSignatures
+            .mapNotNull { sig ->
+                val longestKeyword = sig.keywords.filter { lower.contains(it) }.maxByOrNull { it.length }
+                longestKeyword?.let { sig to it.length }
             }
+            .maxByOrNull { it.second }
+            ?.first
+
+        if (bestSignatureMatch != null) {
+            return ConfirmedProductIdentity(
+                source = source,
+                rawInput = trimmed,
+                suggestedName = bestSignatureMatch.title,
+                suggestedBrand = bestSignatureMatch.brand,
+                suggestedModel = bestSignatureMatch.model,
+                resolvedProductId = bestSignatureMatch.productId,
+                confidenceScore = 0.96,
+                isUserConfirmed = false,
+                editedName = bestSignatureMatch.title,
+                editedBrand = bestSignatureMatch.brand,
+                editedModel = bestSignatureMatch.model
+            )
         }
 
         // 2. Generic heuristic extraction

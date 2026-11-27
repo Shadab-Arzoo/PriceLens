@@ -17,6 +17,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.first
+import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class PriceCheckWorker(
@@ -60,9 +62,9 @@ class PriceCheckWorker(
 
                     if (evaluatedPrice != null && evaluatedPrice <= alert.targetPrice) {
                         val obs = PriceObservation(
-                            id = "bg_obs_${item.productId}_${System.currentTimeMillis()}",
+                            id = "bg_obs_${item.productId}_${UUID.randomUUID()}",
                             productId = item.productId,
-                            retailerId = alert.retailerName?.lowercase() ?: "store",
+                            retailerId = alert.retailerName?.lowercase(Locale.US) ?: "store",
                             retailerName = alert.retailerName ?: "Online Store",
                             price = evaluatedPrice,
                             currency = alert.currency,

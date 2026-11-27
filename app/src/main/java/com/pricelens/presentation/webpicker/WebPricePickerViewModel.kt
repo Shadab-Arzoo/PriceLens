@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import androidx.compose.runtime.Immutable
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
@@ -103,7 +104,7 @@ class WebPricePickerViewModel @Inject constructor(
             val suggestedTarget = if (parsed != null && parsed > 0) {
                 // Default target price suggestion: 5% below current price rounded
                 val discounted = parsed * 0.95
-                "%.0f".format(discounted)
+                "%.0f".format(Locale.US, discounted)
             } else {
                 current.targetPriceInput
             }

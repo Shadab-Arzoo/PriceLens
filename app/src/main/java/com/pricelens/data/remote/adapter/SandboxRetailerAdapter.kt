@@ -1039,8 +1039,8 @@ class SandboxRetailerAdapter @Inject constructor() : RetailerPricingAdapter {
 
     private fun ProductOffersDto.toSummaryDto(): ProductSummaryDto {
         val availableOffers = offers.filter { it.isAvailable && it.price != null }
-        val lowestOffer = availableOffers.minByOrNull { it.price!! }
-        val highestOffer = availableOffers.maxByOrNull { it.price!! }
+        val lowestOffer = availableOffers.minByOrNull { it.price ?: Double.MAX_VALUE }
+        val highestOffer = availableOffers.maxByOrNull { it.price ?: Double.MIN_VALUE }
         return ProductSummaryDto(
             id = productId,
             name = productTitle,

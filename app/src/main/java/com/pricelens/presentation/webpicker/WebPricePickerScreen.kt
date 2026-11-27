@@ -75,6 +75,7 @@ import com.pricelens.core.designsystem.ElectricBlue
 import com.pricelens.core.designsystem.PriceLensTheme
 import com.pricelens.core.designsystem.components.GlassCard
 import com.pricelens.core.designsystem.components.LiquidGlassPrimaryButton
+import java.util.Locale
 
 private const val INSPECTOR_JS = """
 (function() {
@@ -210,6 +211,19 @@ fun WebPricePickerScreen(
     LaunchedEffect(uiState.isInspectMode) {
         val modeStr = if (uiState.isInspectMode) "inspect" else "browse"
         webViewInstance?.evaluateJavascript("if (window.priceLensInspector) { window.priceLensInspector.setMode('$modeStr'); }", null)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            webViewInstance?.apply {
+                stopLoading()
+                removeJavascriptInterface("PriceLensBridge")
+                loadUrl("about:blank")
+                clearHistory()
+                destroy()
+            }
+            webViewInstance = null
+        }
     }
 
     val isDark = PriceLensTheme.isDark
@@ -388,6 +402,8 @@ fun WebPricePickerScreen(
                             )
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true
+                            settings.allowFileAccess = false
+                            settings.allowContentAccess = false
                             settings.useWideViewPort = true
                             settings.loadWithOverviewMode = true
                             settings.userAgentString =
@@ -426,7 +442,9 @@ fun WebPricePickerScreen(
                                 }
 
                                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                                    return false // Load inside WebView
+                                    val scheme = request?.url?.scheme?.lowercase(Locale.US)
+                                    // Only allow http/https navigation inside the WebView
+                                    return scheme != "http" && scheme != "https"
                                 }
                             }
 

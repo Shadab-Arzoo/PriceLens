@@ -52,7 +52,9 @@ fun PriceLensNavGraph(
     modifier: Modifier = Modifier,
     startDestination: String? = null,
     sharedUrl: String? = null,
-    sharedProductId: String? = null
+    sharedProductId: String? = null,
+    onConsumeSharedUrl: () -> Unit = {},
+    onConsumeSharedProductId: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val effectivePreferences = userPreferences
@@ -194,6 +196,7 @@ fun PriceLensNavGraph(
                 if (!sharedUrl.isNullOrBlank()) {
                     viewModel.onEvent(com.pricelens.presentation.dashboard.DashboardUiEvent.OpenPasteUrlSheet)
                     viewModel.onEvent(com.pricelens.presentation.dashboard.DashboardUiEvent.PasteUrlInputChanged(sharedUrl))
+                    onConsumeSharedUrl()
                 }
             }
 
@@ -202,6 +205,7 @@ fun PriceLensNavGraph(
                     navController.navigate(
                         PriceLensDestination.ProductComparison.createRoute(sharedProductId, "")
                     )
+                    onConsumeSharedProductId()
                 }
             }
 
