@@ -65,7 +65,7 @@ half4 main(float2 coord) {
         Modifier.drawWithContent {
             val progress = pressProgressAnimation.value
             if (progress > 0f && size.width > 0f && size.height > 0f) {
-                if (shader != null) {
+                if (shader != null && isRuntimeShaderSupported()) {
                     drawRect(
                         Color.White.copy(0.08f * progress),
                         blendMode = BlendMode.Plus

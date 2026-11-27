@@ -4,6 +4,7 @@ import android.graphics.BlurMaskFilter
 import androidx.compose.ui.graphics.Paint
 import com.kyant.backdrop.RuntimeShader
 import com.kyant.backdrop.asAndroidRuntimeShader
+import com.kyant.backdrop.isRuntimeShaderSupported
 
 internal fun Paint.blur(radius: Float) {
     this.asFrameworkPaint().maskFilter =
@@ -12,5 +13,9 @@ internal fun Paint.blur(radius: Float) {
 }
 
 internal fun Paint.setRuntimeShader(runtimeShader: RuntimeShader?) {
-    this.asFrameworkPaint().shader = runtimeShader?.asAndroidRuntimeShader()
+    if (isRuntimeShaderSupported()) {
+        this.asFrameworkPaint().shader = runtimeShader?.asAndroidRuntimeShader()
+    } else {
+        this.asFrameworkPaint().shader = null
+    }
 }

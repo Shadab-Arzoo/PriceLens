@@ -64,15 +64,15 @@ fun LiquidBottomTabs(
     tabsCount: Int,
     modifier: Modifier = Modifier,
     effectIntensity: Float = 1f,
+    isLightTheme: Boolean = !isSystemInDarkTheme(),
     content: @Composable RowScope.() -> Unit
 ) {
-    val isLightTheme = !isSystemInDarkTheme()
     val accentColor =
         if (isLightTheme) Color(0xFF0088FF)
         else Color(0xFF0091FF)
     val containerColor =
-        if (isLightTheme) Color(0xFFFAFAFA).copy(0.4f)
-        else Color(0xFF121212).copy(0.4f)
+        if (isLightTheme) Color(0xFFFAFAFA).copy(0.46f)
+        else Color(0xFF141416).copy(0.48f)
 
     val tabsBackdrop = rememberLayerBackdrop()
 
@@ -169,8 +169,32 @@ fun LiquidBottomTabs(
                     shape = { Capsule() },
                     effects = {
                         vibrancy()
-                        blur(8f.dp.toPx() * effectIntensity)
-                        lens(24f.dp.toPx() * effectIntensity, 24f.dp.toPx() * effectIntensity)
+                        blur(12f.dp.toPx() * effectIntensity)
+                        lens(
+                            refractionHeight = 24f.dp.toPx() * effectIntensity,
+                            refractionAmount = 28f.dp.toPx() * effectIntensity,
+                            depthEffect = true,
+                            chromaticAberration = true
+                        )
+                    },
+                    highlight = {
+                        Highlight.Default.copy(
+                            width = 0.75.dp,
+                            alpha = if (isLightTheme) 0.85f else 0.62f
+                        )
+                    },
+                    shadow = {
+                        Shadow(
+                            radius = 16f.dp,
+                            color = Color.Black.copy(alpha = if (isLightTheme) 0.10f else 0.34f)
+                        )
+                    },
+                    innerShadow = {
+                        InnerShadow(
+                            radius = 6f.dp * effectIntensity,
+                            color = Color.White.copy(alpha = if (isLightTheme) 0.40f else 0.12f),
+                            alpha = 0.75f
+                        )
                     },
                     layerBlock = {
                         val progress = dampedDragAnimation.pressProgress
@@ -207,15 +231,17 @@ fun LiquidBottomTabs(
                         effects = {
                             val progress = dampedDragAnimation.pressProgress
                             vibrancy()
-                            blur(8f.dp.toPx() * effectIntensity)
+                            blur(10f.dp.toPx() * effectIntensity)
                             lens(
-                                24f.dp.toPx() * progress * effectIntensity,
-                                24f.dp.toPx() * progress * effectIntensity
+                                lerp(12f, 24f, progress).dp.toPx() * effectIntensity,
+                                lerp(14f, 26f, progress).dp.toPx() * effectIntensity,
+                                depthEffect = true,
+                                chromaticAberration = true
                             )
                         },
                         highlight = {
                             val progress = dampedDragAnimation.pressProgress
-                            Highlight.Default.copy(alpha = progress)
+                            Highlight.Default.copy(alpha = lerp(0.50f, 1.0f, progress))
                         },
                         onDrawSurface = { drawRect(containerColor) }
                     )
@@ -244,24 +270,33 @@ fun LiquidBottomTabs(
                     effects = {
                         val progress = dampedDragAnimation.pressProgress
                         lens(
-                            10f.dp.toPx() * progress * effectIntensity,
-                            14f.dp.toPx() * progress * effectIntensity,
+                            refractionHeight = lerp(7f, 12f, progress).dp.toPx() * effectIntensity,
+                            refractionAmount = lerp(10f, 18f, progress).dp.toPx() * effectIntensity,
+                            depthEffect = true,
                             chromaticAberration = true
                         )
                     },
                     highlight = {
                         val progress = dampedDragAnimation.pressProgress
-                        Highlight.Default.copy(alpha = progress)
+                        Highlight.Default.copy(
+                            width = 0.75.dp,
+                            alpha = lerp(0.55f, 1.0f, progress)
+                        )
                     },
                     shadow = {
                         val progress = dampedDragAnimation.pressProgress
-                        Shadow(alpha = progress)
+                        Shadow(
+                            radius = lerp(6f, 16f, progress).dp,
+                            color = Color.Black.copy(alpha = if (isLightTheme) 0.12f else 0.28f),
+                            alpha = lerp(0.45f, 1.0f, progress)
+                        )
                     },
                     innerShadow = {
                         val progress = dampedDragAnimation.pressProgress
                         InnerShadow(
-                            radius = 8f.dp * progress,
-                            alpha = progress
+                            radius = lerp(3.5f, 8f, progress).dp,
+                            color = Color.White.copy(alpha = if (isLightTheme) 0.45f else 0.18f),
+                            alpha = lerp(0.32f, 0.90f, progress)
                         )
                     },
                     layerBlock = {
@@ -274,8 +309,12 @@ fun LiquidBottomTabs(
                     onDrawSurface = {
                         val progress = dampedDragAnimation.pressProgress
                         drawRect(
-                            if (isLightTheme) Color.Black.copy(0.1f)
-                            else Color.White.copy(0.1f),
+                            accentColor.copy(alpha = if (isLightTheme) 0.13f else 0.20f),
+                            alpha = 1f - progress
+                        )
+                        drawRect(
+                            if (isLightTheme) Color.White.copy(0.28f)
+                            else Color.White.copy(0.08f),
                             alpha = 1f - progress
                         )
                         drawRect(Color.Black.copy(alpha = 0.03f * progress))

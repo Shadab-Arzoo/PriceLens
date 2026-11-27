@@ -83,6 +83,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -237,6 +238,7 @@ fun PriceLensBottomDock(
                 backdrop = effectiveBackdrop,
                 tabsCount = tabsCount,
                 effectIntensity = PriceLensTheme.iosGlassIntensity,
+                isLightTheme = !isDark,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 DockTab.entries.forEachIndexed { index, tab ->
@@ -273,7 +275,9 @@ fun PriceLensBottomDock(
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             color = if (isSelected) PriceLensTheme.glassColors.ambientGlow else PriceLensTheme.glassColors.textTertiary,
-                            maxLines = 1
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -309,17 +313,17 @@ fun PriceLensBottomDock(
                 } else {
                     BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
                 },
-                shadowElevation = if (isCupertino) 0.dp else 20.dp,
+                shadowElevation = 0.dp,
                 modifier = if (isCupertino) {
                     Modifier.fillMaxWidth()
                 } else {
                     Modifier
                         .widthIn(max = 440.dp)
                         .shadow(
-                            elevation = 28.dp,
+                            elevation = 16.dp,
                             shape = RoundedCornerShape(30.dp),
-                            ambientColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (isDark) 0.35f else 0.18f),
-                            spotColor = Color.Black.copy(alpha = if (isDark) 0.45f else 0.12f)
+                            ambientColor = PriceLensTheme.glassColors.ambientGlow.copy(alpha = if (isDark) 0.28f else 0.14f),
+                            spotColor = Color.Black.copy(alpha = if (isDark) 0.40f else 0.10f)
                         )
                 }
             ) {

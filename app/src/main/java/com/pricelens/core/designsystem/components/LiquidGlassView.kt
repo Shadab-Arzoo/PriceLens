@@ -7,13 +7,14 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -34,10 +35,20 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.isSpecified
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
+import com.kyant.backdrop.shadow.Shadow
 import com.pricelens.core.designsystem.PriceLensTheme
 import kotlinx.coroutines.launch
 
@@ -83,18 +94,20 @@ fun LiquidGlassView(
     val isCupertino = PriceLensTheme.isCupertino
     val isDark = PriceLensTheme.isDark
     val density = LocalDensity.current
+    val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
+    val canvasBackdrop = PriceLensTheme.canvasBackdrop
 
     // 1. Resolve theme colors
     val defaultTint = if (isCupertino) {
-        if (!isDark) Color(0xFFFAFAFA).copy(alpha = 0.65f) else Color(0xFF1C1C1E).copy(alpha = 0.60f)
+        if (!isDark) Color(0xFFFAFAFA).copy(alpha = 0.58f) else Color(0xFF1C1C1E).copy(alpha = 0.56f)
     } else {
         PriceLensTheme.glassColors.surfaceGlass
     }
     val effectiveTint = if (tintColor.isSpecified) tintColor else defaultTint
 
     val defaultBorderColor = if (isCupertino) {
-        if (isDark) Color(0x38FFFFFF) else Color(0x20000000)
+        if (isDark) Color(0x47FFFFFF) else Color(0x28000000)
     } else {
         PriceLensTheme.glassColors.specularBorder
     }
@@ -110,7 +123,7 @@ fun LiquidGlassView(
     var isTouchActive by remember { mutableStateOf(false) }
 
     val pressScale by animateFloatAsState(
-        targetValue = if (isTouchActive && isInteractive && isCupertino) 0.985f else 1f,
+        targetValue = if (isTouchActive && isInteractive && isCupertino) 0.982f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 500f
@@ -124,20 +137,22 @@ fun LiquidGlassView(
         label = "liquidGlassViewTouchPressed"
     )
 
+    val maxTilt = (4.5f * effectIntensity).coerceIn(2.5f, 7.0f)
+
     // Interactive pointer input tracking for tilt and specular highlight
     val touchModifier = if (isInteractive && isCupertino) {
-        Modifier.pointerInput(Unit) {
+        Modifier.pointerInput(maxTilt) {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
                 touchOffset = down.position
                 isTouchActive = true
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
 
                 val width = size.width.toFloat()
                 val height = size.height.toFloat()
                 if (width > 0 && height > 0) {
                     val normX = ((down.position.x - width / 2f) / (width / 2f)).coerceIn(-1f, 1f)
                     val normY = ((down.position.y - height / 2f) / (height / 2f)).coerceIn(-1f, 1f)
-                    val maxTilt = 4.5f // subtle iOS tilt
                     coroutineScope.launch {
                         tiltRotationX.animateTo(
                             -normY * maxTilt,
@@ -164,7 +179,6 @@ fun LiquidGlassView(
                     if (curWidth > 0 && curHeight > 0) {
                         val normX = ((change.position.x - curWidth / 2f) / (curWidth / 2f)).coerceIn(-1f, 1f)
                         val normY = ((change.position.y - curHeight / 2f) / (curHeight / 2f)).coerceIn(-1f, 1f)
-                        val maxTilt = 4.5f
                         coroutineScope.launch {
                             tiltRotationX.snapTo(-normY * maxTilt)
                             tiltRotationY.snapTo(normX * maxTilt)
@@ -189,6 +203,51 @@ fun LiquidGlassView(
         Modifier
     }
 
+    val backdropModifier = if (isCupertino && canvasBackdrop != null) {
+        val supportsLens = shape is CornerBasedShape || shape is AbsoluteRoundedCornerShape
+        Modifier.drawBackdrop(
+            backdrop = canvasBackdrop,
+            shape = { shape },
+            effects = {
+                vibrancy()
+                blur((blurRadius.value * 0.85f * effectIntensity).dp.toPx())
+                if (supportsLens) {
+                    lens(
+                        refractionHeight = (refractionHeight.value * 0.75f * effectIntensity).dp.toPx(),
+                        refractionAmount = (refractionOffset.value * 1.15f * effectIntensity).dp.toPx(),
+                        depthEffect = true,
+                        chromaticAberration = true
+                    )
+                }
+            },
+            highlight = {
+                Highlight.Default.copy(
+                    width = 0.85.dp,
+                    alpha = (if (isDark) 0.65f else 0.85f) * (0.75f + 0.25f * animatedTouchPressed)
+                )
+            },
+            shadow = {
+                Shadow(
+                    radius = (12f * effectIntensity).dp,
+                    color = Color.Black.copy(alpha = if (isDark) 0.30f else 0.08f)
+                )
+            },
+            innerShadow = {
+                InnerShadow(
+                    radius = (6f * effectIntensity).dp,
+                    offset = DpOffset(0.dp, 2.dp),
+                    color = if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.50f),
+                    alpha = 0.75f
+                )
+            },
+            onDrawSurface = {
+                drawRect(effectiveTint)
+            }
+        )
+    } else {
+        Modifier
+    }
+
     Surface(
         modifier = modifier
             .then(touchModifier)
@@ -202,40 +261,18 @@ fun LiquidGlassView(
                         cameraDistance = 16f * density.density
                     }
                 }
-
-                // 3. Android 13+ GPU AGSL Refraction & Dispersion Shader
-                if (isCupertino && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && size.width > 0 && size.height > 0) {
-                    try {
-                        val effect = LiquidGlassShaderHelper.createShaderEffect(
-                            width = size.width,
-                            height = size.height,
-                            cornerRadiusPx = with(density) { cornerRadius.toPx() },
-                            refractionHeightPx = with(density) { (refractionHeight * effectIntensity).toPx() },
-                            refractionAmountPx = with(density) { (refractionOffset * effectIntensity).toPx() },
-                            dispersion = (dispersion * effectIntensity).coerceIn(0f, 1f),
-                            tintColor = effectiveTint,
-                            specularAmount = specularAmount,
-                            touchX = touchOffset.x,
-                            touchY = touchOffset.y,
-                            touchPressed = animatedTouchPressed,
-                            blurRadiusPx = with(density) { (blurRadius * effectIntensity).toPx() }
-                        )
-                        renderEffect = effect.asComposeRenderEffect()
-                    } catch (_: Throwable) {
-                        // Graceful fallback for non-shader devices
-                    }
-                }
             }
+            .then(backdropModifier)
             .clip(shape)
             .drawWithCache {
-                val glintHeight = (if (isCupertino) 1.0.dp else 1.4.dp).toPx()
+                val glintHeight = (if (isCupertino) 1.1.dp else 1.4.dp).toPx()
                 val glintBrush = if (isCupertino) {
                     Brush.horizontalGradient(
                         listOf(
                             Color.Transparent,
-                            if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.65f),
-                            Color.White.copy(alpha = if (isDark) 0.50f else 0.85f),
-                            if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.65f),
+                            if (isDark) Color.White.copy(alpha = 0.42f) else Color.White.copy(alpha = 0.75f),
+                            Color.White.copy(alpha = if (isDark) 0.62f else 0.92f),
+                            if (isDark) Color.White.copy(alpha = 0.42f) else Color.White.copy(alpha = 0.75f),
                             Color.Transparent
                         )
                     )
@@ -258,34 +295,59 @@ fun LiquidGlassView(
                         drawCircle(
                             brush = Brush.radialGradient(
                                 colors = listOf(
-                                    Color.White.copy(alpha = 0.22f * animatedTouchPressed),
-                                    Color.White.copy(alpha = 0.08f * animatedTouchPressed),
+                                    Color.White.copy(alpha = 0.26f * animatedTouchPressed),
+                                    Color.White.copy(alpha = 0.10f * animatedTouchPressed),
                                     Color.Transparent
                                 ),
                                 center = touchOffset,
-                                radius = 70.dp.toPx()
+                                radius = 84.dp.toPx()
                             ),
                             center = touchOffset,
-                            radius = 70.dp.toPx()
+                            radius = 84.dp.toPx()
                         )
                     }
                 }
             },
         shape = shape,
-        color = effectiveTint,
+        color = if (isCupertino && canvasBackdrop != null) Color.Transparent else effectiveTint,
         border = BorderStroke(borderWidth, effectiveBorderColor)
     ) {
         Box {
             if (isCupertino) {
-                // Frosted optical volume sheen
+                // Dedicated background AGSL optical glass layer (keeps foreground content() crystal sharp!)
                 Box(
                     modifier = Modifier
                         .matchParentSize()
+                        .graphicsLayer {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && size.width > 0 && size.height > 0) {
+                                try {
+                                    val effect = LiquidGlassShaderHelper.createShaderEffect(
+                                        width = size.width,
+                                        height = size.height,
+                                        cornerRadiusPx = with(density) { cornerRadius.toPx() },
+                                        refractionHeightPx = with(density) { (refractionHeight * effectIntensity).toPx() },
+                                        refractionAmountPx = with(density) { (refractionOffset * effectIntensity).toPx() },
+                                        dispersion = (dispersion * effectIntensity).coerceIn(0f, 1f),
+                                        tintColor = effectiveTint.copy(alpha = (effectiveTint.alpha * 0.55f).coerceIn(0.15f, 0.75f)),
+                                        specularAmount = specularAmount,
+                                        touchX = touchOffset.x,
+                                        touchY = touchOffset.y,
+                                        touchPressed = animatedTouchPressed,
+                                        blurRadiusPx = with(density) { (blurRadius * 0.5f * effectIntensity).toPx() },
+                                        fresnelIntensity = (0.22f * effectIntensity).coerceIn(0.10f, 0.42f)
+                                    )
+                                    renderEffect = effect.asComposeRenderEffect()
+                                } catch (_: Throwable) {
+                                    // Graceful fallback for non-shader devices
+                                }
+                            }
+                        }
                         .background(
                             Brush.verticalGradient(
-                                0.0f to (if (isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.40f)),
-                                0.30f to (if (isDark) Color.White.copy(alpha = 0.02f) else Color.White.copy(alpha = 0.08f)),
-                                1.0f to Color.Transparent
+                                0.0f to (if (isDark) Color.White.copy(alpha = 0.11f) else Color.White.copy(alpha = 0.46f)),
+                                0.30f to (if (isDark) Color.White.copy(alpha = 0.03f) else Color.White.copy(alpha = 0.10f)),
+                                0.82f to Color.Transparent,
+                                1.0f to (if (isDark) Color.White.copy(alpha = 0.04f) else Color.White.copy(alpha = 0.16f))
                             )
                         )
                 )

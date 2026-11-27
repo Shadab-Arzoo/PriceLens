@@ -11,6 +11,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,11 +30,21 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asComposeRenderEffect
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
 import com.pricelens.core.designsystem.PriceLensTheme
 import org.intellij.lang.annotations.Language
 
@@ -60,6 +72,7 @@ const val LIQUID_GLASS_AGSL = """
     uniform float specularAmount;
     uniform float2 touchPoint;
     uniform float touchPressed;
+    uniform float fresnelIntensity;
 
     // 2D Signed Distance Function for a rounded rectangle centered at resolution / 2
     float sdRoundedBox(float2 p, float2 b, float r) {
@@ -67,10 +80,28 @@ const val LIQUID_GLASS_AGSL = """
         return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r;
     }
 
+    // Exact SDF outward surface normal matching Kyant0/AndroidLiquidGlass
+    float2 gradSdRoundedBox(float2 p, float2 b, float r) {
+        float2 q = abs(p) - b + r;
+        if (q.x >= 0.0 || q.y >= 0.0) {
+            return sign(p) * normalize(max(q, 0.0001));
+        } else {
+            float gradX = step(q.y, q.x);
+            return sign(p) * float2(gradX, 1.0 - gradX);
+        }
+    }
+
+    // Meniscus toric lens profile: smoothly curves from 0 in interior to 1 at rim
+    float circleMap(float x) {
+        float cx = clamp(x, 0.0, 1.0);
+        return 1.0 - sqrt(max(0.0, 1.0 - cx * cx));
+    }
+
     half4 main(float2 coord) {
-        float2 halfRes = resolution * 0.5;
+        float2 halfRes = max(resolution * 0.5, float2(1.0));
         float2 p = coord - halfRes;
-        float dist = sdRoundedBox(p, halfRes, cornerRadius);
+        float clampedRadius = min(cornerRadius, min(halfRes.x, halfRes.y));
+        float dist = sdRoundedBox(p, halfRes, clampedRadius);
 
         // Outside the rounded rectangle bounds
         if (dist > 0.0) {
@@ -82,49 +113,65 @@ const val LIQUID_GLASS_AGSL = """
         float edgeFactor = clamp(-dist / rH, 0.0, 1.0);
         float rim = 1.0 - edgeFactor; // 0 in center, 1 at edge
 
-        // Surface normal pointing outward
-        float2 norm = (length(p) > 0.001) ? normalize(p) : float2(0.0, 0.0);
+        // Smooth outward normal combining rounded-box gradient & subtle center depth
+        float gradRadius = min(clampedRadius * 1.4, min(halfRes.x, halfRes.y));
+        float2 radial = (length(p) > 0.001) ? normalize(p) : float2(0.0, 0.0);
+        float2 norm = normalize(gradSdRoundedBox(p, halfRes, gradRadius) + radial * 0.18);
 
         // Meniscus / toric lens curve profile
-        float curve = sin(rim * 1.5707963);
+        float curve = circleMap(rim);
+        float2 refractedCoord = coord - norm * (curve * refractionAmount);
 
-        // Cauchy optical dispersion: Red, Green, Blue channel displacement along normal
-        float disp = dispersion * refractionAmount * curve;
-        float2 offsetR = norm * (curve * refractionAmount * (1.0 + disp * 1.25));
-        float2 offsetG = norm * (curve * refractionAmount);
-        float2 offsetB = norm * (curve * refractionAmount * (1.0 - disp * 1.25));
+        // 7-band spectral Cauchy optical dispersion around curved edges
+        float dispStrength = dispersion * curve * refractionAmount * 0.85;
+        float2 dispVec = norm * dispStrength;
 
-        half4 colR = content.eval(coord - offsetR);
-        half4 colG = content.eval(coord - offsetG);
-        half4 colB = content.eval(coord - offsetB);
+        half4 sampled;
+        if (dispStrength > 0.05) {
+            half4 col = half4(0.0);
+            half4 red = content.eval(refractedCoord - dispVec);
+            half4 orange = content.eval(refractedCoord - dispVec * 0.666);
+            half4 yellow = content.eval(refractedCoord - dispVec * 0.333);
+            half4 green = content.eval(refractedCoord);
+            half4 cyan = content.eval(refractedCoord + dispVec * 0.333);
+            half4 blue = content.eval(refractedCoord + dispVec * 0.666);
+            half4 purple = content.eval(refractedCoord + dispVec);
 
-        half4 sampled = half4(colR.r, colG.g, colB.b, colG.a);
+            col.r = (red.r + orange.r + yellow.r) / 3.5 + purple.r / 7.0;
+            col.g = orange.g / 7.0 + (yellow.g + green.g + cyan.g) / 3.5;
+            col.b = (cyan.b + blue.b + purple.b) / 3.0;
+            col.a = (red.a + orange.a + yellow.a + green.a + cyan.a + blue.a + purple.a) / 7.0;
+            sampled = col;
+        } else {
+            sampled = content.eval(refractedCoord);
+        }
 
-        // Vibrancy saturation matrix boost (Backdrop vibrancy primitive)
+        // Vibrancy saturation boost (Backdrop vibrancy primitive)
         half luma = dot(sampled.rgb, half3(0.2126, 0.7152, 0.0722));
-        sampled.rgb = mix(half3(luma), sampled.rgb, half(1.30));
+        sampled.rgb = mix(half3(luma), sampled.rgb, half(1.35));
 
-        // Specular ray lighting
-        // Default ambient light from upper-left
-        float2 defaultLight = float2(-0.5, -0.866);
+        // Specular ray lighting: default ambient light from upper-left
+        float2 defaultLight = float2(-0.48, -0.877);
 
         // If touch is active, dynamically steer specular highlight towards finger touch point
-        float2 touchDir = (length(touchPoint - coord) > 0.001) ? normalize(touchPoint - coord) : float2(0.0, 0.0);
-        float2 effectiveLight = mix(defaultLight, touchDir, touchPressed * 0.70);
+        float2 touchDelta = touchPoint - coord;
+        float2 touchDir = (length(touchDelta) > 0.001) ? normalize(touchDelta) : float2(0.0, 0.0);
+        float2 effectiveLight = normalize(mix(defaultLight, touchDir, touchPressed * 0.75));
 
-        float spec = pow(max(0.0, dot(norm, effectiveLight)), 3.5) * rim * specularAmount;
+        float spec = pow(max(0.0, dot(norm, effectiveLight)), 3.2) * rim * specularAmount;
 
-        // Interactive touch contact gleam when pressed
-        float touchDist = length(coord - touchPoint);
-        float touchGlow = exp(-touchDist * 0.030) * touchPressed * 0.25;
+        // Schlick Fresnel grazing-angle rim reflection
+        float fresnel = pow(rim, 2.4) * fresnelIntensity;
 
-        // Subtle chromatic perimeter rim glow
-        float rimGlow = pow(rim, 2.2) * 0.20;
+        // Resolution-scaled interactive touch contact gleam when pressed
+        float minDim = max(min(resolution.x, resolution.y), 1.0);
+        float normTouchDist = length(touchDelta) / (minDim * 0.42);
+        float touchGlow = exp(-normTouchDist * normTouchDist * 2.5) * touchPressed * 0.28;
 
         // Blend sampled refracted content with translucent glass tint
         half4 tint = half4(tintColor);
         half4 result = mix(sampled, tint, tint.a);
-        result.rgb += half3(spec + rimGlow + touchGlow);
+        result.rgb += half3(spec + fresnel + touchGlow);
 
         return result;
     }
@@ -144,7 +191,8 @@ object LiquidGlassShaderHelper {
         touchX: Float = 0f,
         touchY: Float = 0f,
         touchPressed: Float = 0f,
-        blurRadiusPx: Float = 0f
+        blurRadiusPx: Float = 0f,
+        fresnelIntensity: Float = 0.26f
     ): RenderEffect {
         val shader = RuntimeShader(LIQUID_GLASS_AGSL)
         shader.setFloatUniform("resolution", width, height)
@@ -162,6 +210,7 @@ object LiquidGlassShaderHelper {
         shader.setFloatUniform("specularAmount", specularAmount)
         shader.setFloatUniform("touchPoint", touchX, touchY)
         shader.setFloatUniform("touchPressed", touchPressed)
+        shader.setFloatUniform("fresnelIntensity", fresnelIntensity)
 
         val shaderEffect = RenderEffect.createRuntimeShaderEffect(shader, "content")
 
@@ -196,7 +245,8 @@ fun Modifier.liquidGlass(
     borderWidth: Dp = 1.2.dp,
     showTopGlint: Boolean = true,
     enableShader: Boolean = true,
-    interactiveTouch: Boolean = true
+    interactiveTouch: Boolean = true,
+    backdrop: Backdrop? = null
 ): Modifier = composed {
     val density = LocalDensity.current
     val effectiveTint = tintColor ?: PriceLensTheme.glassColors.surfaceGlass
@@ -204,6 +254,8 @@ fun Modifier.liquidGlass(
     val isDark = PriceLensTheme.isDark
     val isCupertino = PriceLensTheme.isCupertino
     val glowColor = PriceLensTheme.glassColors.ambientGlow
+    val effectIntensity = if (isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f
+    val resolvedBackdrop = backdrop ?: if (isCupertino) PriceLensTheme.canvasBackdrop else null
 
     var touchOffset by remember { mutableStateOf(Offset.Zero) }
     var isTouchActive by remember { mutableStateOf(false) }
@@ -237,58 +289,76 @@ fun Modifier.liquidGlass(
         }
     }
 
-    // 1. On Android 13+, attach the AGSL runtime shader
-    if (enableShader && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        val cornerRadiusPx = with(density) { cornerRadius.toPx() }
-        val refractionHeightPx = with(density) { (if (isCupertino) 26.dp else 22.dp).toPx() }
-        val refractionAmountPx = with(density) { (if (isCupertino) 12.dp else 10.dp).toPx() }
-        val blurRadiusPx = if (isCupertino) with(density) { 14.dp.toPx() } else 0f
-
-        modifier = modifier.graphicsLayer {
-            if (size.width > 0 && size.height > 0) {
-                try {
-                    val effect = LiquidGlassShaderHelper.createShaderEffect(
-                        width = size.width,
-                        height = size.height,
-                        cornerRadiusPx = cornerRadiusPx,
-                        refractionHeightPx = refractionHeightPx,
-                        refractionAmountPx = refractionAmountPx,
-                        dispersion = if (isCupertino) 0.25f else 0.35f,
-                        tintColor = effectiveTint,
-                        specularAmount = if (isDark) (if (isCupertino) 0.55f else 0.65f) else 0.50f,
-                        touchX = touchOffset.x,
-                        touchY = touchOffset.y,
-                        touchPressed = animatedTouchPressed,
-                        blurRadiusPx = blurRadiusPx
+    // 1. Real optical backdrop sampling (blur + vibrancy + chromatic lens) behind foreground content
+    if (resolvedBackdrop != null) {
+        val supportsLens = shape is CornerBasedShape || shape is AbsoluteRoundedCornerShape
+        modifier = modifier.drawBackdrop(
+            backdrop = resolvedBackdrop,
+            shape = { shape },
+            effects = {
+                vibrancy()
+                blur((10f * effectIntensity).dp.toPx())
+                if (supportsLens) {
+                    lens(
+                        refractionHeight = (12f * effectIntensity).dp.toPx(),
+                        refractionAmount = (16f * effectIntensity).dp.toPx(),
+                        depthEffect = true,
+                        chromaticAberration = true
                     )
-                    renderEffect = effect.asComposeRenderEffect()
-                } catch (_: Throwable) {
-                    // Graceful fallback
                 }
+            },
+            highlight = {
+                Highlight.Default.copy(
+                    width = 0.85.dp,
+                    alpha = (if (isDark) 0.58f else 0.82f) * (0.8f + 0.2f * animatedTouchPressed)
+                )
+            },
+            innerShadow = {
+                InnerShadow(
+                    radius = (6f * effectIntensity).dp,
+                    offset = DpOffset(0.dp, 2.dp),
+                    color = if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.50f),
+                    alpha = 0.75f
+                )
+            },
+            onDrawSurface = {
+                drawRect(effectiveTint.copy(alpha = (effectiveTint.alpha * 0.72f).coerceIn(0.18f, 0.78f)))
             }
-        }
+        )
     }
 
-    // 2. Base translucent glass body fill and shape clip
+    // 2. Shape clip & optical border stroke
     modifier = modifier
         .clip(shape)
-        .background(color = effectiveTint, shape = shape)
+        .then(
+            if (resolvedBackdrop == null) {
+                Modifier.background(color = effectiveTint, shape = shape)
+            } else {
+                Modifier
+            }
+        )
         .border(
             width = borderWidth,
             brush = effectiveBorderBrush,
             shape = shape
         )
 
-    // 3. Draw specular glint reflection on top edge & touch contact gleam
+    // 3. Render AGSL shader onto an isolated background glass layer so child content stays razor-sharp
+    val shaderGlassLayer = rememberGraphicsLayer()
+    val cornerRadiusPx = with(density) { cornerRadius.toPx() }
+    val refractionHeightPx = with(density) { ((if (isCupertino) 24.dp else 20.dp) * effectIntensity).toPx() }
+    val refractionAmountPx = with(density) { ((if (isCupertino) 12.dp else 10.dp) * effectIntensity).toPx() }
+    val blurRadiusPx = if (resolvedBackdrop == null && isCupertino) with(density) { (8.dp * effectIntensity).toPx() } else 0f
+
     modifier = modifier.drawWithCache {
         val glintHeight = (if (isCupertino) 1.0.dp else 1.5.dp).toPx()
         val glintBrush = if (isCupertino) {
             Brush.horizontalGradient(
                 listOf(
                     Color.Transparent,
-                    (if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.70f)),
-                    Color.White.copy(alpha = if (isDark) 0.50f else 0.85f),
-                    (if (isDark) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.70f)),
+                    (if (isDark) Color.White.copy(alpha = 0.42f) else Color.White.copy(alpha = 0.75f)),
+                    Color.White.copy(alpha = if (isDark) 0.60f else 0.92f),
+                    (if (isDark) Color.White.copy(alpha = 0.42f) else Color.White.copy(alpha = 0.75f)),
                     Color.Transparent
                 )
             )
@@ -303,8 +373,45 @@ fun Modifier.liquidGlass(
                 )
             )
         }
+        val volumeBrush = Brush.verticalGradient(
+            0.0f to (if (isDark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.44f)),
+            0.35f to (if (isDark) Color.White.copy(alpha = 0.03f) else Color.White.copy(alpha = 0.10f)),
+            0.85f to Color.Transparent,
+            1.0f to (if (isDark) Color.White.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.16f))
+        )
+
         onDrawWithContent {
+            if (enableShader && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && size.width > 0f && size.height > 0f) {
+                try {
+                    val effect = LiquidGlassShaderHelper.createShaderEffect(
+                        width = size.width,
+                        height = size.height,
+                        cornerRadiusPx = cornerRadiusPx,
+                        refractionHeightPx = refractionHeightPx,
+                        refractionAmountPx = refractionAmountPx,
+                        dispersion = ((if (isCupertino) 0.30f else 0.38f) * effectIntensity).coerceIn(0f, 1f),
+                        tintColor = effectiveTint.copy(alpha = if (resolvedBackdrop != null) 0.25f else effectiveTint.alpha),
+                        specularAmount = if (isDark) (if (isCupertino) 0.60f else 0.70f) else 0.55f,
+                        touchX = touchOffset.x,
+                        touchY = touchOffset.y,
+                        touchPressed = animatedTouchPressed,
+                        blurRadiusPx = blurRadiusPx,
+                        fresnelIntensity = (0.24f * effectIntensity).coerceIn(0.10f, 0.40f)
+                    )
+                    shaderGlassLayer.renderEffect = effect.asComposeRenderEffect()
+                    shaderGlassLayer.record {
+                        drawRect(brush = volumeBrush)
+                    }
+                    drawLayer(shaderGlassLayer)
+                } catch (_: Throwable) {
+                    drawRect(brush = volumeBrush)
+                }
+            } else {
+                drawRect(brush = volumeBrush)
+            }
+
             drawContent()
+
             if (showTopGlint) {
                 drawRect(
                     brush = glintBrush,
@@ -316,15 +423,15 @@ fun Modifier.liquidGlass(
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.22f * animatedTouchPressed),
+                            Color.White.copy(alpha = 0.24f * animatedTouchPressed),
                             glowColor.copy(alpha = 0.14f * animatedTouchPressed),
                             Color.Transparent
                         ),
                         center = touchOffset,
-                        radius = 80.dp.toPx()
+                        radius = 84.dp.toPx()
                     ),
                     center = touchOffset,
-                    radius = 80.dp.toPx()
+                    radius = 84.dp.toPx()
                 )
             }
         }

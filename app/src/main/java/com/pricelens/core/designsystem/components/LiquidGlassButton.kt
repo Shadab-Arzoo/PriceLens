@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -40,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -51,9 +54,19 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceAtMost
 import androidx.compose.ui.util.lerp
+import com.kyant.backdrop.catalog.utils.InteractiveHighlight
+import com.kyant.backdrop.drawBackdrop
+import com.kyant.backdrop.effects.blur
+import com.kyant.backdrop.effects.lens
+import com.kyant.backdrop.effects.vibrancy
+import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.InnerShadow
+import com.kyant.backdrop.shadow.Shadow
+import com.kyant.shapes.Capsule
 import com.pricelens.core.designsystem.PriceLensTheme
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -87,12 +100,18 @@ fun LiquidGlassPrimaryButton(
     val isCupertino = PriceLensTheme.isCupertino
     val isDark = PriceLensTheme.isDark
     val glowColor = PriceLensTheme.glassColors.ambientGlow
+    val canvasBackdrop = PriceLensTheme.canvasBackdrop
+    val effectIntensity = if (isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f
+    val coroutineScope = rememberCoroutineScope()
+    val interactiveHighlight = remember(coroutineScope) {
+        InteractiveHighlight(animationScope = coroutineScope)
+    }
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled && !loading) 0.95f else 1f,
+        targetValue = if (isPressed && enabled && !loading) 0.955f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 500f
@@ -101,7 +120,7 @@ fun LiquidGlassPrimaryButton(
     )
 
     val currentElevation by animateDpAsState(
-        targetValue = if (isPressed && enabled) 1.dp else if (enabled) (if (isCupertino) 2.dp else 5.dp) else 0.dp,
+        targetValue = if (isPressed && enabled) 1.dp else if (enabled) (if (isCupertino) 3.dp else 5.dp) else 0.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 500f
@@ -110,20 +129,69 @@ fun LiquidGlassPrimaryButton(
     )
 
     val glintAlpha by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.95f else 0.55f,
+        targetValue = if (isPressed && enabled) 0.95f else if (isCupertino) 0.72f else 0.55f,
         animationSpec = spring(stiffness = 500f),
         label = "buttonGlintAlpha"
     )
 
     val ambientShadow = if (isCupertino) {
-        Color.Black.copy(alpha = if (isDark) 0.20f else 0.05f)
+        Color.Black.copy(alpha = if (isDark) 0.22f else 0.06f)
     } else {
         glowColor.copy(alpha = if (isDark) 0.25f else 0.12f)
     }
     val spotShadow = if (isCupertino) {
-        Color.Black.copy(alpha = if (isDark) 0.35f else 0.10f)
+        Color.Black.copy(alpha = if (isDark) 0.36f else 0.12f)
     } else {
         Color.Black.copy(alpha = if (isDark) 0.35f else 0.15f)
+    }
+
+    val activeBackdrop = if (isCupertino && enabled) canvasBackdrop else null
+    val useBackdrop = activeBackdrop != null
+    val backdropModifier = if (activeBackdrop != null) {
+        val supportsLens = shape is CornerBasedShape || shape is AbsoluteRoundedCornerShape
+        Modifier.drawBackdrop(
+            backdrop = activeBackdrop,
+            shape = { shape },
+            effects = {
+                vibrancy()
+                blur((6f * effectIntensity).dp.toPx())
+                if (supportsLens) {
+                    lens(
+                        refractionHeight = (9f * effectIntensity).dp.toPx(),
+                        refractionAmount = (14f * effectIntensity).dp.toPx(),
+                        depthEffect = true,
+                        chromaticAberration = true
+                    )
+                }
+            },
+            highlight = {
+                Highlight.Default.copy(
+                    width = 0.85.dp,
+                    alpha = if (isPressed) 0.95f else 0.75f
+                )
+            },
+            shadow = {
+                Shadow(
+                    radius = (currentElevation.value * 3f).dp,
+                    color = glowColor.copy(alpha = if (isDark) 0.28f else 0.18f)
+                )
+            },
+            innerShadow = {
+                InnerShadow(
+                    radius = (4f * effectIntensity).dp,
+                    offset = DpOffset(0.dp, 1.5.dp),
+                    color = Color.White.copy(alpha = 0.32f),
+                    alpha = 0.85f
+                )
+            }
+        )
+    } else {
+        Modifier.shadow(
+            elevation = currentElevation,
+            shape = shape,
+            ambientColor = ambientShadow,
+            spotColor = spotShadow
+        )
     }
 
     Surface(
@@ -132,13 +200,17 @@ fun LiquidGlassPrimaryButton(
                 scaleX = scale
                 scaleY = scale
             }
-            .shadow(
-                elevation = currentElevation,
-                shape = shape,
-                ambientColor = ambientShadow,
-                spotColor = spotShadow
-            )
+            .then(backdropModifier)
             .clip(shape)
+            .then(
+                if (isCupertino && enabled && !loading) {
+                    Modifier
+                        .then(interactiveHighlight.modifier)
+                        .then(interactiveHighlight.gestureModifier)
+                } else {
+                    Modifier
+                }
+            )
             .clickable(
                 enabled = enabled && !loading,
                 interactionSource = interactionSource,
@@ -146,9 +218,9 @@ fun LiquidGlassPrimaryButton(
                 onClick = onClick
             ),
         shape = shape,
-        color = PriceLensTheme.glassColors.actionFill,
+        color = if (useBackdrop) Color.Transparent else PriceLensTheme.glassColors.actionFill,
         border = if (isCupertino) {
-            BorderStroke(0.5.dp, if (isDark) Color.White.copy(alpha = 0.20f) else Color.White.copy(alpha = 0.40f))
+            BorderStroke(0.75.dp, if (isDark) Color.White.copy(alpha = 0.28f) else Color.White.copy(alpha = 0.55f))
         } else {
             BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
         }
@@ -159,10 +231,11 @@ fun LiquidGlassPrimaryButton(
                 .background(
                     if (enabled) {
                         if (isCupertino && gradientBrush == PriceLensTheme.glassColors.primaryGradientBrush) {
+                            val tintAlpha = if (useBackdrop) 0.82f else 1.0f
                             Brush.verticalGradient(
                                 listOf(
-                                    if (isDark) Color(0xFF0091FF) else Color(0xFF0088FF),
-                                    if (isDark) Color(0xFF0077E6) else Color(0xFF006ED6)
+                                    (if (isDark) Color(0xFF0091FF) else Color(0xFF0088FF)).copy(alpha = tintAlpha),
+                                    (if (isDark) Color(0xFF0077E6) else Color(0xFF006ED6)).copy(alpha = tintAlpha)
                                 )
                             )
                         } else {
@@ -261,12 +334,18 @@ fun LiquidGlassSecondaryButton(
     val isCupertino = PriceLensTheme.isCupertino
     val isDark = PriceLensTheme.isDark
     val glowColor = PriceLensTheme.glassColors.ambientGlow
+    val canvasBackdrop = PriceLensTheme.canvasBackdrop
+    val effectIntensity = if (isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f
+    val coroutineScope = rememberCoroutineScope()
+    val interactiveHighlight = remember(coroutineScope) {
+        InteractiveHighlight(animationScope = coroutineScope)
+    }
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.95f else 1f,
+        targetValue = if (isPressed && enabled) 0.955f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 500f
@@ -275,7 +354,7 @@ fun LiquidGlassSecondaryButton(
     )
 
     val currentElevation by animateDpAsState(
-        targetValue = if (isPressed && enabled) 0.5.dp else (if (isCupertino) 1.dp else 2.dp),
+        targetValue = if (isPressed && enabled) 0.5.dp else (if (isCupertino) 2.dp else 2.dp),
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = 500f
@@ -284,20 +363,78 @@ fun LiquidGlassSecondaryButton(
     )
 
     val glintAlpha by animateFloatAsState(
-        targetValue = if (isPressed && enabled) 0.90f else 0.40f,
+        targetValue = if (isPressed && enabled) 0.92f else if (isCupertino) 0.68f else 0.40f,
         animationSpec = spring(stiffness = 500f),
         label = "secondaryButtonGlintAlpha"
     )
 
     val ambientShadow = if (isCupertino) {
-        Color.Black.copy(alpha = if (isDark) 0.15f else 0.03f)
+        Color.Black.copy(alpha = if (isDark) 0.16f else 0.04f)
     } else {
         glowColor.copy(alpha = if (isDark) 0.15f else 0.06f)
     }
     val spotShadow = if (isCupertino) {
-        Color.Black.copy(alpha = if (isDark) 0.25f else 0.06f)
+        Color.Black.copy(alpha = if (isDark) 0.28f else 0.08f)
     } else {
         Color.Black.copy(alpha = if (isDark) 0.22f else 0.08f)
+    }
+
+    val surfaceTint = if (isCupertino) {
+        if (!isDark) Color(0xFFFAFAFA).copy(alpha = 0.56f) else Color(0xFF2C2C2E).copy(alpha = 0.54f)
+    } else {
+        PriceLensTheme.glassColors.surfaceGlass
+    }
+
+    val activeBackdrop = if (isCupertino) canvasBackdrop else null
+    val useBackdrop = activeBackdrop != null
+    val backdropModifier = if (activeBackdrop != null) {
+        val supportsLens = shape is CornerBasedShape || shape is AbsoluteRoundedCornerShape
+        Modifier.drawBackdrop(
+            backdrop = activeBackdrop,
+            shape = { shape },
+            effects = {
+                vibrancy()
+                blur((6f * effectIntensity).dp.toPx())
+                if (supportsLens) {
+                    lens(
+                        refractionHeight = (9f * effectIntensity).dp.toPx(),
+                        refractionAmount = (14f * effectIntensity).dp.toPx(),
+                        depthEffect = true,
+                        chromaticAberration = true
+                    )
+                }
+            },
+            highlight = {
+                Highlight.Default.copy(
+                    width = 0.75.dp,
+                    alpha = if (isPressed) 0.92f else if (isDark) 0.55f else 0.78f
+                )
+            },
+            shadow = {
+                Shadow(
+                    radius = (currentElevation.value * 2.5f).dp,
+                    color = Color.Black.copy(alpha = if (isDark) 0.24f else 0.07f)
+                )
+            },
+            innerShadow = {
+                InnerShadow(
+                    radius = (4f * effectIntensity).dp,
+                    offset = DpOffset(0.dp, 1.5.dp),
+                    color = Color.White.copy(alpha = if (isDark) 0.12f else 0.42f),
+                    alpha = 0.75f
+                )
+            },
+            onDrawSurface = {
+                drawRect(surfaceTint)
+            }
+        )
+    } else {
+        Modifier.shadow(
+            elevation = currentElevation,
+            shape = shape,
+            ambientColor = ambientShadow,
+            spotColor = spotShadow
+        )
     }
 
     Surface(
@@ -306,13 +443,17 @@ fun LiquidGlassSecondaryButton(
                 scaleX = scale
                 scaleY = scale
             }
-            .shadow(
-                elevation = currentElevation,
-                shape = shape,
-                ambientColor = ambientShadow,
-                spotColor = spotShadow
-            )
+            .then(backdropModifier)
             .clip(shape)
+            .then(
+                if (isCupertino && enabled) {
+                    Modifier
+                        .then(interactiveHighlight.modifier)
+                        .then(interactiveHighlight.gestureModifier)
+                } else {
+                    Modifier
+                }
+            )
             .clickable(
                 enabled = enabled,
                 interactionSource = interactionSource,
@@ -320,13 +461,9 @@ fun LiquidGlassSecondaryButton(
                 onClick = onClick
             ),
         shape = shape,
-        color = if (isCupertino) {
-            if (!isDark) Color(0xFFFAFAFA).copy(alpha = 0.65f) else Color(0xFF2C2C2E).copy(alpha = 0.60f)
-        } else {
-            PriceLensTheme.glassColors.surfaceGlass
-        },
+        color = if (useBackdrop) Color.Transparent else surfaceTint,
         border = if (isCupertino) {
-            BorderStroke(0.75.dp, if (isDark) Color.White.copy(alpha = 0.20f) else Color.Black.copy(alpha = 0.08f))
+            BorderStroke(0.75.dp, PriceLensTheme.glassColors.specularBorderBrush)
         } else {
             BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
         }
@@ -396,22 +533,70 @@ fun LiquidButton(
     val isDark = PriceLensTheme.isDark
     val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
+    val canvasBackdrop = PriceLensTheme.canvasBackdrop
+    val effectIntensity = if (isCupertino) PriceLensTheme.iosGlassIntensity else 1.0f
+    val interactiveHighlight = remember(coroutineScope) {
+        InteractiveHighlight(animationScope = coroutineScope)
+    }
 
     val pressAnimatable = remember { Animatable(0f) }
     val animatedOffsetX = remember { Animatable(0f) }
     val animatedOffsetY = remember { Animatable(0f) }
 
     val defaultSurfaceColor = if (isCupertino) {
-        if (!isDark) Color(0xFFFAFAFA).copy(alpha = 0.60f) else Color(0xFF1E1E1E).copy(alpha = 0.60f)
+        if (!isDark) Color(0xFFFAFAFA).copy(alpha = 0.56f) else Color(0xFF1E1E1E).copy(alpha = 0.54f)
     } else {
         PriceLensTheme.glassColors.surfaceGlass
     }
     val resolvedSurfaceColor = if (surfaceColor.isSpecified) surfaceColor else defaultSurfaceColor
 
     val borderStroke = if (isCupertino) {
-        BorderStroke(0.75.dp, if (isDark) Color.White.copy(alpha = 0.25f) else Color.Black.copy(alpha = 0.08f))
+        BorderStroke(0.75.dp, PriceLensTheme.glassColors.specularBorderBrush)
     } else {
         BorderStroke(1.2.dp, PriceLensTheme.glassColors.specularBorderBrush)
+    }
+
+    val activeBackdrop = if (isCupertino) canvasBackdrop else null
+    val useBackdrop = activeBackdrop != null
+    val backdropModifier = if (activeBackdrop != null) {
+        Modifier.drawBackdrop(
+            backdrop = activeBackdrop,
+            shape = { Capsule() },
+            effects = {
+                vibrancy()
+                blur((4f * effectIntensity).dp.toPx())
+                lens(
+                    refractionHeight = (10f * effectIntensity).dp.toPx(),
+                    refractionAmount = (18f * effectIntensity).dp.toPx(),
+                    depthEffect = true,
+                    chromaticAberration = true
+                )
+            },
+            highlight = {
+                Highlight.Default.copy(
+                    width = 0.75.dp,
+                    alpha = lerp(if (isDark) 0.55f else 0.78f, 1f, pressAnimatable.value)
+                )
+            },
+            innerShadow = {
+                InnerShadow(
+                    radius = (4f * effectIntensity).dp,
+                    offset = DpOffset(0.dp, 1.5.dp),
+                    color = Color.White.copy(alpha = if (isDark) 0.14f else 0.45f),
+                    alpha = 0.75f
+                )
+            },
+            onDrawSurface = {
+                if (tint.isSpecified) {
+                    drawRect(tint, blendMode = BlendMode.Hue)
+                    drawRect(tint.copy(alpha = 0.70f))
+                } else {
+                    drawRect(resolvedSurfaceColor)
+                }
+            }
+        )
+    } else {
+        Modifier
     }
 
     Surface(
@@ -440,7 +625,17 @@ fun LiquidButton(
                             (height / (if (width > 0) width else 1f)).fastCoerceAtMost(1f)
                 }
             }
+            .then(backdropModifier)
             .clip(RoundedCornerShape(9999.dp))
+            .then(
+                if (isCupertino && isInteractive) {
+                    Modifier
+                        .then(interactiveHighlight.modifier)
+                        .then(interactiveHighlight.gestureModifier)
+                } else {
+                    Modifier
+                }
+            )
             .pointerInput(isInteractive) {
                 if (!isInteractive) return@pointerInput
                 awaitEachGesture {
@@ -504,7 +699,7 @@ fun LiquidButton(
                 onClick = onClick
             ),
         shape = RoundedCornerShape(9999.dp),
-        color = resolvedSurfaceColor,
+        color = if (useBackdrop) Color.Transparent else resolvedSurfaceColor,
         border = borderStroke
     ) {
         Box(contentAlignment = Alignment.Center) {
